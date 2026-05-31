@@ -67,6 +67,41 @@
     .helper-grid label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:6px 10px;color:var(--ink);font-size:12px;font-weight:850}
     .color-dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:4px;vertical-align:-1px;border:1px solid rgba(0,0,0,.12)}
     .person-color{width:44px;min-height:36px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .workspace-dashboard{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:14px;align-items:start}
+    .dash-column,.dash-main,.dash-side{display:grid;gap:12px;min-width:0}
+    .dash-section{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;min-width:0}
+    .dash-section.compact{padding:12px}
+    .dash-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .dash-title h2{font-size:16px}
+    .project-search{width:100%;height:36px;border:1px solid var(--line);border-radius:999px;padding:0 12px;background:#fff}
+    .project-list{display:grid;gap:8px;max-height:calc(100vh - 260px);overflow:auto;padding-right:4px}
+    .project-item{border:1px solid var(--line);background:#fbfdfc;border-radius:12px;padding:12px;text-align:left;display:grid;gap:6px;transition:.14s}
+    .project-item:hover,.project-item.active{border-color:var(--teal);background:#eaf8f7}
+    .project-item .project-name{font-weight:900}
+    .project-item .project-meta{font-size:12px;color:var(--muted);line-height:1.45}
+    .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .detail-cell{border:1px solid var(--line);background:#fbfdfc;border-radius:10px;padding:12px;min-height:64px}
+    .detail-cell strong{display:block;margin-top:4px;font-size:15px}
+    .detail-cell.full{grid-column:1/-1}
+    .dash-empty{border:1px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);background:#fbfdfc}
+    .memo-list,.linked-list,.today-list{display:grid;gap:8px}
+    .memo-item,.linked-item,.today-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;text-align:left}
+    .linked-item,.today-item{cursor:pointer}
+    .linked-item:hover,.today-item:hover{border-color:var(--teal);background:#f2fbfa}
+    .memo-item .meta,.linked-item .meta,.today-item .meta{line-height:1.5}
+    .mini-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+    .mini-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    .mini-day-name,.mini-day{min-height:32px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;place-items:center;font-size:11px}
+    .mini-day-name:nth-child(7n),.mini-day:nth-child(7n){border-right:0}
+    .mini-day-name{background:#f8fbfc;color:var(--muted);font-weight:900}
+    .mini-day{background:#fff;cursor:pointer;position:relative}
+    .mini-day.muted{color:#a5b0b7;background:#f8fafb}
+    .mini-day.active{background:var(--teal);color:#fff;font-weight:900}
+    .mini-day.has-work:after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:#f0a23a}
+    .mini-day.active.has-work:after{background:#fff}
+    .dash-link-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .dash-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#f6faf9;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:850}
+    @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
     .time-grid{display:grid;grid-template-columns:1fr 120px;gap:8px}.quick-durations{display:flex;gap:6px;flex-wrap:wrap}
     .google-btn{border-color:#cfe3d8;background:#f6fbf8;color:#137b46}
     .todo-page header #addProjectBtn{display:none}
@@ -287,6 +322,136 @@
     renderAssignmentCalendar=function(){ensureConfigLists();renderAssignmentPeopleChips();renderScheduleViewButtons();const y=Number(els.assignmentCalendarYear.value),m=Number(els.assignmentCalendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"],days=assignmentCalendarView==="month"?42:assignmentCalendarView==="week"?7:1;let html=(assignmentCalendarView==="day"?["일정"]:names).map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<days;i++){const d=assignmentCalendarView==="day"?new Date(y,m,1):new Date(start);if(assignmentCalendarView!=="day")d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>(assignmentPersonFilter===KR.all||taskPeople(a).includes(assignmentPersonFilter))&&(a.start===iso||a.due===iso));html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(assignmentTaskHtml).join("")}</div>`}els.assignmentCalendarGrid.style.gridTemplateColumns=assignmentCalendarView==="day"?"1fr":"repeat(7,minmax(0,1fr))";els.assignmentCalendarGrid.innerHTML=html}
     renderAdmin=function(){ensureConfigLists();$("#adminBrand").value=state.brand;$("#adminTitle").value=state.title;$("#adminSubtitle").value=state.subtitle;$("#adminPin").value=state.adminPin;["#adminBrand","#adminTitle","#adminSubtitle","#adminPin"].forEach(id=>$(id).readOnly=!adminBasicEditMode);$("#saveAdminBasicBtn").disabled=!adminBasicEditMode;$("#editAdminBasicBtn").textContent=adminBasicEditMode?"수정 중":"수정 시작";const nav=`<div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list">${state.nav.map((n,i)=>`<div class="admin-item"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}</div></div>`;const people=`<div class="card"><div class="panel-title"><h2>담당자 / 직원</h2><button class="btn" data-add-admin-person>직원 추가</button></div><div class="admin-list">${state.people.map((p,i)=>`<div class="admin-item"><input class="person-color" type="color" data-admin-person-color="${i}" value="${esc(p.color||personColor(p.name))}"><input class="field" data-admin-person-name="${i}" value="${esc(p.name)}" placeholder="이름"><input class="field" data-admin-person-role="${i}" value="${esc(p.role||"")}" placeholder="직책"><button class="btn icon" data-move-admin-person="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-person="${i}" data-dir="1" ${i===state.people.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-person="${i}">&times;</button></div>`).join("")}</div></div>`;const projects=`<div class="card"><div class="panel-title"><h2>현장/프로젝트</h2><button class="btn" data-add-admin-project>프로젝트 추가</button></div><div class="admin-list">${state.projects.map((p,i)=>`<div class="admin-item single"><input class="field" data-admin-project-name="${i}" value="${esc(p.name)}" placeholder="현장/프로젝트명"><button class="btn icon" data-move-admin-project="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-project="${i}" data-dir="1" ${i===state.projects.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-project="${i}">&times;</button></div>`).join("")}</div></div>`;$("#adminView .admin-grid").innerHTML=nav+people+projects+adminCard("현장/프로젝트 상태","admin-status","새 상태","상태 추가")+adminCard("현장 업무단계","admin-phase","새 단계","단계 추가")+adminCard("일정/업무 상태","admin-assignment-status","새 상태","상태 추가")+adminCard("할일 상태","admin-todo-status","새 상태","상태 추가")+adminCard("우선순위","admin-priority","새 우선순위","우선순위 추가")+adminCard("구분","admin-assignment-type","새 구분","구분 추가")+adminCard("시공일정 단계","admin-construction-phase","새 단계","단계 추가")+adminCard("시공사","admin-team","새 시공사","시공사 추가")+adminCard("구조물팀","admin-structure-team","새 팀","팀 추가")}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.hasAttribute?.("data-add-admin-person")){e.preventDefault();e.stopImmediatePropagation();state.people.push({name:KR.newEmployee,role:KR.employee,area:"",monthlyTarget:30,yearlyTarget:360,color:pastelPalette[state.people.length%pastelPalette.length]});saveState("직원을 추가했습니다.");render()}if(t.hasAttribute?.("data-add-admin-project")){e.preventDefault();e.stopImmediatePropagation();state.projects.push({name:KR.newProject});saveState("프로젝트를 추가했습니다.");render()}},true)
+    let dashboardSelectedConstruction=0,dashboardDate=today;
+    function linkedByProjectName(name){
+      const n=String(name||"").trim();
+      return {
+        todos:state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>t.project===n||t.title?.includes(n)||t.detail?.includes(n)),
+        assignments:state.assignments.map((a,i)=>({a:normalizeAssignment(a),i})).filter(({a})=>a.project===n||a.title?.includes(n)||a.detail?.includes(n))
+      }
+    }
+    function dashboardConstructionRows(){
+      const q=($("#dashboardProjectSearch")?.value||"").toLowerCase();
+      return state.construction.map((c,i)=>({c,i})).filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
+    }
+    function dashboardDateItems(date){
+      const todos=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>t.start===date||t.due===date);
+      const assignments=state.assignments.map((a,i)=>({a:normalizeAssignment(a),i})).filter(({a})=>a.start===date||a.due===date);
+      return {todos,assignments};
+    }
+    function renderDashboardMiniCalendar(){
+      const y=Number(els.calendarYear.value)||Number(today.slice(0,4)),m=(Number(els.calendarMonth.value)||Number(today.slice(5,7)))-1,first=new Date(y,m,1),start=new Date(first);
+      start.setDate(1-first.getDay());
+      const names=["일","월","화","수","목","금","토"];
+      let html=names.map(n=>`<div class="mini-day-name">${n}</div>`).join("");
+      for(let i=0;i<42;i++){
+        const d=new Date(start);d.setDate(start.getDate()+i);
+        const iso=localDateString(d),items=dashboardDateItems(iso),has=items.todos.length+items.assignments.length>0;
+        html+=`<button class="mini-day ${d.getMonth()!==m?"muted":""} ${iso===dashboardDate?"active":""} ${has?"has-work":""}" data-dashboard-date="${iso}" title="${iso}">${d.getDate()}</button>`;
+      }
+      return html;
+    }
+    function renderDashboard(){
+      ensureConfigLists();ensureTaskLinks();
+      els.dashboardView.classList.remove("hidden");
+      els.dashboardView.classList.add("dashboard-workspace");
+      const rows=dashboardConstructionRows();
+      if(!rows.some(x=>x.i===dashboardSelectedConstruction))dashboardSelectedConstruction=rows.length?rows[0].i:-1;
+      const selected=state.construction[dashboardSelectedConstruction];
+      const linked=selected?linkedByProjectName(selected.site):{todos:[],assignments:[]};
+      const dateItems=dashboardDateItems(dashboardDate);
+      const progressTotal=state.construction.length;
+      const progressDone=state.construction.filter(c=>c.status==="완료"||c.phase==="완료").length;
+      const activeCount=state.construction.filter(c=>c.status==="시공중"||c.phase==="구조물시공"||c.phase==="전기시공").length;
+      const lateCount=state.construction.filter(c=>c.status==="지연").length;
+      els.dashboardView.innerHTML=`
+        <div class="workspace-dashboard">
+          <aside class="dash-column">
+            <section class="dash-section">
+              <div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
+              <input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
+              <div class="dash-link-row">
+                <span class="dash-pill">전체 ${progressTotal}</span>
+                <span class="dash-pill">시공중 ${activeCount}</span>
+                <span class="dash-pill">지연 ${lateCount}</span>
+              </div>
+              <div class="project-list">
+                ${rows.length?rows.map(({c,i})=>`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}">
+                  <span class="project-name">${esc(c.site||"이름 없는 발전소")}</span>
+                  <span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span>
+                  <span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span>
+                </button>`).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
+              </div>
+            </section>
+          </aside>
+          <div class="dash-main">
+            <section class="dash-section">
+              <div class="dash-title"><h2>시공관리 현황</h2>${selected?`<button class="btn" data-edit-construction="${dashboardSelectedConstruction}">수정</button>`:""}</div>
+              ${selected?`
+                <div class="detail-grid">
+                  <div class="detail-cell"><span class="label">현장</span><strong>${esc(selected.site)}</strong></div>
+                  <div class="detail-cell"><span class="label">시공사</span><strong>${esc(selected.company)}</strong></div>
+                  <div class="detail-cell"><span class="label">용량</span><strong>${esc(selected.kw||0)}kW</strong></div>
+                  <div class="detail-cell"><span class="label">상태</span><strong><span class="badge ${statusClass(selected.status)}">${esc(selected.status||"예정")}</span></strong></div>
+                  <div class="detail-cell"><span class="label">업무단계</span><strong>${esc(selected.phase||"-")}</strong></div>
+                  <div class="detail-cell"><span class="label">기간</span><strong>${esc(selected.start||"-")} ~ ${esc(selected.end||"")}</strong></div>
+                  <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
+                </div>
+              `:`<div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div>`}
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>메모</h2>${selected?`<button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button>`:""}</div>
+              <div class="memo-list">${selected&&Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta">등록된 메모가 없습니다.</div>`}</div>
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>할일</h2>${selected?`<button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button>`:""}</div>
+              <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 할일이 없습니다.</div>`}</div>
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>일정</h2>${selected?`<button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button>`:""}</div>
+              <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 일정이 없습니다.</div>`}</div>
+            </section>
+          </div>
+          <aside class="dash-side">
+            <section class="dash-section">
+              <div class="mini-calendar-head">
+                <button class="btn icon" data-dashboard-month="-1">‹</button>
+                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong>
+                <button class="btn icon" data-dashboard-month="1">›</button>
+              </div>
+              <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
+            </section>
+            <section class="dash-section">
+              <div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div>
+              <div class="today-list">
+                ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
+                ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
+                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
+              </div>
+            </section>
+          </aside>
+        </div>`;
+      $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
+    }
+    renderCalendar=renderDashboard;
+    const priorRenderView=renderView;
+    renderView=function(){
+      priorRenderView();
+      $("#kpis").classList.toggle("hidden",currentView==="dashboard"||currentView==="assignments"||currentView==="todos");
+      els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");
+    }
+    document.addEventListener("click",e=>{
+      const t=e.target.closest("button,[data-dashboard-date]")||e.target;
+      if(t.dataset.dashboardConstruction){dashboardSelectedConstruction=Number(t.dataset.dashboardConstruction);renderDashboard()}
+      if(t.dataset.dashboardDate){dashboardDate=t.dataset.dashboardDate;renderDashboard()}
+      if(t.dataset.dashboardMonth){const d=new Date(Number(els.calendarYear.value),Number(els.calendarMonth.value)-1+Number(t.dataset.dashboardMonth),1);setCalendarMonth(els.calendarYear,els.calendarMonth,localDateString(d));renderDashboard()}
+      if(t.dataset.dashboardToday!==undefined){dashboardDate=today;setCalendarMonth(els.calendarYear,els.calendarMonth,today);renderDashboard()}
+      if(t.dataset.dashboardAddConstruction!==undefined)openConstructionModal();
+      if(t.dataset.dashboardAddMemo){const i=Number(t.dataset.dashboardAddMemo),text=prompt("메모 내용을 입력하세요.");if(text){state.construction[i].memos=state.construction[i].memos||[];state.construction[i].memos.unshift({text,date:today});saveState("메모를 저장했습니다.");renderDashboard()}}
+      if(t.dataset.dashboardDeleteMemo){const i=Number(t.dataset.dashboardDeleteMemo),mi=Number(t.dataset.memoIndex);state.construction[i].memos?.splice(mi,1);saveState("메모를 삭제했습니다.");renderDashboard()}
+      if(t.dataset.dashboardAddTodo){const c=state.construction[Number(t.dataset.dashboardAddTodo)];openTodoModal();$("#todoProject").value=c?.site||KR.general;$("#todoTitle").value=(c?.site||"현장")+" 할일";$("#todoDetail").value=c?.next||""}
+      if(t.dataset.dashboardAddAssignment){const c=state.construction[Number(t.dataset.dashboardAddAssignment)];openAssignmentModal();$("#assignmentProject").value=c?.site||KR.general;$("#assignmentTitle").value=(c?.site||"현장")+" 일정";$("#assignmentDetail").value=c?.next||""}
+    },true);
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);render();loadSharedState();
   </script>
 </body>
