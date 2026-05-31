@@ -112,7 +112,13 @@
     .mini-day.active.has-work:after{background:#fff}
     .dash-link-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .dash-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#f6faf9;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:850}
+    .dash-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .dash-kpi-grid.small{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
+    .dash-kpi-grid .dash-section{box-shadow:none}
+    .dash-main>.dash-section:first-child{padding:16px}
     @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
+    @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:620px){.dash-kpi-grid,.dash-kpi-grid.small{grid-template-columns:1fr}}
     .time-grid{display:grid;grid-template-columns:1fr 120px;gap:8px}.quick-durations{display:flex;gap:6px;flex-wrap:wrap}
     .google-btn{border-color:#cfe3d8;background:#f6fbf8;color:#137b46}
     .todo-page header #addProjectBtn{display:none}
@@ -488,7 +494,62 @@
     }
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.showCompletedList!==undefined){todoStatusFilter=KR.done;todoViewMode="list";renderTodoBoard()}if(t.dataset.todoSort){todoListSort.dir=todoListSort.key===t.dataset.todoSort&&todoListSort.dir==="asc"?"desc":"asc";todoListSort.key=t.dataset.todoSort;renderTodoBoard()}},true);
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
-    document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);render();loadSharedState();
+    function monthValue(){return `${els.calendarYear.value||today.slice(0,4)}-${els.calendarMonth.value||today.slice(5,7)}`}
+    function inSelectedConstructionMonth(c){const ym=monthValue();return [c.start,c.end].some(d=>d&&d.startsWith(ym))||(!c.end&&c.start&&c.start<=`${ym}-31`)}
+    function constructionMonthRows(){return state.construction.map((c,i)=>({c,i})).filter(({c})=>inSelectedConstructionMonth(c))}
+    function statusCount(rows,status){return rows.filter(({c})=>c.status===status||c.phase===status).length}
+    function kwSum(rows){return Math.round(rows.reduce((s,{c})=>s+(Number(c.kw)||0),0)*100)/100}
+    function avgDuration(rows){const done=rows.map(({c})=>durationDays(c.start,c.end)).filter(Boolean);return done.length?Math.round(done.reduce((a,b)=>a+b,0)/done.length):0}
+    function smallBar(label,value,max,color="var(--teal)"){const pct=max?Math.round(value/max*100):0;return `<div class="chart-row"><span>${esc(label)}</span><div class="chart-track"><div class="chart-fill" style="width:${pct}%;background:${color}"></div></div><strong>${esc(value)}</strong></div>`}
+    function renderDashboardKpi(rows){
+      const total=rows.length,done=statusCount(rows,"완료"),active=rows.filter(({c})=>c.status==="시공중"||["구조물시공","전기시공"].includes(c.phase)).length,late=statusCount(rows,"지연"),kw=kwSum(rows);
+      const teams=["남해","다온","다호","동광"],maxTeam=Math.max(1,...teams.map(t=>rows.filter(({c})=>c.company===t).length));
+      const phases=["자재입고완료","구조물시공","전기시공","완료"],maxPhase=Math.max(1,...phases.map(p=>rows.filter(({c})=>c.phase===p).length));
+      return `<div class="dash-kpi-grid">
+        <div class="dash-section compact"><div class="label">월간 시공 진행률</div><div class="donut" style="--p:${total?Math.round(done/total*100):0}%"><span>${total?Math.round(done/total*100):0}%</span></div><div class="meta">완료 ${done} / 전체 ${total}</div></div>
+        <div class="dash-section compact"><div class="label">상태별 발전소</div>${smallBar("시공중",active,total)}${smallBar("예정",statusCount(rows,"예정"),total,"#7aa7d9")}${smallBar("지연",late,total,"#d87568")}</div>
+        <div class="dash-section compact"><div class="label">업무단계 분포</div>${phases.map(p=>smallBar(p,rows.filter(({c})=>c.phase===p).length,maxPhase)).join("")}</div>
+        <div class="dash-section compact"><div class="label">월간 시공 물량</div><div class="value">${esc(kw)}kW</div><div class="meta">평균 소요일 ${avgDuration(rows)}일</div>${teams.map(t=>smallBar(t,rows.filter(({c})=>c.company===t).length,maxTeam)).join("")}</div>
+      </div>`
+    }
+    function renderWeatherBox(){
+      return `<section class="dash-section compact"><div class="dash-title"><h2>날씨 · 현재 시간</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashClock" class="value" style="font-size:22px"></div><div id="dashWeatherContent" class="meta">날씨 정보를 불러오는 중입니다.</div></section>`
+    }
+    function updateClock(){const el=$("#dashClock");if(el)el.textContent=new Date().toLocaleString("ko-KR",{dateStyle:"medium",timeStyle:"short"})}
+    async function updateWeather(){
+      const box=$("#dashWeatherContent");if(!box)return;
+      const render=(temp,wind,label="현재 위치")=>{box.innerHTML=`${esc(label)} 기준 · 기온 <strong>${Math.round(temp)}°C</strong> · 풍속 <strong>${Math.round(wind)}m/s</strong><div class="meta">현장 주소가 없어서 브라우저 현재 위치 또는 서울 기준으로 표시합니다.</div>`};
+      try{
+        const pos=await new Promise((resolve,reject)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(resolve,reject,{timeout:2500}):reject());
+        const {latitude,longitude}=pos.coords;
+        const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&timezone=Asia%2FSeoul`);
+        const j=await r.json();render(j.current.temperature_2m,j.current.wind_speed_10m);
+      }catch{
+        try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,wind_speed_10m&timezone=Asia%2FSeoul");const j=await r.json();render(j.current.temperature_2m,j.current.wind_speed_10m,"서울");}
+        catch{box.textContent="날씨 정보를 불러오지 못했습니다. 네트워크 또는 위치 권한을 확인하세요."}
+      }
+    }
+    renderDashboard=function(){
+      ensureConfigLists();ensureTaskLinks();
+      const rows=constructionMonthRows(),q=($("#dashboardProjectSearch")?.value||"").toLowerCase(),shown=rows.filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
+      const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
+      els.dashboardView.innerHTML=`<div class="workspace-dashboard">
+        <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
+        <div class="dash-main"><section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${renderWeatherBox()}<section class="dash-section compact"><div class="dash-title"><h2>이번 달 지연/확인 필요</h2></div><div class="linked-list">${rows.filter(({c})=>c.status==="지연"||c.next).slice(0,8).map(({c,i})=>`<button class="linked-item" data-dashboard-construction="${i}"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.status||"-")} · ${esc(c.next||"다음 액션 없음")}</div></button>`).join("")||`<div class="meta">이번 달 특이사항이 없습니다.</div>`}</div></section></div>
+        <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
+      </div>`;
+      $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
+      updateClock();updateWeather();
+    }
+    renderCalendar=renderDashboard;
+    function teamKpiHtml(rows){
+      const people=state.people.map(p=>p.name),total=rows.length,done=rows.filter(({t})=>t.status===KR.done).length,late=rows.filter(({t})=>t.status!==KR.done&&t.due&&t.due<today).length,max=Math.max(1,...people.map(p=>rows.filter(({t})=>taskPeople(t).includes(p)).length));
+      return `<div class="dash-section compact"><div class="dash-title"><h2>우리팀 KPI</h2><span class="dash-pill">완료율 ${total?Math.round(done/total*100):0}%</span></div><div class="dash-kpi-grid small"><div><div class="label">전체</div><div class="value">${total}</div></div><div><div class="label">완료</div><div class="value">${done}</div></div><div><div class="label">지연</div><div class="value">${late}</div></div></div>${people.map(p=>smallBar(p,rows.filter(({t})=>taskPeople(t).includes(p)).length,max,personColor(p))).join("")}</div>`
+    }
+    const oldTodoListHtml=todoListHtml;
+    todoListHtml=function(rows){return teamKpiHtml(rows)+oldTodoListHtml(rows)}
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.dashboardConstruction){openConstructionModal(Number(t.dataset.dashboardConstruction))}if(t.dataset.dashboardGoConstruction!==undefined){goToView("construction","시공일정")}if(t.dataset.refreshWeather!==undefined){updateClock();updateWeather()}},true);
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
 </html>
