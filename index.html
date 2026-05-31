@@ -60,9 +60,20 @@
     .todo-card{border:1px solid #edf0ee;border-radius:12px;background:#fff;padding:12px;margin-bottom:10px;box-shadow:0 8px 18px rgba(29,45,56,.06);border-left:5px solid var(--teal)}
     .todo-card.todo-backlog{border-left-color:#b889d9}.todo-card.todo-ready{border-left-color:#d99b43}.todo-card.todo-doing{border-left-color:#42b6d8}.todo-card.todo-done{border-left-color:#63b679}.todo-card.todo-cancel{border-left-color:#cf7f7f}
     .todo-card-title{font-weight:900;line-height:1.35;margin-bottom:8px}.todo-card-meta{color:var(--muted);font-size:12px;line-height:1.5}
+    .todo-card .row-actions{margin-top:8px!important;gap:5px}
+    .todo-card .btn.icon,.todo-list-row .btn.icon,.linked-item .btn.icon,.today-item .btn.icon,.row-actions .btn.icon{width:26px;min-height:26px;border-radius:7px;padding:0;font-size:12px}
+    .btn.icon[data-edit-todo]::before,.btn.icon[data-edit-assignment]::before,.btn.icon[data-edit-project]::before,.btn.icon[data-edit-construction]::before,.btn.icon[data-edit-person]::before{content:"수정";font-size:11px}
+    .btn.icon[data-edit-todo],.btn.icon[data-edit-assignment],.btn.icon[data-edit-project],.btn.icon[data-edit-construction],.btn.icon[data-edit-person]{font-size:0;width:40px}
+    .btn.icon.danger[data-delete-todo]::before,.btn.icon.danger[data-delete-person]::before{content:"삭제";font-size:11px}
+    .btn.icon.danger[data-delete-todo],.btn.icon.danger[data-delete-person]{font-size:0;width:40px}
+    .todo-complete-more{width:100%;margin-top:6px}
     .todo-list{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
-    .todo-list-row{display:grid;grid-template-columns:1.5fr .7fr .7fr .7fr .8fr auto;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line);font-size:13px}
+    .todo-list-row{display:grid;grid-template-columns:1.5fr .7fr .7fr .7fr .8fr auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px}
     .todo-list-row:last-child{border-bottom:0}.todo-list-row.head{background:#f8fbfc;color:var(--muted);font-weight:900;font-size:12px}
+    .todo-list-row.filter{background:#fbfdfe;padding:6px 12px}
+    .todo-list-filter{width:100%;height:26px;border:1px solid var(--line);border-radius:6px;padding:0 7px;font-size:11px;background:#fff}
+    .todo-sort{border:0;background:transparent;padding:0;font-weight:900;color:inherit;text-align:left;font-size:12px}
+    .todo-sort .sort-mark{color:var(--teal);font-size:10px}
     .helper-grid{display:flex;flex-wrap:wrap;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fbfdfe}
     .helper-grid label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:6px 10px;color:var(--ink);font-size:12px;font-weight:850}
     .color-dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:4px;vertical-align:-1px;border:1px solid rgba(0,0,0,.12)}
@@ -452,6 +463,31 @@
       if(t.dataset.dashboardAddTodo){const c=state.construction[Number(t.dataset.dashboardAddTodo)];openTodoModal();$("#todoProject").value=c?.site||KR.general;$("#todoTitle").value=(c?.site||"현장")+" 할일";$("#todoDetail").value=c?.next||""}
       if(t.dataset.dashboardAddAssignment){const c=state.construction[Number(t.dataset.dashboardAddAssignment)];openAssignmentModal();$("#assignmentProject").value=c?.site||KR.general;$("#assignmentTitle").value=(c?.site||"현장")+" 일정";$("#assignmentDetail").value=c?.next||""}
     },true);
+    let todoListFilters={title:"",owner:"",status:"",priority:"",due:""},todoListSort={key:"due",dir:"desc"};
+    function todoField(t,key){return key==="title"?t.title:key==="owner"?peopleText(t):key==="status"?t.status:key==="priority"?t.priority:key==="due"?t.due:""}
+    function todoSortButton(key,label){const on=todoListSort.key===key,mark=on?`<span class="sort-mark">${todoListSort.dir==="asc"?"▲":"▼"}</span>`:"";return `<button class="todo-sort" data-todo-sort="${key}">${esc(label)}${mark}</button>`}
+    function todoListFilterInput(key,label){return `<input class="todo-list-filter" data-todo-list-filter="${key}" value="${esc(todoListFilters[key]||"")}" placeholder="${esc(label)}">`}
+    function todoFilteredRows(baseRows){
+      const rows=baseRows.filter(({t})=>Object.entries(todoListFilters).every(([k,v])=>!v||String(todoField(t,k)||"").toLowerCase().includes(v.toLowerCase())));
+      const dir=todoListSort.dir==="asc"?1:-1,key=todoListSort.key;
+      return rows.sort((a,b)=>String(todoField(a.t,key)||"").localeCompare(String(todoField(b.t,key)||"","ko"),"ko",{numeric:true})*dir);
+    }
+    todoListHtml=function(rows){
+      rows=todoFilteredRows(rows);
+      return `<div class="todo-list"><div class="todo-list-row head"><span>${todoSortButton("title","제목")}</span><span>${todoSortButton("owner","담당")}</span><span>${todoSortButton("status","상태")}</span><span>${todoSortButton("priority","우선")}</span><span>${todoSortButton("due","마감")}</span><span>관리</span></div><div class="todo-list-row filter"><span>${todoListFilterInput("title","제목")}</span><span>${todoListFilterInput("owner","담당")}</span><span>${todoListFilterInput("status","상태")}</span><span>${todoListFilterInput("priority","우선")}</span><span>${todoListFilterInput("due","마감")}</span><span></span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||KR.normal)}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">조건에 맞는 할일이 없습니다.</span></div>`}</div>`
+    }
+    renderTodoBoard=function(){
+      ensureConfigLists();ensureTaskLinks();
+      const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=[KR.all,...state.people.map(p=>p.name)];
+      const filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter===KR.all||t.status===todoStatusFilter)&&(todoOwnerFilter===KR.all||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));
+      const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter===KR.all?"active":""}" data-todo-status-filter="${KR.all}">${KR.all} <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o===KR.all?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;
+      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
+      panel.classList.remove("hidden");
+      panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
+      $("#todoSearch")?.addEventListener("input",renderTodoBoard);
+    }
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.showCompletedList!==undefined){todoStatusFilter=KR.done;todoViewMode="list";renderTodoBoard()}if(t.dataset.todoSort){todoListSort.dir=todoListSort.key===t.dataset.todoSort&&todoListSort.dir==="asc"?"desc":"asc";todoListSort.key=t.dataset.todoSort;renderTodoBoard()}},true);
+    document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);render();loadSharedState();
   </script>
 </body>
