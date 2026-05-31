@@ -116,9 +116,18 @@
     .dash-kpi-grid.small{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
     .dash-kpi-grid .dash-section{box-shadow:none}
     .dash-main>.dash-section:first-child{padding:16px}
+    .weather-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+    .weather-city{border:1px solid var(--line);border-radius:10px;background:#fbfdfe;padding:10px}
+    .forecast-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+    .forecast-day{border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px;text-align:center;font-size:12px}
+    .time-card{display:grid;align-content:center}
+    body.masking-mode .project-name,body.masking-mode .todo-card-title,body.masking-mode .linked-item strong,body.masking-mode .today-item strong,body.masking-mode td:first-child,body.masking-mode .name,body.masking-mode .memo-item,body.masking-mode .detail-cell strong{filter:blur(5px);user-select:none}
+    body.masking-mode .project-meta,body.masking-mode .todo-card-meta,body.masking-mode .meta{filter:blur(3px);user-select:none}
     @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
     @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:1180px){.weather-grid,.forecast-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:620px){.dash-kpi-grid,.dash-kpi-grid.small{grid-template-columns:1fr}}
+    @media(max-width:620px){.weather-grid,.forecast-strip{grid-template-columns:1fr}}
     .time-grid{display:grid;grid-template-columns:1fr 120px;gap:8px}.quick-durations{display:flex;gap:6px;flex-wrap:wrap}
     .google-btn{border-color:#cfe3d8;background:#f6fbf8;color:#137b46}
     .todo-page header #addProjectBtn{display:none}
@@ -549,6 +558,62 @@
     const oldTodoListHtml=todoListHtml;
     todoListHtml=function(rows){return teamKpiHtml(rows)+oldTodoListHtml(rows)}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.dashboardConstruction){openConstructionModal(Number(t.dataset.dashboardConstruction))}if(t.dataset.dashboardGoConstruction!==undefined){goToView("construction","시공일정")}if(t.dataset.refreshWeather!==undefined){updateClock();updateWeather()}},true);
+    let maskingMode=localStorage.getItem("solar-mask-mode")==="on";
+    function applyMasking(){document.body.classList.toggle("masking-mode",maskingMode);const b=$("#addProjectBtn");if(b&&currentView==="dashboard"){b.textContent=maskingMode?"마스킹 ON":"마스킹 OFF";b.classList.toggle("primary",!maskingMode);b.dataset.maskToggle="1"}}
+    const renderBaseForMask=render;
+    render=function(){renderBaseForMask();applyMasking()}
+    const cityWeather=[
+      {name:"서울",lat:37.5665,lon:126.9780},
+      {name:"대전",lat:36.3504,lon:127.3845},
+      {name:"대구",lat:35.8714,lon:128.6014},
+      {name:"부산",lat:35.1796,lon:129.0756},
+      {name:"광주",lat:35.1595,lon:126.8526}
+    ];
+    function renderWeatherBox(){
+      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
+        <section class="dash-section compact"><div class="dash-title"><h2>날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
+        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
+      </div>`
+    }
+    async function updateWeather(){
+      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
+      box.innerHTML=`<div class="meta">날씨 정보를 불러오는 중입니다.</div>`;
+      try{
+        const results=await Promise.all(cityWeather.map(async c=>{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);const j=await r.json();return{...c,current:j.current,daily:j.daily}}));
+        box.innerHTML=results.map(r=>`<div class="weather-city"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${Math.round(r.current.temperature_2m)}°C</div><div class="meta">풍속 ${Math.round(r.current.wind_speed_10m)}m/s</div></div>`).join("");
+        const daegu=results.find(r=>r.name==="대구");
+        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>`<div class="forecast-day"><strong>${d.slice(5).replace("-","/")}</strong><div>${Math.round(daegu.daily.temperature_2m_min[i])}° / ${Math.round(daegu.daily.temperature_2m_max[i])}°</div></div>`).join("");
+      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
+    }
+    const dashboardWithWeather=renderDashboard;
+    renderDashboard=function(){
+      dashboardWithWeather();
+      const main=$(".dash-main");
+      const weatherHtml=renderWeatherBox();
+      const weatherNode=document.createElement("div");
+      weatherNode.innerHTML=weatherHtml;
+      const oldWeather=[...main.children].find(x=>x.textContent.includes("날씨"));
+      if(oldWeather)oldWeather.remove();
+      main.insertBefore(weatherNode.firstElementChild,main.firstElementChild);
+      updateClock();updateWeather();
+    }
+    function personCompletionRows(rows){
+      return state.people.map(p=>{const rel=rows.filter(({t})=>taskPeople(t).includes(p.name)),done=rel.filter(({t})=>t.status===KR.done).length,rate=rel.length?Math.round(done/rel.length*100):0;return{p,rel,done,rate}});
+    }
+    teamKpiHtml=function(rows){
+      const total=rows.length,done=rows.filter(({t})=>t.status===KR.done).length,late=rows.filter(({t})=>t.status!==KR.done&&t.due&&t.due<today).length,people=personCompletionRows(rows);
+      return `<div class="dash-section compact"><div class="dash-title"><h2>우리팀 KPI</h2><span class="dash-pill">전체 완료율 ${total?Math.round(done/total*100):0}%</span></div><div class="dash-kpi-grid small"><div><div class="label">전체</div><div class="value">${total}</div></div><div><div class="label">완료</div><div class="value">${done}</div></div><div><div class="label">지연</div><div class="value">${late}</div></div></div>${people.map(x=>smallBar(`${x.p.name} ${x.rate}%`,x.done,Math.max(1,x.rel.length),x.p.color||personColor(x.p.name))).join("")}</div>`
+    }
+    todoListHtml=function(rows){
+      const sorted=todoFilteredRows(rows);
+      const table=`<div class="todo-list"><div class="todo-list-row head"><span>${todoSortButton("title","제목")}</span><span>${todoSortButton("owner","담당")}</span><span>${todoSortButton("status","상태")}</span><span>${todoSortButton("priority","우선")}</span><span>${todoSortButton("due","마감")}</span><span>관리</span></div><div class="todo-list-row filter"><span>${todoListFilterInput("title","제목")}</span><span>${todoListFilterInput("owner","담당")}</span><span>${todoListFilterInput("status","상태")}</span><span>${todoListFilterInput("priority","우선")}</span><span>${todoListFilterInput("due","마감")}</span><span></span></div>${sorted.length?sorted.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||KR.normal)}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">수정</button><button class="btn icon danger" data-delete-todo="${i}">삭제</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">조건에 맞는 할일이 없습니다.</span></div>`}</div>`;
+      return teamKpiHtml(rows)+table;
+    }
+    document.addEventListener("click",e=>{
+      const t=e.target.closest("button")||e.target;
+      if(t.dataset.maskToggle){maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking();toast(maskingMode?"마스킹 모드를 켰습니다.":"마스킹 모드를 껐습니다.")}
+      if(t.dataset.todoView==="list"&&!adminUnlocked){if(!unlockAdmin()){todoViewMode="board";setTimeout(renderTodoBoard,0);e.preventDefault();e.stopPropagation()}}
+    },true);
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
