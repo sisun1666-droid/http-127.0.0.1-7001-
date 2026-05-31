@@ -614,6 +614,74 @@
       if(t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking();return}
       if(t.dataset.todoView==="list"&&!adminUnlocked){if(!unlockAdmin()){todoViewMode="board";setTimeout(renderTodoBoard,0);e.preventDefault();e.stopPropagation()}}
     },true);
+    function localDateValue(v){
+      const m=String(v||"").match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):null;
+    }
+    function overdueDays(due){
+      const d=localDateValue(due),now=localDateValue(today);
+      return d&&now?Math.max(0,Math.floor((now-d)/86400000)):0;
+    }
+    function overdueTodoRows(){
+      return state.todos.map((t,i)=>({t:normalizeTodo(t),i}))
+        .filter(({t})=>t.due&&t.status!==KR.done&&t.due<today)
+        .sort((a,b)=>overdueDays(b.t.due)-overdueDays(a.t.due));
+    }
+    function overdueWarningHtml(){
+      const rows=overdueTodoRows();
+      return `<section class="dash-section compact" style="border:2px solid #f5b800;background:#fffdf2">
+        <div class="dash-title"><h2>마감 경과 업무 경고</h2><span class="dash-pill" style="background:#fff1cc;color:#8a4b00">지연 ${rows.length}</span></div>
+        <div class="linked-list">
+          ${rows.length?rows.slice(0,10).map(({t,i})=>{
+            const days=overdueDays(t.due);
+            return `<button class="linked-item" data-edit-todo="${i}" style="border-left:5px solid #ef4444;background:#fff7f7;text-align:left">
+              <strong>${esc(t.title||"제목 없는 할일")}</strong>
+              <div class="meta">${esc(peopleText(t))} · ${esc(t.status||"-")} · 마감 ${esc(t.due)} · <b style="color:#b91c1c">${days}일 경과</b></div>
+              <div class="meta">${esc(t.project||KR.general)} · ${esc(t.priority||KR.normal)}</div>
+            </button>`
+          }).join(""):`<div class="meta">마감 지난 업무가 없습니다.</div>`}
+        </div>
+      </section>`;
+    }
+    function renderWeatherBox(){
+      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
+        <section class="dash-section compact"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">강수 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
+        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
+      </div>`;
+    }
+    async function updateWeather(){
+      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
+      box.innerHTML=`<div class="meta">강수 정보를 불러오는 중입니다.</div>`;
+      try{
+        const results=await Promise.all(cityWeather.map(async c=>{
+          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,showers,wind_speed_10m&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
+          const j=await r.json();
+          return{...c,current:j.current,daily:j.daily};
+        }));
+        box.innerHTML=results.map(r=>{
+          const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1);
+          const danger=prob>=60||Number(sum)>=5;
+          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}%</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
+        }).join("");
+        const daegu=results.find(r=>r.name==="대구")||results[2];
+        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
+          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),hot=prob>=60||Number(sum)>=5;
+          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${sum}mm</div></div>`;
+        }).join("");
+      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
+    }
+    renderDashboard=function(){
+      ensureConfigLists();ensureTaskLinks();
+      const rows=constructionMonthRows(),q=($("#dashboardProjectSearch")?.value||"").toLowerCase(),shown=rows.filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
+      const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
+      els.dashboardView.innerHTML=`<div class="workspace-dashboard">
+        <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
+        <div class="dash-main">${renderWeatherBox()}<section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${overdueWarningHtml()}</div>
+        <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
+      </div>`;
+      $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
+      updateClock();updateWeather();applyMasking();
+    }
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
