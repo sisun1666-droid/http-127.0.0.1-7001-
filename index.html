@@ -913,11 +913,12 @@
     }
     function defaultTodoSteps(baseDate=today){
       const d=new Date(baseDate+"T00:00:00");
-      return ["지시 확인","현장 방문","자재 발주","작업 진행","완료 확인"].map((title,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return{title,due:localDateString(x),done:false}});
+      return Array.from({length:5},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return{title:"",due:localDateString(x),done:false}});
     }
     function normalizeTodoSteps(steps,baseDate=today){
       const list=Array.isArray(steps)&&steps.length?steps:defaultTodoSteps(baseDate);
-      return list.map(s=>({title:String(s.title||"단계").trim()||"단계",due:s.due||"",done:!!s.done}));
+      const oldDefaults=new Set(["지시 확인","현장 방문","자재 발주","작업 진행","완료 확인"]);
+      return list.map(s=>{const title=String(s.title||"").trim();return{title:oldDefaults.has(title)?"":title,due:s.due||"",done:!!s.done}});
     }
     function todoProgress(t){
       const steps=normalizeTodoSteps(t?.steps||[],t?.start||t?.due||today),done=steps.filter(s=>s.done).length,total=steps.length||1;
@@ -926,11 +927,11 @@
     function renderTodoSteps(steps){
       const box=$("#todoSteps");if(!box)return;
       const p=todoProgress({steps});
-      box.innerHTML=`<div class="todo-progress"><div class="todo-progress-track"><div class="todo-progress-fill" style="width:${p.pct}%"></div></div><span>${p.pct}%</span></div>${p.steps.map((s,i)=>`<div class="todo-step-row"><input type="checkbox" data-todo-step-done="${i}" ${s.done?"checked":""}><input type="text" data-todo-step-title="${i}" value="${esc(s.title)}" placeholder="단계명"><input type="date" data-todo-step-due="${i}" value="${esc(s.due)}"><button class="todo-step-remove" type="button" data-remove-todo-step="${i}">×</button></div>`).join("")}<div class="todo-step-toolbar"><button class="btn" type="button" id="addTodoStepBtn">단계 추가</button><button class="btn" type="button" id="resetTodoStepsBtn">표준 단계</button></div>`;
+      box.innerHTML=`<div class="todo-progress"><div class="todo-progress-track"><div class="todo-progress-fill" style="width:${p.pct}%"></div></div><span>${p.pct}%</span></div>${p.steps.map((s,i)=>`<div class="todo-step-row"><input type="checkbox" data-todo-step-done="${i}" ${s.done?"checked":""}><input type="text" data-todo-step-title="${i}" value="${esc(s.title)}" placeholder="진행 단계 입력"><input type="date" data-todo-step-due="${i}" value="${esc(s.due)}"><button class="todo-step-remove" type="button" data-remove-todo-step="${i}">×</button></div>`).join("")}<div class="todo-step-toolbar"><button class="btn" type="button" id="addTodoStepBtn">단계 추가</button><button class="btn" type="button" id="resetTodoStepsBtn">빈 단계</button></div>`;
     }
     function readTodoSteps(){
       const rows=[...$$(".todo-step-row")];
-      return rows.map(row=>({done:!!row.querySelector("[data-todo-step-done]")?.checked,title:row.querySelector("[data-todo-step-title]")?.value.trim()||"단계",due:row.querySelector("[data-todo-step-due]")?.value||""})).filter(s=>s.title||s.due);
+      return rows.map(row=>({done:!!row.querySelector("[data-todo-step-done]")?.checked,title:row.querySelector("[data-todo-step-title]")?.value.trim()||"",due:row.querySelector("[data-todo-step-due]")?.value||""})).filter(s=>s.title||s.due);
     }
     function cardProgressHtml(t){
       const p=todoProgress(t);
@@ -943,7 +944,7 @@
     const normalizeTodoWithSteps=normalizeTodo;
     normalizeTodo=function(t){t=normalizeTodoWithSteps(t);t.steps=normalizeTodoSteps(t.steps,t.start||t.due||today);return t}
     $("#saveTodoBtn").onclick=()=>{const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,steps:readTodoSteps(),kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy});if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 진행 단계를 저장했습니다.");render()}
-    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="addTodoStepBtn"){const steps=readTodoSteps();steps.push({title:"새 단계",due:$("#todoDue")?.value||today,done:false});renderTodoSteps(steps)}if(t.id==="resetTodoStepsBtn"){renderTodoSteps(defaultTodoSteps($("#todoStart")?.value||today))}if(t.dataset.removeTodoStep){const steps=readTodoSteps();steps.splice(Number(t.dataset.removeTodoStep),1);renderTodoSteps(steps.length?steps:defaultTodoSteps($("#todoStart")?.value||today))}},true);
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="addTodoStepBtn"){const steps=readTodoSteps();steps.push({title:"",due:$("#todoDue")?.value||today,done:false});renderTodoSteps(steps)}if(t.id==="resetTodoStepsBtn"){renderTodoSteps(defaultTodoSteps($("#todoStart")?.value||today))}if(t.dataset.removeTodoStep){const steps=readTodoSteps();steps.splice(Number(t.dataset.removeTodoStep),1);renderTodoSteps(steps.length?steps:defaultTodoSteps($("#todoStart")?.value||today))}},true);
     document.addEventListener("change",e=>{if(e.target?.dataset.todoStepDone!==undefined)renderTodoSteps(readTodoSteps())},true);
     assignmentTaskHtml=function(t){const i=state.assignments.indexOf(t),c=personColor(t.owner),addr=t.location?`<br>주소: ${esc(t.location)}`:"";return `<div class="calendar-task" style="border-left-color:${esc(c)};background:${esc(hexToRgba(c,.22))}" data-open-assignment="${i}" title="${esc([t.detail,t.location].filter(Boolean).join(" / ")||t.title)}"><span class="color-dot" style="background:${esc(c)}"></span>${esc(peopleText(t))} · ${esc(t.title)}<br>${esc(t.status)} · ${esc(t.priority)}${addr}</div>`}
     const renderTodoBoardWithAddress=renderTodoBoard;
