@@ -912,13 +912,15 @@
       requestAnimationFrame(()=>{const modal=$("#"+id+" .modal");if(modal)modal.scrollTop=0});
     }
     function defaultTodoSteps(baseDate=today){
-      const d=new Date(baseDate+"T00:00:00");
-      return [{title:"",due:localDateString(d),done:false}];
+      return [{title:"",due:"",done:false}];
     }
     function normalizeTodoSteps(steps,baseDate=today){
       const list=Array.isArray(steps)&&steps.length?steps:defaultTodoSteps(baseDate);
       const oldDefaults=new Set(["지시 확인","현장 방문","자재 발주","작업 진행","완료 확인"]);
-      return list.map(s=>{const title=String(s.title||"").trim();return{title:oldDefaults.has(title)?"":title,due:s.due||"",done:!!s.done}});
+      const normalized=list.map(s=>{const title=String(s.title||"").trim();return{title:oldDefaults.has(title)?"":title,due:s.due||"",done:!!s.done}});
+      const meaningful=normalized.filter(s=>s.title||s.done);
+      if(!meaningful.length)return defaultTodoSteps(baseDate);
+      return normalized.filter(s=>s.title||s.due||s.done);
     }
     function todoProgress(t){
       const steps=normalizeTodoSteps(t?.steps||[],t?.start||t?.due||today),done=steps.filter(s=>s.done).length,total=steps.length||1;
@@ -933,9 +935,13 @@
       const rows=[...$$(".todo-step-row")];
       return rows.map(row=>({done:!!row.querySelector("[data-todo-step-done]")?.checked,title:row.querySelector("[data-todo-step-title]")?.value.trim()||"",due:row.querySelector("[data-todo-step-due]")?.value||""})).filter(s=>s.title||s.due);
     }
-    function applyTodoCompleteStep(){
+    function syncTodoStatusStep(){
       const status=$("#todoStatus")?.value;
-      if(status!=="완료")return;
+      if(status!=="완료"){
+        const steps=readTodoSteps().filter(s=>s.title!=="완료");
+        renderTodoSteps(steps.length?steps:defaultTodoSteps());
+        return;
+      }
       const completedAt=localDateString(new Date());
       const steps=readTodoSteps();
       let target=steps.find(s=>s.title==="완료")||steps.find(s=>!s.title);
@@ -955,10 +961,10 @@
     openAssignmentModal=function(...args){openAssignmentModalScrollTop(...args);resetTaskModalScroll("assignmentModal")}
     const normalizeTodoWithSteps=normalizeTodo;
     normalizeTodo=function(t){t=normalizeTodoWithSteps(t);t.steps=normalizeTodoSteps(t.steps,t.start||t.due||today);return t}
-    $("#saveTodoBtn").onclick=()=>{applyTodoCompleteStep();const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,steps:readTodoSteps(),kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy});if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 진행 단계를 저장했습니다.");render()}
+    $("#saveTodoBtn").onclick=()=>{syncTodoStatusStep();const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,steps:readTodoSteps(),kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy});if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 진행 단계를 저장했습니다.");render()}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="addTodoStepBtn"){const steps=readTodoSteps();steps.push({title:"",due:$("#todoDue")?.value||today,done:false});renderTodoSteps(steps)}if(t.id==="resetTodoStepsBtn"){renderTodoSteps(defaultTodoSteps($("#todoStart")?.value||today))}if(t.dataset.removeTodoStep){const steps=readTodoSteps();steps.splice(Number(t.dataset.removeTodoStep),1);renderTodoSteps(steps.length?steps:defaultTodoSteps($("#todoStart")?.value||today))}},true);
     document.addEventListener("change",e=>{if(e.target?.dataset.todoStepDone!==undefined)renderTodoSteps(readTodoSteps())},true);
-    document.addEventListener("change",e=>{if(e.target?.id==="todoStatus")applyTodoCompleteStep()},true);
+    document.addEventListener("change",e=>{if(e.target?.id==="todoStatus")syncTodoStatusStep()},true);
     assignmentTaskHtml=function(t){const i=state.assignments.indexOf(t),c=personColor(t.owner),addr=t.location?`<br>주소: ${esc(t.location)}`:"";return `<div class="calendar-task" style="border-left-color:${esc(c)};background:${esc(hexToRgba(c,.22))}" data-open-assignment="${i}" title="${esc([t.detail,t.location].filter(Boolean).join(" / ")||t.title)}"><span class="color-dot" style="background:${esc(c)}"></span>${esc(peopleText(t))} · ${esc(t.title)}<br>${esc(t.status)} · ${esc(t.priority)}${addr}</div>`}
     const renderTodoBoardWithAddress=renderTodoBoard;
     renderTodoBoard=function(){
