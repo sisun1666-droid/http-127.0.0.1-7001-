@@ -1200,7 +1200,8 @@
       function dbRows(){const db=loadDb();return Array.isArray(db.rows)?db.rows:[]}
       function dbColumns(){const rows=dbRows();return rows[0]?Object.keys(rows[0]):[]}
       function dbCell(row,names){const keys=Object.keys(row||{});for(const name of names){const found=keys.find(k=>k.replace(/\s/g,"").toLowerCase()===String(name).replace(/\s/g,"").toLowerCase());if(found&&row[found]!==undefined&&row[found]!==null&&String(row[found]).trim()!=="")return String(row[found]).trim()}return""}
-      function dbSummary(row){return [dbCell(row,["발전소명","현장명","사업장명","발전소","상호"]),dbCell(row,["사업주","사업주명","대표자","고객명","발주처","성명"]),dbCell(row,["현장 주소","주소","설치주소","현장주소","소재지"])].filter(Boolean).join(" · ")}
+      function dbKw(row){const v=dbCell(row,["공사용량","발전허가용량","공사_용량","발전_허가용량","용량(kW)","용량","설비용량","kw","kW"]);return v?`${v}kW`:""}
+      function dbSummary(row){return [dbCell(row,["발전소명","현장명","사업장명","발전소","상호"]),dbKw(row),dbCell(row,["사업주","사업주명","대표자","고객명","발주처","성명"]),dbCell(row,["현장 주소","주소","설치주소","현장주소","소재지"])].filter(Boolean).join(" · ")}
       function searchDb(q,limit=8){q=String(q||"").trim().toLowerCase();if(!q)return[];return dbRows().map((row,i)=>({row,i,text:Object.values(row).join(" ").toLowerCase()})).filter(x=>x.text.includes(q)).slice(0,limit)}
       window.solarDb={rows:dbRows,columns:dbColumns,search:searchDb,cell:dbCell,summary:dbSummary};
       function injectDbChrome(){
