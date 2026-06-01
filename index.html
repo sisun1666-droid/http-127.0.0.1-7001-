@@ -856,6 +856,199 @@
     goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
     if(currentView==="assignments"){resetAssignmentCalendarToToday();syncViewChrome()}
     if(currentView==="dashboard"){resetDashboardToToday();syncViewChrome()}
+    (function setupGoogleDriveFiles(){
+      const DRIVE_SCOPE="https://www.googleapis.com/auth/drive.file";
+      const driveStoreKey="solar-google-drive-config-v1";
+      const driveTokenState={client:null,token:"",expiresAt:0,query:"",folderId:"",folderName:"태양광 공무팀 프로젝트 파일",files:[]};
+      const driveTypeMap={folder:"FOLDER","application/vnd.google-apps.folder":"FOLDER","text/markdown":"MD","text/plain":"TXT","text/html":"HTML","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"XLS","application/vnd.ms-excel":"XLS","application/pdf":"PDF","image/png":"IMG","image/jpeg":"IMG"};
+      function driveConfig(){try{return JSON.parse(localStorage.getItem(driveStoreKey)||"{}")}catch{return{}}}
+      function saveDriveConfig(cfg){localStorage.setItem(driveStoreKey,JSON.stringify({...driveConfig(),...cfg}))}
+      function injectDriveChrome(){
+        if(!$("#driveView")){
+          els.adminView.insertAdjacentHTML("afterend",`<section class="panel hidden" id="driveView"></section>`);
+          els.driveView=$("#driveView");
+        }
+        if(!$("#driveStyle")){
+          document.head.insertAdjacentHTML("beforeend",`<style id="driveStyle">
+            #driveView{box-shadow:none;background:transparent;border:0;padding:0}
+            .drive-shell{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+            .drive-side,.drive-main,.drive-card{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px}
+            .drive-side{display:grid;gap:12px}.drive-main{min-width:0}
+            .drive-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+            .drive-path{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;font-weight:850;margin-top:4px}
+            .drive-file-list{border-top:1px solid var(--line);margin-top:12px}
+            .drive-row{display:grid;grid-template-columns:54px minmax(0,1fr) 110px 150px 126px;gap:10px;align-items:center;min-height:58px;border-bottom:1px solid var(--line);padding:8px 0}
+            .drive-row button{text-align:left}.drive-type{display:inline-grid;place-items:center;min-width:38px;height:24px;border-radius:6px;background:#edf3f5;color:#52636b;font-size:11px;font-weight:900}
+            .drive-type.xls{background:#e8f5ed;color:#177245}.drive-type.folder{background:#fff2d9;color:#9a5b08}.drive-type.html{background:#edf0ff;color:#4056b2}.drive-type.img{background:#f7eafa;color:#7c3b89}
+            .drive-name{font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.drive-empty{border:1px dashed var(--line);border-radius:8px;padding:28px;text-align:center;color:var(--muted);background:#fbfdfe;margin-top:12px}
+            .drive-settings{display:grid;gap:8px}.drive-settings .field{width:100%}.drive-note{font-size:12px;line-height:1.55;color:var(--muted)}
+            @media(max-width:900px){.drive-shell{grid-template-columns:1fr}.drive-row{grid-template-columns:44px minmax(0,1fr);gap:8px}.drive-row .meta,.drive-row .drive-actions{grid-column:2}.drive-row .drive-actions{justify-content:flex-start}}
+          </style>`);
+        }
+      }
+      function ensureDriveNav(){
+        if(!state.nav.some(n=>n.label==="프로젝트 파일")){
+          const adminIndex=state.nav.findIndex(n=>n.label.includes("관리자"));
+          state.nav.splice(adminIndex>=0?adminIndex:state.nav.length,0,{icon:"▤",label:"프로젝트 파일"});
+        }
+      }
+      const baseNormalizeForDrive=normalizeState;
+      normalizeState=function(){baseNormalizeForDrive();ensureDriveNav()};
+      const baseViewForLabelForDrive=viewForLabel;
+      viewForLabel=function(label){return label.includes("프로젝트 파일")||label.includes("Drive")?"drive":baseViewForLabelForDrive(label)};
+      const baseIsActiveForDrive=isActive;
+      isActive=function(label){return currentView==="drive"?label.includes("프로젝트 파일"):baseIsActiveForDrive(label)};
+      const baseRenderViewForDrive=renderView;
+      renderView=function(){
+        injectDriveChrome();
+        baseRenderViewForDrive();
+        const isDrive=currentView==="drive";
+        $("#kpis").classList.toggle("hidden",isDrive||currentView==="dashboard"||currentView==="assignments"||currentView==="todos");
+        els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");
+        els.adminView.classList.toggle("hidden",currentView!=="admin");
+        els.driveView.classList.toggle("hidden",!isDrive);
+        els.mainGrid.classList.toggle("hidden",isDrive||currentView==="dashboard"||currentView==="admin");
+        document.body.classList.toggle("drive-page",isDrive);
+      };
+      const baseRenderCurrentForDrive=renderCurrentContent;
+      renderCurrentContent=function(){
+        if(currentView==="drive"){syncViewChrome();renderDriveView();return}
+        baseRenderCurrentForDrive();
+      };
+      const baseSyncViewChromeForDrive=syncViewChrome;
+      syncViewChrome=function(){
+        baseSyncViewChromeForDrive();
+        if(currentView==="drive"){
+          els.pageTitle.textContent="프로젝트 파일";
+          els.pageSub.textContent="Google Drive에 프로젝트별 파일을 만들고 저장합니다.";
+          $("#addProjectBtn").textContent="파일 업로드";
+        }
+      };
+      const baseGoToViewForDrive=goToView;
+      goToView=function(view,label=""){baseGoToViewForDrive(view,label);if(view==="drive"){syncViewChrome();renderDriveView();applyMasking()}};
+      const originalAddProjectClick=document.addEventListener;
+      function typeLabel(file){const key=file.mimeType==="application/vnd.google-apps.folder"?"folder":file.mimeType;return driveTypeMap[key]||((file.name||"").split(".").pop()||"FILE").slice(0,4).toUpperCase()}
+      function typeClass(file){const t=typeLabel(file).toLowerCase();return t==="folder"?"folder":t==="xls"?"xls":t==="html"?"html":t==="img"?"img":""}
+      function bytes(n){if(!n)return "-";const u=["B","KB","MB","GB"];let i=0,v=Number(n);while(v>=1024&&i<u.length-1){v/=1024;i++}return `${v.toFixed(i?1:0)} ${u[i]}`}
+      function driveDate(v){return v?new Date(v).toLocaleString("ko-KR",{dateStyle:"short",timeStyle:"short"}):"-"}
+      function renderDriveView(){
+        injectDriveChrome();
+        const cfg=driveConfig(),connected=!!driveTokenState.token&&Date.now()<driveTokenState.expiresAt;
+        const files=driveTokenState.files.filter(f=>!driveTokenState.query||f.name.toLowerCase().includes(driveTokenState.query.toLowerCase()));
+        els.driveView.innerHTML=`<div class="drive-shell">
+          <aside class="drive-side">
+            <div class="drive-card">
+              <div class="panel-title"><h2>Google Drive</h2><span class="badge ${connected?"green":"amber"}">${connected?"연결됨":"설정 필요"}</span></div>
+              <div class="drive-settings">
+                <label class="label">OAuth Client ID</label>
+                <input class="field" id="driveClientId" value="${esc(cfg.clientId||"")}" placeholder="Google Cloud OAuth Client ID">
+                <label class="label">프로젝트 루트 폴더명</label>
+                <input class="field" id="driveRootName" value="${esc(cfg.rootName||driveTokenState.folderName)}">
+                <button class="btn primary" id="driveSaveConfigBtn">설정 저장</button>
+                <button class="btn" id="driveConnectBtn">${connected?"다시 연결":"Google 계정 연결"}</button>
+              </div>
+              <p class="drive-note">처음에는 Google Cloud에서 Drive API 사용 설정과 OAuth 승인된 JavaScript 원본에 현재 GitHub Pages 주소를 추가해야 합니다.</p>
+            </div>
+            <div class="drive-card">
+              <div class="label">현재 폴더</div>
+              <div class="name" id="driveFolderName">${esc(driveTokenState.folderName)}</div>
+              <div class="drive-actions" style="margin-top:10px">
+                <button class="btn" id="driveCreateRootBtn">폴더 생성/열기</button>
+                <button class="btn" id="driveRefreshBtn">새로고침</button>
+              </div>
+            </div>
+          </aside>
+          <section class="drive-main">
+            <div class="panel-title">
+              <div><h2>프로젝트 파일</h2><div class="drive-path">Google Drive · ${esc(driveTokenState.folderName)} · ${driveTokenState.files.length}개 항목</div></div>
+              <div class="drive-actions">
+                <input class="search" id="driveSearch" placeholder="파일명 검색" value="${esc(driveTokenState.query)}">
+                <button class="btn" id="driveNewFolderBtn">폴더 생성</button>
+                <label class="btn primary" for="driveUploadInput">파일 업로드</label>
+                <input id="driveUploadInput" type="file" multiple hidden>
+              </div>
+            </div>
+            <div class="drive-file-list">
+              ${files.length?files.map(f=>`<div class="drive-row">
+                <span class="drive-type ${typeClass(f)}">${esc(typeLabel(f))}</span>
+                <button class="btn" data-drive-open="${esc(f.id)}"><span class="drive-name">${esc(f.name)}</span></button>
+                <span class="meta">${bytes(f.size)}</span>
+                <span class="meta">${driveDate(f.modifiedTime)}</span>
+                <span class="drive-actions"><button class="btn icon" title="열기" data-drive-open="${esc(f.id)}">↗</button><button class="btn icon danger" title="삭제" data-drive-delete="${esc(f.id)}">×</button></span>
+              </div>`).join(""):`<div class="drive-empty">Google Drive 폴더를 생성하거나 파일을 업로드하면 여기에 표시됩니다.</div>`}
+            </div>
+          </section>
+        </div>`;
+        $("#driveSearch")?.addEventListener("input",e=>{driveTokenState.query=e.target.value;renderDriveView()});
+        $("#driveUploadInput")?.addEventListener("change",e=>uploadDriveFiles([...e.target.files]));
+      }
+      function loadScript(src){return new Promise((resolve,reject)=>{if([...document.scripts].some(s=>s.src===src))return resolve();const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+      async function ensureDriveToken(){
+        const cfg=driveConfig();
+        if(!cfg.clientId){toast("먼저 OAuth Client ID를 저장하세요.");return false}
+        if(driveTokenState.token&&Date.now()<driveTokenState.expiresAt)return true;
+        await loadScript("https://accounts.google.com/gsi/client");
+        return new Promise(resolve=>{
+          driveTokenState.client=google.accounts.oauth2.initTokenClient({client_id:cfg.clientId,scope:DRIVE_SCOPE,callback:r=>{
+            if(r?.access_token){driveTokenState.token=r.access_token;driveTokenState.expiresAt=Date.now()+Math.max(300,Number(r.expires_in||3600)-60)*1000;toast("Google Drive에 연결했습니다.");resolve(true)}
+            else resolve(false);
+          }});
+          driveTokenState.client.requestAccessToken({prompt:"consent"});
+        });
+      }
+      async function driveFetch(url,options={}){
+        if(!await ensureDriveToken())throw new Error("Drive token missing");
+        const r=await fetch(url,{...options,headers:{Authorization:`Bearer ${driveTokenState.token}`,...(options.headers||{})}});
+        if(!r.ok)throw new Error(`Drive API ${r.status}`);
+        return r;
+      }
+      async function ensureRootFolder(){
+        const cfg=driveConfig(),name=cfg.rootName||driveTokenState.folderName;
+        driveTokenState.folderName=name;
+        const q=encodeURIComponent(`name='${name.replaceAll("'","\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const found=await (await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime,size,mimeType,webViewLink)`)).json();
+        if(found.files?.[0]){driveTokenState.folderId=found.files[0].id;return driveTokenState.folderId}
+        const created=await (await driveFetch("https://www.googleapis.com/drive/v3/files?fields=id,name",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder"})})).json();
+        driveTokenState.folderId=created.id;return created.id;
+      }
+      async function refreshDriveFiles(){
+        try{
+          const folderId=await ensureRootFolder();
+          const q=encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+          const data=await (await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=folder,name&fields=files(id,name,mimeType,size,modifiedTime,webViewLink,webContentLink)`)).json();
+          driveTokenState.files=data.files||[];
+          renderDriveView();
+        }catch(err){toast("Drive 목록을 불러오지 못했습니다.");console.warn(err)}
+      }
+      async function createDriveFolder(){
+        const name=prompt("생성할 폴더 이름",`프로젝트_${localDateString().replaceAll("-","")}`);
+        if(!name)return;
+        try{await ensureRootFolder();await driveFetch("https://www.googleapis.com/drive/v3/files",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder",parents:[driveTokenState.folderId]})});toast("폴더를 생성했습니다.");refreshDriveFiles()}catch(err){toast("폴더 생성에 실패했습니다.");console.warn(err)}
+      }
+      async function uploadDriveFiles(files){
+        if(!files.length)return;
+        try{
+          await ensureRootFolder();
+          for(const file of files){
+            const meta={name:file.name,parents:[driveTokenState.folderId]},boundary="drive-upload-"+Date.now();
+            const body=new Blob([`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: ${file.type||"application/octet-stream"}\r\n\r\n`,file,`\r\n--${boundary}--`]);
+            await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name",{method:"POST",headers:{"Content-Type":`multipart/related; boundary=${boundary}`},body});
+          }
+          toast(`${files.length}개 파일을 업로드했습니다.`);refreshDriveFiles();
+        }catch(err){toast("파일 업로드에 실패했습니다.");console.warn(err)}
+      }
+      document.addEventListener("click",e=>{
+        const t=e.target.closest("button,[data-drive-open],[data-drive-delete],label")||e.target;
+        if(currentView==="drive"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();$("#driveUploadInput")?.click()}
+        if(t.id==="driveSaveConfigBtn"){saveDriveConfig({clientId:$("#driveClientId").value.trim(),rootName:$("#driveRootName").value.trim()||driveTokenState.folderName});toast("Drive 설정을 저장했습니다.");renderDriveView()}
+        if(t.id==="driveConnectBtn"){ensureDriveToken().then(ok=>ok&&refreshDriveFiles())}
+        if(t.id==="driveCreateRootBtn"||t.id==="driveRefreshBtn"){refreshDriveFiles()}
+        if(t.id==="driveNewFolderBtn"){createDriveFolder()}
+        if(t.dataset.driveOpen){const f=driveTokenState.files.find(x=>x.id===t.dataset.driveOpen);if(f)window.open(f.webViewLink||`https://drive.google.com/open?id=${f.id}`,"_blank")}
+        if(t.dataset.driveDelete){const f=driveTokenState.files.find(x=>x.id===t.dataset.driveDelete);if(f&&confirm(`${f.name} 파일을 휴지통으로 이동할까요?`)){driveFetch(`https://www.googleapis.com/drive/v3/files/${f.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({trashed:true})}).then(()=>{toast("파일을 휴지통으로 이동했습니다.");refreshDriveFiles()}).catch(()=>toast("삭제에 실패했습니다."))}}
+      },true);
+      injectDriveChrome();
+    })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
