@@ -702,10 +702,26 @@
     document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="kakaoTodoBtn"){e.preventDefault();$("#kakaoTodoText").value=todoKakaoMessage(currentTodoFormForKakao());$("#kakaoTodoModal").classList.add("open");$("#kakaoTodoText").focus();$("#kakaoTodoText").select()}if(t.id==="copyKakaoTodoBtn"){e.preventDefault();const text=$("#kakaoTodoText").value;try{await navigator.clipboard.writeText(text);toast("카톡 메시지를 복사했습니다.")}catch{$("#kakaoTodoText").focus();$("#kakaoTodoText").select();document.execCommand("copy");toast("카톡 메시지를 복사했습니다.")}}if(t.id==="openKakaoTodoBtn"){e.preventDefault();try{await navigator.clipboard.writeText($("#kakaoTodoText").value)}catch{}toast("복사했습니다. 카톡 대화창에 붙여넣으세요.");location.href="kakaotalk://"}},true);
     function applyMasking(){document.body.classList.toggle("masking-mode",maskingMode);const b=$("#maskToggleBtn"),add=$("#addProjectBtn");if(b){b.textContent=maskingMode?"마스킹 ON":"마스킹 OFF";b.classList.toggle("primary",true);b.setAttribute("aria-pressed",maskingMode?"true":"false")}if(add)add.style.display=currentView==="dashboard"?"none":""}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="maskToggleBtn"||t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking()}},true);
+    function syncViewChrome(){
+      if(currentView==="assignments"){
+        els.pageTitle.textContent="일정관리";els.pageSub.textContent="회의는 짧게, 성과는 길게 가면 좋겠습니다.";els.tableTitle.textContent="일정관리";
+        $("#addProjectBtn").textContent="일정 등록";$("#addContentBtn").textContent="일정 등록";
+      }else if(currentView==="todos"){
+        els.pageTitle.textContent="할일관리";els.pageSub.textContent="작게 쪼개면 일도 덜 무서워 보입니다.";els.tableTitle.textContent="할일관리";
+        $("#addProjectBtn").textContent="할일 추가";$("#addContentBtn").textContent="할일 추가";
+      }
+    }
     function resetAssignmentCalendarToToday(){setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,today)}
+    const baseRenderCurrentContentForCalendar=renderCurrentContent;
+    renderCurrentContent=function(){
+      if(currentView==="assignments")resetAssignmentCalendarToToday();
+      baseRenderCurrentContentForCalendar();
+      syncViewChrome();
+      if(currentView==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}
+    }
     const baseGoToViewForCalendar=goToView;
-    goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
-    if(currentView==="assignments")resetAssignmentCalendarToToday();
+    goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
+    if(currentView==="assignments"){resetAssignmentCalendarToToday();syncViewChrome()}
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
