@@ -478,7 +478,13 @@
       if(t.dataset.dashboardAddTodo){const c=state.construction[Number(t.dataset.dashboardAddTodo)];openTodoModal();$("#todoProject").value=c?.site||KR.general;$("#todoTitle").value=(c?.site||"현장")+" 할일";$("#todoDetail").value=c?.next||""}
       if(t.dataset.dashboardAddAssignment){const c=state.construction[Number(t.dataset.dashboardAddAssignment)];openAssignmentModal();$("#assignmentProject").value=c?.site||KR.general;$("#assignmentTitle").value=(c?.site||"현장")+" 일정";$("#assignmentDetail").value=c?.next||""}
     },true);
-    let todoListFilters={title:"",owner:"",status:"",priority:"",due:""},todoListSort={key:"due",dir:"desc"};
+    let todoListFilters={title:"",owner:"",status:"",priority:"",due:""},todoListSort={key:"due",dir:"desc"},todoSearchComposing=false,todoListFilterComposing=null;
+    function bindTodoSearchInput(){
+      const input=$("#todoSearch");if(!input)return;
+      input.addEventListener("compositionstart",()=>{todoSearchComposing=true});
+      input.addEventListener("compositionend",()=>{todoSearchComposing=false;renderTodoBoard()});
+      input.addEventListener("input",()=>{if(!todoSearchComposing)renderTodoBoard()});
+    }
     function todoField(t,key){return key==="title"?t.title:key==="owner"?peopleText(t):key==="status"?t.status:key==="priority"?t.priority:key==="due"?t.due:""}
     function todoSortButton(key,label){const on=todoListSort.key===key,mark=on?`<span class="sort-mark">${todoListSort.dir==="asc"?"▲":"▼"}</span>`:"";return `<button class="todo-sort" data-todo-sort="${key}">${esc(label)}${mark}</button>`}
     function todoListFilterInput(key,label){return `<input class="todo-list-filter" data-todo-list-filter="${key}" value="${esc(todoListFilters[key]||"")}" placeholder="${esc(label)}">`}
@@ -499,10 +505,12 @@
       const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
       panel.classList.remove("hidden");
       panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
-      $("#todoSearch")?.addEventListener("input",renderTodoBoard);
+      bindTodoSearchInput();
     }
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.showCompletedList!==undefined){todoStatusFilter=KR.done;todoViewMode="list";renderTodoBoard()}if(t.dataset.todoSort){todoListSort.dir=todoListSort.key===t.dataset.todoSort&&todoListSort.dir==="asc"?"desc":"asc";todoListSort.key=t.dataset.todoSort;renderTodoBoard()}},true);
-    document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
+    document.addEventListener("compositionstart",e=>{const t=e.target;if(t.dataset.todoListFilter)todoListFilterComposing=t.dataset.todoListFilter},true);
+    document.addEventListener("compositionend",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilterComposing=null;todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
+    document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;if(todoListFilterComposing===t.dataset.todoListFilter)return;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
     function monthValue(){return `${els.calendarYear.value||today.slice(0,4)}-${els.calendarMonth.value||today.slice(5,7)}`}
     function inSelectedConstructionMonth(c){const ym=monthValue();return [c.start,c.end].some(d=>d&&d.startsWith(ym))||(!c.end&&c.start&&c.start<=`${ym}-31`)}
     function constructionMonthRows(){return state.construction.map((c,i)=>({c,i})).filter(({c})=>inSelectedConstructionMonth(c))}
