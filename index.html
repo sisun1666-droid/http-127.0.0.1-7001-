@@ -1231,9 +1231,9 @@
       const baseNormalizeForDb=normalizeState;
       normalizeState=function(){baseNormalizeForDb();ensureDbNav()};
       const baseViewForLabelForDb=viewForLabel;
-      viewForLabel=function(label){return label==="DB"?"db":baseViewForLabelForDb(label)};
+      viewForLabel=function(label){return label.includes("DB")?"db":baseViewForLabelForDb(label)};
       const baseIsActiveForDb=isActive;
-      isActive=function(label){return currentView==="db"?label==="DB":baseIsActiveForDb(label)};
+      isActive=function(label){return currentView==="db"?label.includes("DB"):baseIsActiveForDb(label)};
       const baseRenderViewForDb=renderView;
       renderView=function(){
         injectDbChrome();baseRenderViewForDb();
@@ -1506,6 +1506,50 @@
       },true);
       if(localStorage.getItem(viewStorageKey)==="reports")currentView="reports";
       injectReportChrome();
+    })();
+    (function setupCategoryPolish(){
+      const extendedViews=new Set(["drive","reports","db"]);
+      if(!$("#categoryPolishStyle")){
+        document.head.insertAdjacentHTML("beforeend",`<style id="categoryPolishStyle">
+          header{position:relative;overflow:hidden;border-radius:10px;padding:12px 14px;margin:-8px -14px 18px}
+          header:before{content:"";position:absolute;inset:0;border-radius:10px;background:linear-gradient(90deg,#eaf8f6,#f8fbfd 62%,transparent);opacity:.82;z-index:-1}
+          body.view-dashboard header:before{background:linear-gradient(90deg,#e9f7ff,#f8fbfd 62%,transparent)}
+          body.view-construction header:before{background:linear-gradient(90deg,#eef7f1,#f8fbfd 62%,transparent)}
+          body.view-todos header:before{background:linear-gradient(90deg,#fff7df,#f8fbfd 62%,transparent)}
+          body.view-assignments header:before{background:linear-gradient(90deg,#f1ecff,#f8fbfd 62%,transparent)}
+          body.view-drive header:before{background:linear-gradient(90deg,#eaf2ff,#f8fbfd 62%,transparent)}
+          body.view-reports header:before{background:linear-gradient(90deg,#fff0e8,#f8fbfd 62%,transparent)}
+          body.view-db header:before{background:linear-gradient(90deg,#e9f8ef,#f8fbfd 62%,transparent)}
+          body.view-admin header:before{background:linear-gradient(90deg,#f0f3f7,#f8fbfd 62%,transparent)}
+          header h1{letter-spacing:0}
+        </style>`);
+      }
+      function applyCategoryChrome(){
+        document.body.className=document.body.className.replace(/\bview-\S+/g,"").trim();
+        document.body.classList.add(`view-${currentView}`);
+        if(extendedViews.has(currentView)){
+          $("#kpis")?.classList.add("hidden");
+          els.dashboardView?.classList.add("hidden");
+          els.adminView?.classList.add("hidden");
+          els.mainGrid?.classList.add("hidden");
+          if(els.driveView)els.driveView.classList.toggle("hidden",currentView!=="drive");
+          if(els.reportView)els.reportView.classList.toggle("hidden",currentView!=="reports");
+          if(els.dbView)els.dbView.classList.toggle("hidden",currentView!=="db");
+          $("#sharedNotice")?.classList.add("hidden");
+        }else{
+          $("#sharedNotice")?.classList.remove("hidden");
+          if(els.driveView)els.driveView.classList.add("hidden");
+          if(els.reportView)els.reportView.classList.add("hidden");
+          if(els.dbView)els.dbView.classList.add("hidden");
+        }
+      }
+      const baseSyncForPolish=syncViewChrome;
+      syncViewChrome=function(){baseSyncForPolish();applyCategoryChrome()};
+      const baseRenderViewForPolish=renderView;
+      renderView=function(){baseRenderViewForPolish();applyCategoryChrome()};
+      const baseGoToViewForPolish=goToView;
+      goToView=function(view,label=""){baseGoToViewForPolish(view,label);applyCategoryChrome()};
+      applyCategoryChrome();
     })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
