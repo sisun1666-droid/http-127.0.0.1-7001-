@@ -151,6 +151,42 @@
     .time-grid{display:grid;grid-template-columns:1fr 120px;gap:8px}.quick-durations{display:flex;gap:6px;flex-wrap:wrap}
     .google-btn{border-color:#cfe3d8;background:#f6fbf8;color:#137b46}
     .todo-page header #addProjectBtn{display:none}
+    #assignmentModal,#todoModal{align-items:stretch;justify-content:flex-end;padding:0;background:rgba(20,28,32,.32)}
+    #assignmentModal .modal,#todoModal .modal{width:min(430px,100vw);max-height:none;height:100vh;border:0;border-left:1px solid #dfe9e3;border-radius:0;background:#fffdf6;box-shadow:-10px 0 28px rgba(20,32,38,.18);padding:20px 20px 0}
+    #assignmentModal .modal-head,#todoModal .modal-head{align-items:center;margin:0 0 18px}
+    #assignmentModal .modal-head h2,#todoModal .modal-head h2{font-size:18px;font-weight:900;letter-spacing:0;color:#283531}
+    #assignmentModal .modal-head .btn.icon,#todoModal .modal-head .btn.icon{border:0;background:transparent;color:#9aa29d;font-size:24px;font-weight:400;width:32px;min-height:32px}
+    #assignmentModal .form-grid,#todoModal .form-grid{display:flex;flex-direction:column;gap:12px}
+    #assignmentModal .form-row,#todoModal .form-row{display:grid;gap:7px}
+    #assignmentModal .form-row.full,#todoModal .form-row.full{grid-column:auto}
+    #assignmentModal .form-row label,#todoModal .form-row label{font-size:12px;font-weight:900;color:#59665f}
+    #assignmentModal .field,#assignmentModal select,#todoModal .field,#todoModal select{width:100%;min-height:38px;border:1px solid #e8ebe4;border-radius:12px;background:#fffef8;color:#2b3732;box-shadow:0 1px 5px rgba(45,55,45,.05);outline:none}
+    #assignmentModal .field:focus,#assignmentModal select:focus,#todoModal .field:focus,#todoModal select:focus{border-color:#9fbfb5;box-shadow:0 0 0 3px rgba(8,125,143,.14)}
+    #assignmentModal input[type="checkbox"],#todoModal input[type="checkbox"]{width:16px;height:16px;accent-color:var(--teal);vertical-align:-3px}
+    #assignmentModal .time-grid,#todoModal .time-grid{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:8px}
+    #assignmentModal .quick-durations,#todoModal .quick-durations{gap:8px}
+    #assignmentModal .quick-durations .btn,#todoModal .quick-durations .btn{min-height:34px;border-radius:999px;background:#fffef8;border-color:#e8ebe4;color:#4c5a54;padding:0 14px;box-shadow:none}
+    #assignmentModal .quick-durations .btn.primary,#todoModal .quick-durations .btn.primary{background:#0b8b85;border-color:#0b8b85;color:#fff}
+    #assignmentModal .helper-grid,#todoModal .helper-grid{border-color:#e8ebe4;border-radius:12px;background:#fffef8;box-shadow:0 1px 5px rgba(45,55,45,.05)}
+    #assignmentModal textarea.field,#todoModal textarea.field{min-height:74px;line-height:1.5;padding-top:10px}
+    #assignmentModal .toolbar,#todoModal .toolbar{position:sticky;bottom:0;margin:18px -20px 0!important;padding:14px 20px;background:linear-gradient(180deg,rgba(255,253,246,.8),#fffdf6 30%);border-top:1px solid #edf0ea;justify-content:flex-end}
+    #assignmentModal .toolbar .btn,#todoModal .toolbar .btn{border-radius:12px}
+    #assignmentModal .toolbar .btn.primary,#todoModal .toolbar .btn.primary{background:#0b8b85;border-color:#0b8b85}
+    #assignmentModal .form-row:has(#assignmentTitle),#todoModal .form-row:has(#todoTitle){order:1}
+    #assignmentModal .form-row:has(#assignmentAllDay),#todoModal .form-row:has(#todoAllDay){order:2}
+    #assignmentModal .form-row:has(#assignmentStart),#todoModal .form-row:has(#todoStart){order:3}
+    #assignmentModal .form-row:has(#assignmentDue),#todoModal .form-row:has(#todoDue){order:4}
+    #assignmentModal .form-row:has([data-duration-min]),#todoModal .form-row:has([data-todo-duration-min]){order:5}
+    #assignmentModal .form-row:has(#assignmentRepeat),#todoModal .form-row:has(#todoRepeat){order:6}
+    #assignmentModal .form-row:has(#assignmentLocation),#todoModal .form-row:has(#todoLocation){order:7}
+    #assignmentModal .form-row:has(#assignmentProject),#todoModal .form-row:has(#todoProject){order:8}
+    #assignmentModal .form-row:has(#assignmentOwner),#todoModal .form-row:has(#todoOwner){order:9}
+    #assignmentModal .form-row:has(#assignmentHelpers),#todoModal .form-row:has(#todoHelpers){order:10}
+    #assignmentModal .form-row:has(#assignmentType),#todoModal .form-row:has(#todoType){order:11}
+    #assignmentModal .form-row:has(#assignmentPriority),#todoModal .form-row:has(#todoPriority){order:12}
+    #assignmentModal .form-row:has(#assignmentStatus),#todoModal .form-row:has(#todoStatus){order:13}
+    #assignmentModal .form-row:has(#assignmentDetail),#todoModal .form-row:has(#todoDetail){order:14}
+    #assignmentModal .form-row:has(#assignmentResult),#todoModal .form-row:has(#todoResult){order:15}
     @media(max-width:980px){.todo-board{grid-template-columns:repeat(5,220px)}}
     @media(max-width:760px){.todo-list-row{grid-template-columns:1fr}.time-grid{grid-template-columns:1fr}}
     @media(max-width:980px){.admin-grid{grid-template-columns:1fr}}
@@ -534,7 +570,7 @@
       const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=[KR.all,...state.people.map(p=>p.name)];
       const filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter===KR.all||t.status===todoStatusFilter)&&(todoOwnerFilter===KR.all||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));
       const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter===KR.all?"active":""}" data-todo-status-filter="${KR.all}">${KR.all} <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o===KR.all?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;
-      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column" data-todo-drop-status="${esc(s)}"><div class="todo-column-head"><span>${esc(s)}<em class="todo-drag-hint">드래그 이동</em></span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" draggable="true" data-todo-drag-index="${i}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)} ${todoShareBadge(t)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn" data-toggle-todo-share="${i}">${t.kakaoSharedAt?"미공유":"공유됨"}</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
+      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column" data-todo-drop-status="${esc(s)}"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" draggable="true" data-todo-drag-index="${i}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)} ${todoShareBadge(t)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn" data-toggle-todo-share="${i}">${t.kakaoSharedAt?"미공유":"공유됨"}</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
       panel.classList.remove("hidden");
       panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
       bindTodoSearchInput();
