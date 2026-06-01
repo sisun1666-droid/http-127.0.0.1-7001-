@@ -1590,6 +1590,66 @@
       goToView=function(view,label=""){baseGoToViewForPolish(view,label);applyCategoryChrome()};
       applyCategoryChrome();
     })();
+    (function setupConstructionDbSearch(){
+      if(!$("#constructionDbStyle")){
+        document.head.insertAdjacentHTML("beforeend",`<style id="constructionDbStyle">
+          #constructionModal .modal-head{align-items:flex-start;gap:10px}
+          .construction-db-search{position:relative;margin-left:auto;width:min(270px,42vw)}
+          .construction-db-search .field{width:100%;height:36px}
+          .construction-db-results{position:absolute;top:40px;left:0;right:0;z-index:30;display:grid;gap:6px;max-height:260px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:8px}
+          .construction-db-result{border:1px solid var(--line);background:#fbfdfe;border-radius:8px;padding:8px;text-align:left;font-size:12px;line-height:1.45}
+          .construction-db-empty{font-size:12px;color:var(--muted);padding:8px}
+          @media(max-width:720px){#constructionModal .modal-head{display:grid;grid-template-columns:1fr auto}.construction-db-search{grid-column:1/-1;width:100%;margin-left:0;order:3}}
+        </style>`);
+      }
+      function ensureConstructionDbSearch(){
+        const head=$("#constructionModal .modal-head");
+        if(!head||$("#constructionDbSearch"))return;
+        const close=head.querySelector("[data-close='constructionModal']");
+        close?.insertAdjacentHTML("beforebegin",`<div class="construction-db-search"><input class="field" id="constructionDbSearch" placeholder="DB 검색"><div class="construction-db-results hidden" id="constructionDbResults"></div></div>`);
+      }
+      const baseOpenConstructionForDb=openConstructionModal;
+      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden")};
+      function renderConstructionDbResults(){
+        const box=$("#constructionDbResults"),q=$("#constructionDbSearch")?.value||"";
+        if(!box||!window.solarDb)return;
+        const rows=window.solarDb.search(q,8);
+        box.classList.toggle("hidden",!q.trim());
+        box.innerHTML=rows.length?rows.map(x=>`<button class="construction-db-result" type="button" data-construction-db-row="${x.i}"><strong>${esc(window.solarDb.summary(x.row)||"DB 항목")}</strong></button>`).join(""):`<div class="construction-db-empty">검색 결과가 없습니다.</div>`;
+      }
+      function setSelectIfExists(id,value){
+        const el=$("#"+id);if(!el||!value)return false;
+        const opt=[...el.options].find(o=>o.value===value||o.textContent===value);
+        if(opt){el.value=opt.value;return true}
+        return false;
+      }
+      function applyDbRowToConstruction(row){
+        const c=window.solarDb?.cell;if(!c)return;
+        const site=c(row,["발전소명","현장명","사업장명","발전소"]);
+        const kw=c(row,["공사용량","발전허가용량","공사_용량","발전_허가용량","용량(kW)","용량","설비용량"]);
+        const sales=c(row,["영업담당자","영업 담당자","영업자","담당자"]);
+        const customer=c(row,["사업주","사업주명","대표자","고객명","성명"]);
+        const address=c(row,["현장주소","현장 주소","주소","설치주소","소재지"]);
+        const status=c(row,["진행상태","진행중","상태","공사진행"]);
+        const request=c(row,["고객요청사항","요청사항","비고"]);
+        const company=c(row,["시공업체","시공_전기시공업체","전기시공업체","시공사"]);
+        const structureTeam=c(row,["구조물시공팀","시공_구조물시공팀","구조물팀"]);
+        if(site)$("#constructionSite").value=site;
+        if(kw)$("#constructionKw").value=String(kw).replace(/[^\d.]/g,"");
+        if(sales)$("#constructionSales").value=sales;
+        if(customer)$("#constructionCustomer").value=customer;
+        if(company)setSelectIfExists("constructionCompany",company);
+        if(structureTeam)setSelectIfExists("constructionStructureTeam",structureTeam);
+        const next=[address&&`주소: ${address}`,status&&`진행상태: ${status}`,request&&`요청사항: ${request}`].filter(Boolean).join("\n");
+        if(next)$("#constructionNext").value=next;
+        $("#constructionDbResults")?.classList.add("hidden");
+        $(".construction-db-search #constructionDbSearch").value=site||customer||"";
+        updateConstructionDuration();
+        toast("DB 정보로 시공일정을 자동 입력했습니다.");
+      }
+      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch")renderConstructionDbResults()},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.constructionDbRow!==undefined){const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
+    })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
