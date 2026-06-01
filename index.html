@@ -1203,15 +1203,21 @@
         if(!$("#reportStyle")){
           document.head.insertAdjacentHTML("beforeend",`<style id="reportStyle">
             #reportView{box-shadow:none;background:transparent;border:0;padding:0}
-            .report-shell{display:grid;grid-template-columns:minmax(340px,420px) minmax(0,1fr);gap:18px;align-items:start}
+            .report-shell{display:grid;grid-template-columns:minmax(360px,460px) minmax(0,1fr);gap:24px;align-items:start}
             .report-form,.report-card{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px}
             .report-preview{background:transparent;border:0;box-shadow:none;padding:0;overflow:auto}
             .report-form{display:grid;gap:10px}.report-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
             .report-tabs button{min-height:36px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:0 14px;font-weight:900}
             .report-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}
-            .report-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.report-form-grid .full{grid-column:1/-1}
-            .photo-inputs{display:grid;grid-template-columns:1fr;gap:8px}.photo-box{border:1px dashed var(--line);border-radius:8px;padding:10px;background:#fbfdfe}
-            .photo-box input{width:100%}.as-sheet{width:794px;max-width:100%;margin:auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
+            .report-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.report-form-grid .full{grid-column:1/-1}.report-form-grid .field{width:100%;min-width:0}
+            .report-photo-board{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:260px;border:3px solid #111;background:#fff;margin-top:4px}
+            .report-photo-board:before{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:3px solid #111;z-index:1}.report-photo-board.dragging{outline:4px solid rgba(10,132,145,.28)}
+            .report-drop-hint{position:absolute;top:34px;left:50%;transform:translateX(-50%);border:3px solid #111;background:#fff;padding:18px 82px;z-index:2;white-space:nowrap}
+            .report-drop-zone{position:relative;display:grid;align-items:center;padding:28px 36px;color:#111;font-weight:800}
+            .report-drop-zone[data-photo-drop="after"]{justify-items:end;text-align:right}.report-drop-zone.dragover{background:#eef9fb}
+            .report-drop-count{position:absolute;bottom:16px;left:36px;color:var(--muted);font-size:12px;font-weight:800}.report-drop-zone[data-photo-drop="after"] .report-drop-count{left:auto;right:36px}
+            .photo-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photo-box{border:1px dashed var(--line);border-radius:8px;padding:10px;background:#fbfdfe;font-size:12px}
+            .photo-box input{width:100%}.as-sheet{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
             .as-sheet h2{text-align:center;font-size:22px;margin:18px 0 20px}.as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:7px 12px;background:#fff}
             .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}.as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:7px 9px;white-space:normal;overflow:visible;text-overflow:clip;height:30px}
             .as-table th{width:96px;text-align:center;background:#fff;font-weight:900;color:#111}.as-table td:last-child,.as-table th:last-child{border-right:0}
@@ -1307,7 +1313,7 @@
       }
       function renderReportForm(){
         return `<div class="report-form">
-          <div class="panel-title"><h2>A/S 보고서 작성</h2><button class="btn primary" data-print-as-report>인쇄/PDF</button></div>
+          <div class="panel-title"><h2>A/S 보고서 작성</h2></div>
           <div class="report-form-grid">
             <input class="field" id="asNo" placeholder="접수번호" value="A1"><input class="field" type="date" id="asReceived" value="${today}">
             <input class="field" type="date" id="asCompleted" value="${today}"><input class="field" id="asPhone" placeholder="연락처">
@@ -1322,11 +1328,22 @@
             <input class="field" id="asFinish" placeholder="마감상태"><input class="field" id="asCustomerCheck" placeholder="고객확인">
             <input class="field full" id="asNotice" placeholder="사후안내">
           </div>
+          <div class="label">사진 드래그 등록</div>
+          <div class="report-photo-board" id="asPhotoDropBoard">
+            <div class="report-drop-hint">사진을 넣어주세요</div>
+            <div class="report-drop-zone" data-photo-drop="before"><span>작업 전</span><span class="report-drop-count" id="beforePhotoCount">0장</span></div>
+            <div class="report-drop-zone" data-photo-drop="after"><span>작업 후</span><span class="report-drop-count" id="afterPhotoCount">0장</span></div>
+          </div>
           <div class="photo-inputs">
             <label class="photo-box"><strong>작업 전 사진</strong><input type="file" id="asBeforePhotos" accept="image/*" multiple></label>
             <label class="photo-box"><strong>작업 후 사진</strong><input type="file" id="asAfterPhotos" accept="image/*" multiple></label>
           </div>
         </div>`;
+      }
+      function updatePhotoCounts(){
+        const before=$("#beforePhotoCount"),after=$("#afterPhotoCount");
+        if(before)before.textContent=`${beforePhotos.length}장`;
+        if(after)after.textContent=`${afterPhotos.length}장`;
       }
       function renderReportView(){
         injectReportChrome();
@@ -1334,9 +1351,18 @@
         $$(`#reportView input,#reportView textarea`).forEach(el=>el.addEventListener("input",()=>{$(".report-preview").innerHTML=renderAsSheet()}));
         $("#asBeforePhotos")?.addEventListener("change",e=>readPhotos(e.target.files,"before"));
         $("#asAfterPhotos")?.addEventListener("change",e=>readPhotos(e.target.files,"after"));
+        $$("#reportView [data-photo-drop]").forEach(zone=>{
+          zone.addEventListener("dragover",e=>{e.preventDefault();$("#asPhotoDropBoard")?.classList.add("dragging");zone.classList.add("dragover")});
+          zone.addEventListener("dragleave",()=>zone.classList.remove("dragover"));
+          zone.addEventListener("drop",e=>{
+            e.preventDefault();$("#asPhotoDropBoard")?.classList.remove("dragging");zone.classList.remove("dragover");
+            readPhotos([...e.dataTransfer.files].filter(f=>f.type.startsWith("image/")),zone.dataset.photoDrop);
+          });
+        });
+        updatePhotoCounts();
       }
       function readPhotos(files,kind){
-        Promise.all([...files].slice(0,3).map(file=>new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(file)}))).then(urls=>{if(kind==="before")beforePhotos=urls;else afterPhotos=urls;$(".report-preview").innerHTML=renderAsSheet()});
+        Promise.all([...files].slice(0,3).map(file=>new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(file)}))).then(urls=>{if(kind==="before")beforePhotos=urls;else afterPhotos=urls;$(".report-preview").innerHTML=renderAsSheet();updatePhotoCounts();toast(`${kind==="before"?"작업 전":"작업 후"} 사진 ${urls.length}장을 넣었습니다.`)});
       }
       function printAsReport(){
         const html=renderAsSheet();
