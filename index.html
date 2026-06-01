@@ -130,7 +130,9 @@
     .dashboard-risk-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .risk-item{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;background:#fff}
     .risk-soon{border-left:5px solid #f59e0b;background:#fff7e6}
-    .risk-late{border-left:5px solid #ef4444;background:#fff1f1}
+    .risk-late{border-color:#f7c8c8;border-left:5px solid #ef4444;background:#fff1f1}
+    .risk-late strong{color:#991b1b}
+    .risk-soon strong{color:#8a4b00}
     .dashboard-memo-box{width:100%;min-height:112px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;line-height:1.5;background:#fbfdfe}
     body.masking-mode .project-name,body.masking-mode .todo-card-title,body.masking-mode .linked-item strong,body.masking-mode .today-item strong,body.masking-mode td:first-child,body.masking-mode .name,body.masking-mode .memo-item,body.masking-mode .detail-cell strong{filter:blur(5px);user-select:none}
     body.masking-mode .project-meta,body.masking-mode .todo-card-meta,body.masking-mode .meta{filter:blur(3px);user-select:none}
@@ -484,7 +486,7 @@
       if(t.dataset.dashboardConstruction){dashboardSelectedConstruction=Number(t.dataset.dashboardConstruction);renderDashboard()}
       if(t.dataset.dashboardDate){dashboardDate=t.dataset.dashboardDate;renderDashboard()}
       if(t.dataset.dashboardMonth){const d=new Date(Number(els.calendarYear.value),Number(els.calendarMonth.value)-1+Number(t.dataset.dashboardMonth),1);setCalendarMonth(els.calendarYear,els.calendarMonth,localDateString(d));renderDashboard()}
-      if(t.dataset.dashboardToday!==undefined){dashboardDate=today;setCalendarMonth(els.calendarYear,els.calendarMonth,today);renderDashboard()}
+      if(t.dataset.dashboardToday!==undefined){resetDashboardToToday();renderDashboard()}
       if(t.dataset.dashboardAddConstruction!==undefined)openConstructionModal();
       if(t.dataset.dashboardAddMemo){const i=Number(t.dataset.dashboardAddMemo),text=prompt("메모 내용을 입력하세요.");if(text){state.construction[i].memos=state.construction[i].memos||[];state.construction[i].memos.unshift({text,date:today});saveState("메모를 저장했습니다.");renderDashboard()}}
       if(t.dataset.dashboardDeleteMemo){const i=Number(t.dataset.dashboardDeleteMemo),mi=Number(t.dataset.memoIndex);state.construction[i].memos?.splice(mi,1);saveState("메모를 삭제했습니다.");renderDashboard()}
@@ -668,12 +670,13 @@
       const base=assignmentCalendarDefaultDate();
       const baseDate=localDateValue(base),soonLimit=new Date(baseDate);soonLimit.setDate(soonLimit.getDate()+3);
       const makeDate=t=>localDateValue(t.due||t.end||t.start);
+      const isExpiredToday=(item,date)=>date===base&&item.endTime&&!item.allDay&&new Date(`${date}T${item.endTime}`)<new Date();
       return state.todos.map((t,i)=>({kind:"할일",item:normalizeTodo(t),i,edit:`data-edit-todo="${i}"`}))
         .concat(state.assignments.map((a,i)=>({kind:"일정",item:normalizeAssignment(a),i,edit:`data-open-assignment="${i}"`})))
         .map(row=>({...row,d:makeDate(row.item)}))
         .filter(row=>row.d&&row.item.status!==KR.done&&localDateString(row.d).slice(0,7)===base.slice(0,7))
         .map(row=>{
-          const date=localDateString(row.d),late=row.d<baseDate||String(row.item.status||"").includes("지연");
+          const date=localDateString(row.d),late=row.d<baseDate||isExpiredToday(row.item,date)||String(row.item.status||"").includes("지연");
           const soon=!late&&row.d<=soonLimit;
           return {...row,date,level:late?"late":soon?"soon":""};
         })
@@ -778,9 +781,11 @@
     function resetAssignmentCalendarToToday(){setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,assignmentCalendarDefaultDate())}
     const baseRenderCurrentContentForCalendar=renderCurrentContent;
     renderCurrentContent=function(){
+      if(currentView==="dashboard")resetDashboardToToday();
       if(currentView==="assignments")resetAssignmentCalendarToToday();
       baseRenderCurrentContentForCalendar();
       syncViewChrome();
+      if(currentView==="dashboard"){resetDashboardToToday();renderDashboard()}
       if(currentView==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}
     }
     const baseRenderAssignmentCalendarForDefaultDate=renderAssignmentCalendar;
