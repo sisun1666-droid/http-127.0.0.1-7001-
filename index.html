@@ -59,6 +59,8 @@
     .todo-column-head .count{color:var(--muted);font-size:12px}
     .todo-card{border:1px solid #edf0ee;border-radius:12px;background:#fff;padding:12px;margin-bottom:10px;box-shadow:0 8px 18px rgba(29,45,56,.06);border-left:5px solid var(--teal)}
     .todo-card.todo-backlog{border-left-color:#b889d9}.todo-card.todo-ready{border-left-color:#d99b43}.todo-card.todo-doing{border-left-color:#42b6d8}.todo-card.todo-done{border-left-color:#63b679}.todo-card.todo-cancel{border-left-color:#cf7f7f}
+    .todo-card[draggable=true]{cursor:grab}.todo-card.dragging{opacity:.45;transform:scale(.98)}.todo-column.drag-over{outline:2px dashed var(--teal);outline-offset:-6px;background:#eefafa}
+    .todo-drag-hint{font-size:11px;color:var(--muted);font-weight:800;margin-left:6px}
     .todo-card-title{font-weight:900;line-height:1.35;margin-bottom:8px}.todo-card-meta{color:var(--muted);font-size:12px;line-height:1.5}
     .todo-card .row-actions{margin-top:8px!important;gap:5px}
     .todo-card .btn.icon,.todo-list-row .btn.icon,.linked-item .btn.icon,.today-item .btn.icon,.row-actions .btn.icon{width:26px;min-height:26px;border-radius:7px;padding:0;font-size:12px}
@@ -518,7 +520,7 @@
       const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=[KR.all,...state.people.map(p=>p.name)];
       const filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter===KR.all||t.status===todoStatusFilter)&&(todoOwnerFilter===KR.all||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));
       const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter===KR.all?"active":""}" data-todo-status-filter="${KR.all}">${KR.all} <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o===KR.all?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;
-      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
+      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column" data-todo-drop-status="${esc(s)}"><div class="todo-column-head"><span>${esc(s)}<em class="todo-drag-hint">드래그 이동</em></span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" draggable="true" data-todo-drag-index="${i}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
       panel.classList.remove("hidden");
       panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
       bindTodoSearchInput();
@@ -527,6 +529,45 @@
     document.addEventListener("compositionstart",e=>{const t=e.target;if(t.dataset.todoListFilter)todoListFilterComposing=t.dataset.todoListFilter},true);
     document.addEventListener("compositionend",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilterComposing=null;todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;if(todoListFilterComposing===t.dataset.todoListFilter)return;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
+    let draggedTodoIndex=null;
+    document.addEventListener("dragstart",e=>{
+      const card=e.target.closest?.("[data-todo-drag-index]");
+      if(!card)return;
+      draggedTodoIndex=Number(card.dataset.todoDragIndex);
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed="move";
+      e.dataTransfer.setData("text/plain",String(draggedTodoIndex));
+    },true);
+    document.addEventListener("dragend",e=>{
+      e.target.closest?.("[data-todo-drag-index]")?.classList.remove("dragging");
+      $$(".todo-column.drag-over").forEach(c=>c.classList.remove("drag-over"));
+      draggedTodoIndex=null;
+    },true);
+    document.addEventListener("dragover",e=>{
+      const col=e.target.closest?.("[data-todo-drop-status]");
+      if(!col||draggedTodoIndex===null)return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect="move";
+      col.classList.add("drag-over");
+    },true);
+    document.addEventListener("dragleave",e=>{
+      const col=e.target.closest?.("[data-todo-drop-status]");
+      if(col&&!col.contains(e.relatedTarget))col.classList.remove("drag-over");
+    },true);
+    document.addEventListener("drop",e=>{
+      const col=e.target.closest?.("[data-todo-drop-status]");
+      if(!col)return;
+      e.preventDefault();
+      col.classList.remove("drag-over");
+      const i=Number(e.dataTransfer.getData("text/plain")||draggedTodoIndex);
+      const nextStatus=col.dataset.todoDropStatus;
+      const todo=state.todos[i];
+      if(!todo||!nextStatus||todo.status===nextStatus)return;
+      todo.status=nextStatus;
+      syncTodoToAssignment(i);
+      saveState(`할일을 '${nextStatus}' 상태로 이동했습니다.`);
+      renderTodoBoard();
+    },true);
     function monthValue(){return `${els.calendarYear.value||today.slice(0,4)}-${els.calendarMonth.value||today.slice(5,7)}`}
     function inSelectedConstructionMonth(c){const ym=monthValue();return [c.start,c.end].some(d=>d&&d.startsWith(ym))||(!c.end&&c.start&&c.start<=`${ym}-31`)}
     function constructionMonthRows(){return state.construction.map((c,i)=>({c,i})).filter(({c})=>inSelectedConstructionMonth(c))}
