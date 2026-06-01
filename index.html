@@ -1200,7 +1200,7 @@
       function dbRows(){const db=loadDb();return Array.isArray(db.rows)?db.rows:[]}
       function dbColumns(){const rows=dbRows();return rows[0]?Object.keys(rows[0]):[]}
       function dbCell(row,names){const keys=Object.keys(row||{});for(const name of names){const found=keys.find(k=>k.replace(/\s/g,"").toLowerCase()===String(name).replace(/\s/g,"").toLowerCase());if(found&&row[found]!==undefined&&row[found]!==null&&String(row[found]).trim()!=="")return String(row[found]).trim()}return""}
-      function dbSummary(row){return [dbCell(row,["발전소명","현장명","사업장명","발전소","상호"]),dbCell(row,["사업주명","대표자","고객명","발주처","성명"]),dbCell(row,["주소","설치주소","현장주소","소재지"])].filter(Boolean).join(" · ")}
+      function dbSummary(row){return [dbCell(row,["발전소명","현장명","사업장명","발전소","상호"]),dbCell(row,["사업주","사업주명","대표자","고객명","발주처","성명"]),dbCell(row,["현장 주소","주소","설치주소","현장주소","소재지"])].filter(Boolean).join(" · ")}
       function searchDb(q,limit=8){q=String(q||"").trim().toLowerCase();if(!q)return[];return dbRows().map((row,i)=>({row,i,text:Object.values(row).join(" ").toLowerCase()})).filter(x=>x.text.includes(q)).slice(0,limit)}
       window.solarDb={rows:dbRows,columns:dbColumns,search:searchDb,cell:dbCell,summary:dbSummary};
       function injectDbChrome(){
@@ -1269,6 +1269,37 @@
         $("#dbFileInput")?.addEventListener("change",e=>parseDbFile(e.target.files[0]));
       }
       function loadXlsxScript(){return new Promise((resolve,reject)=>{if(window.XLSX)return resolve();const src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";if([...document.scripts].some(s=>s.src===src)){const wait=()=>window.XLSX?resolve():setTimeout(wait,100);return wait()}const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+      function compactDbRow(row){
+        const get=names=>dbCell(row,names);
+        return {
+          영업순번:get(["영업순번"]),
+          계약법인:get(["계약법인"]),
+          발전소명:get(["발전소명","현장명","사업장명","발전소"]),
+          건립종류:get(["건립종류","지붕유형","지붕형태","설치유형"]),
+          영업담당자:get(["영업 담당자","영업담당자","담당자"]),
+          사업주:get(["사업주","사업주명","대표자","고객명","성명"]),
+          연락처:get(["연락처","전화번호","휴대폰","핸드폰","사업주연락처"]),
+          현장주소:get(["현장 주소","현장주소","주소","설치주소","소재지"]),
+          진행상태:get(["진행중","상태","공사진행"]),
+          고객요청사항:get(["고객요청사항","요청사항","비고"]),
+          발전허가용량:get(["발전_허가용량","허가용량"]),
+          공사용량:get(["공사_용량","공사계획_허가용량","용량","용량(kW)","설비용량"]),
+          모듈종류:get(["모듈종류/등급","모듈종류"]),
+          모듈용량:get(["모듈용량"]),
+          모듈장수:get(["모듈장수"]),
+          구조물업체:get(["구조물_생산업체","구조물업체"]),
+          시공업체:get(["시공_전기시공업체","전기시공업체","시공사"]),
+          구조물시공팀:get(["시공_구조물시공팀","구조물시공팀"]),
+          구조물시작일:get(["시공_구조물시작일"]),
+          구조물종료일:get(["시공_구조물종료일"]),
+          전기시공시작일:get(["시공_전기시공시작일"]),
+          상업운전개시일:get(["한전_상업운전개시일"]),
+          AS원인:get(["A/S원인"]),
+          AS분류:get(["A/S분류"]),
+          AS처리여부:get(["A/S처리여부"]),
+          AS완료일자:get(["A/S완료일자","A/S완료일1차","A/S완료일2차","A/S완료일3차"])
+        };
+      }
       async function parseDbFile(file){
         if(!file)return;
         try{
@@ -1276,10 +1307,11 @@
           const buf=await file.arrayBuffer();
           const wb=XLSX.read(buf,{type:"array",cellDates:false});
           const ws=wb.Sheets[wb.SheetNames[0]];
-          const rows=XLSX.utils.sheet_to_json(ws,{defval:""}).map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim(),String(v).trim()])));
-          saveDb({fileName:file.name,updatedAt:new Date().toISOString(),rows});
+          const rawRows=XLSX.utils.sheet_to_json(ws,{defval:""}).map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim(),String(v).trim()])));
+          const rows=rawRows.map(compactDbRow).filter(r=>r.발전소명||r.사업주||r.현장주소);
+          saveDb({fileName:file.name,updatedAt:new Date().toISOString(),sourceRows:rawRows.length,sourceColumns:Object.keys(rawRows[0]||{}).length,rows});
           window.solarDb={rows:dbRows,columns:dbColumns,search:searchDb,cell:dbCell,summary:dbSummary};
-          toast(`DB ${rows.length}건을 저장했습니다.`);renderDbView();
+          toast(`DB ${rows.length}건을 가볍게 저장했습니다.`);renderDbView();
         }catch(err){toast("DB 파일을 읽지 못했습니다.");console.warn(err)}
       }
       document.addEventListener("click",e=>{const t=e.target.closest("button,label")||e.target;if(currentView==="db"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();$("#dbFileInput")?.click()}if(t.id==="dbDropZone")$("#dbFileInput")?.click();if(t.id==="dbClearBtn"&&confirm("저장된 DB를 비울까요?")){localStorage.removeItem(dbStoreKey);toast("DB를 비웠습니다.");renderDbView()}},true);
@@ -1467,12 +1499,16 @@
       function applyDbRowToAs(row){
         const c=window.solarDb?.cell;if(!c)return;
         setReportField("asSite",c(row,["발전소명","현장명","사업장명","발전소","상호"]));
-        setReportField("asClient",c(row,["사업주명","대표자","고객명","발주처","성명"]));
+        setReportField("asClient",c(row,["사업주","사업주명","대표자","고객명","발주처","성명"]));
         setReportField("asPhone",c(row,["연락처","전화번호","휴대폰","핸드폰","사업주연락처"]));
-        setReportField("asAddress",c(row,["주소","설치주소","현장주소","소재지"]));
-        setReportField("asKw",c(row,["용량(kW)","용량","설비용량","kw","kW"]));
-        setReportField("asRoof",c(row,["지붕유형","지붕형태","설치유형","구조물"]));
-        setReportField("asBuilt",c(row,["시공년월","준공일","사용전검사일","설치일"]));
+        setReportField("asAddress",c(row,["현장주소","현장 주소","주소","설치주소","소재지"]));
+        setReportField("asKw",c(row,["공사용량","발전허가용량","용량(kW)","용량","설비용량","kw","kW"]));
+        setReportField("asRoof",c(row,["건립종류","지붕유형","지붕형태","설치유형","구조물"]));
+        setReportField("asBuilt",c(row,["상업운전개시일","시공년월","준공일","사용전검사일","설치일"]));
+        setReportField("asDefectType",c(row,["AS분류","A/S분류"]));
+        setReportField("asCause",c(row,["AS원인","A/S원인"]));
+        setReportField("asFinish",c(row,["AS처리여부","A/S처리여부"]));
+        setReportField("asCompleted",c(row,["AS완료일자","A/S완료일자"]));
         $(".report-preview").innerHTML=renderAsSheet();
         $("#asDbResults").innerHTML="";
         toast("DB 정보로 보고서를 자동 입력했습니다.");
