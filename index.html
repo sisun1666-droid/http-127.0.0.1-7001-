@@ -756,9 +756,11 @@
     document.addEventListener("input",e=>{
       if(e.target?.id==="dashboardMemoText")localStorage.setItem("solar-dashboard-memo",e.target.value||"");
     },true);
+    function dashboardDefaultDate(){return assignmentCalendarDefaultDate()}
+    function resetDashboardToToday(){dashboardDate=dashboardDefaultDate();setCalendarMonth(els.calendarYear,els.calendarMonth,dashboardDate)}
     function syncViewChrome(){
       if(currentView==="dashboard"){
-        els.pageTitle.textContent="업무관리";els.pageSub.textContent="시공 일정과 할일, 날씨를 한 화면에서 확인합니다.";els.tableTitle.textContent="시공일정";
+        els.pageTitle.textContent="대시보드";els.pageSub.textContent="시공 일정과 할일, 날씨를 한 화면에서 확인합니다.";els.tableTitle.textContent="시공일정";
         $("#addProjectBtn").textContent="현장 추가";$("#addContentBtn").textContent="추가";
       }else if(currentView==="assignments"){
         els.pageTitle.textContent="일정관리";els.pageSub.textContent="회의는 짧게, 성과는 길게 가면 좋겠습니다.";els.tableTitle.textContent="일정관리";
@@ -790,8 +792,9 @@
       baseRenderAssignmentCalendarForDefaultDate();
     }
     const baseGoToViewForCalendar=goToView;
-    goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
+    goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
     if(currentView==="assignments"){resetAssignmentCalendarToToday();syncViewChrome()}
+    if(currentView==="dashboard"){resetDashboardToToday();syncViewChrome()}
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSharedState()});setInterval(()=>{if(!document.hidden)loadSharedState()},5000);setInterval(updateClock,30000);render();loadSharedState();
   </script>
 </body>
