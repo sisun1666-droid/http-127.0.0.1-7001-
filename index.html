@@ -123,6 +123,12 @@
     .dash-main>.dash-section:first-child{padding:16px}
     .weather-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
     .weather-city{border:1px solid var(--line);border-radius:10px;background:#fbfdfe;padding:10px}
+    .weather-eye-alert,.forecast-eye-alert{position:relative;border-color:#202326!important;background:#fff!important;overflow:hidden}
+    .weather-eye-alert{padding-right:48px}
+    .forecast-eye-alert{padding-top:32px}
+    .eye-mark{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#141414 0 12%,#d91414 13% 36%,#1b1b1b 37% 43%,#d91414 44% 68%,#1b1b1b 69% 75%,#d91414 76%);border:2px solid #171717;box-shadow:0 2px 8px rgba(120,0,0,.25)}
+    .eye-mark:before,.eye-mark:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#171717;top:5px;left:11px;box-shadow:-8px 13px 0 #171717,8px 13px 0 #171717}
+    .eye-mark:after{width:16px;height:16px;border:2px solid rgba(20,20,20,.82);background:transparent;top:5px;left:5px;box-shadow:none;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(35deg)}
     .forecast-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
     .forecast-day{border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px;text-align:center;font-size:12px}
     .time-card{display:grid;align-content:center}
@@ -814,12 +820,12 @@
           const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1),temp=Math.round(r.current?.temperature_2m||0);
           const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp);
           const danger=prob>=60||Number(sum)>=5;
-          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}% · ${temp}℃</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">기온 ${tMin}℃~${tMax}℃ · 현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
+          return `<div class="weather-city ${danger?"weather-eye-alert":""}">${danger?`<span class="eye-mark" aria-hidden="true"></span>`:""}<strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}% · ${temp}℃</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">기온 ${tMin}℃~${tMax}℃ · 현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
         }).join("");
         const daegu=results.find(r=>r.name==="대구")||results[2];
         forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
           const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0),hot=prob>=60||Number(sum)>=5;
-          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${min}℃~${max}℃</div><div>${sum}mm</div></div>`;
+          return `<div class="forecast-day ${hot?"forecast-eye-alert":""}">${hot?`<span class="eye-mark" aria-hidden="true"></span>`:""}<strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${min}℃~${max}℃</div><div>${sum}mm</div></div>`;
         }).join("");
       }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
     }
