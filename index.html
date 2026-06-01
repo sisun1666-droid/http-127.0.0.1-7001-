@@ -121,9 +121,21 @@
     .forecast-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
     .forecast-day{border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px;text-align:center;font-size:12px}
     .time-card{display:grid;align-content:center}
+    .dashboard-workspace .workspace-dashboard{grid-template-columns:280px minmax(0,1fr) 360px;align-items:start}
+    .dashboard-workspace .dash-main{align-content:start}
+    .dashboard-workspace .dash-side{padding-top:18px}
+    .dashboard-workspace .dash-side .dash-section{padding:16px}
+    .dashboard-workspace .mini-day-name,.dashboard-workspace .mini-day{min-height:38px;font-size:12px}
+    .dashboard-workspace .today-item{padding:12px}
+    .dashboard-risk-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .risk-item{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;background:#fff}
+    .risk-soon{border-left:5px solid #f59e0b;background:#fff7e6}
+    .risk-late{border-left:5px solid #ef4444;background:#fff1f1}
+    .dashboard-memo-box{width:100%;min-height:112px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;line-height:1.5;background:#fbfdfe}
     body.masking-mode .project-name,body.masking-mode .todo-card-title,body.masking-mode .linked-item strong,body.masking-mode .today-item strong,body.masking-mode td:first-child,body.masking-mode .name,body.masking-mode .memo-item,body.masking-mode .detail-cell strong{filter:blur(5px);user-select:none}
     body.masking-mode .project-meta,body.masking-mode .todo-card-meta,body.masking-mode .meta{filter:blur(3px);user-select:none}
     @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
+    @media(max-width:1180px){.dashboard-workspace .workspace-dashboard{grid-template-columns:1fr}.dashboard-workspace .dash-side{padding-top:0}.dashboard-risk-list{grid-template-columns:1fr}}
     @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:1180px){.weather-grid,.forecast-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:620px){.dash-kpi-grid,.dash-kpi-grid.small{grid-template-columns:1fr}}
@@ -652,6 +664,42 @@
         </div>
       </section>`;
     }
+    function dashboardRiskRows(){
+      const base=assignmentCalendarDefaultDate();
+      const baseDate=localDateValue(base),soonLimit=new Date(baseDate);soonLimit.setDate(soonLimit.getDate()+3);
+      const makeDate=t=>localDateValue(t.due||t.end||t.start);
+      return state.todos.map((t,i)=>({kind:"할일",item:normalizeTodo(t),i,edit:`data-edit-todo="${i}"`}))
+        .concat(state.assignments.map((a,i)=>({kind:"일정",item:normalizeAssignment(a),i,edit:`data-open-assignment="${i}"`})))
+        .map(row=>({...row,d:makeDate(row.item)}))
+        .filter(row=>row.d&&row.item.status!==KR.done&&localDateString(row.d).slice(0,7)===base.slice(0,7))
+        .map(row=>{
+          const date=localDateString(row.d),late=row.d<baseDate||String(row.item.status||"").includes("지연");
+          const soon=!late&&row.d<=soonLimit;
+          return {...row,date,level:late?"late":soon?"soon":""};
+        })
+        .filter(row=>row.level)
+        .sort((a,b)=>a.d-b.d);
+    }
+    function renderDashboardRiskHtml(){
+      const rows=dashboardRiskRows();
+      return `<section class="dash-section compact">
+        <div class="dash-title"><h2>이번 달 지연/확인 필요</h2><span class="dash-pill">확인 ${rows.length}</span></div>
+        <div class="dashboard-risk-list">
+          ${rows.length?rows.slice(0,8).map(row=>`<button class="risk-item risk-${row.level}" ${row.edit}>
+            <strong>${row.level==="late"?"지연확정":"마감 임박"} · ${esc(row.item.title||"제목 없는 항목")}</strong>
+            <div class="meta">${esc(peopleText(row.item))} · ${esc(row.item.status||"-")} · ${esc(row.date)} · ${row.kind}</div>
+            <div class="meta">${esc(row.item.project||row.item.location||KR.general)} · ${esc(row.item.priority||KR.normal)}</div>
+          </button>`).join(""):`<div class="meta">이번 달 특이사항이 없습니다.</div>`}
+        </div>
+      </section>`;
+    }
+    function dashboardMemoText(){return localStorage.getItem("solar-dashboard-memo")||""}
+    function renderDashboardMemo(){
+      return `<section class="dash-section compact">
+        <div class="dash-title"><h2>메모</h2><span class="dash-pill">대시보드</span></div>
+        <textarea id="dashboardMemoText" class="dashboard-memo-box" placeholder="회의 내용, 현장 확인 사항, 전달 메모를 입력하세요.">${esc(dashboardMemoText())}</textarea>
+      </section>`;
+    }
     function renderWeatherBox(){
       return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
         <section class="dash-section compact"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">강수 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
@@ -668,24 +716,27 @@
           return{...c,current:j.current,daily:j.daily};
         }));
         box.innerHTML=results.map(r=>{
-          const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1);
+          const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1),temp=Math.round(r.current?.temperature_2m||0);
+          const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp);
           const danger=prob>=60||Number(sum)>=5;
-          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}%</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
+          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}% · ${temp}℃</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">기온 ${tMin}℃~${tMax}℃ · 현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
         }).join("");
         const daegu=results.find(r=>r.name==="대구")||results[2];
         forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
-          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),hot=prob>=60||Number(sum)>=5;
-          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${sum}mm</div></div>`;
+          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0),hot=prob>=60||Number(sum)>=5;
+          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${min}℃~${max}℃</div><div>${sum}mm</div></div>`;
         }).join("");
       }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
     }
     renderDashboard=function(){
       ensureConfigLists();ensureTaskLinks();
+      syncViewChrome();
+      els.dashboardView.classList.add("dashboard-workspace");
       const rows=constructionMonthRows(),q=($("#dashboardProjectSearch")?.value||"").toLowerCase(),shown=rows.filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
       const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
       els.dashboardView.innerHTML=`<div class="workspace-dashboard">
         <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
-        <div class="dash-main">${renderWeatherBox()}<section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${overdueWarningHtml()}</div>
+        <div class="dash-main"><section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${renderWeatherBox()}${renderDashboardRiskHtml()}${renderDashboardMemo()}</div>
         <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
       </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
@@ -702,8 +753,14 @@
     document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="kakaoTodoBtn"){e.preventDefault();$("#kakaoTodoText").value=todoKakaoMessage(currentTodoFormForKakao());$("#kakaoTodoModal").classList.add("open");$("#kakaoTodoText").focus();$("#kakaoTodoText").select()}if(t.id==="copyKakaoTodoBtn"){e.preventDefault();const text=$("#kakaoTodoText").value;try{await navigator.clipboard.writeText(text);toast("카톡 메시지를 복사했습니다.")}catch{$("#kakaoTodoText").focus();$("#kakaoTodoText").select();document.execCommand("copy");toast("카톡 메시지를 복사했습니다.")}}if(t.id==="openKakaoTodoBtn"){e.preventDefault();try{await navigator.clipboard.writeText($("#kakaoTodoText").value)}catch{}toast("복사했습니다. 카톡 대화창에 붙여넣으세요.");location.href="kakaotalk://"}},true);
     function applyMasking(){document.body.classList.toggle("masking-mode",maskingMode);const b=$("#maskToggleBtn"),add=$("#addProjectBtn");if(b){b.textContent=maskingMode?"마스킹 ON":"마스킹 OFF";b.classList.toggle("primary",true);b.setAttribute("aria-pressed",maskingMode?"true":"false")}if(add)add.style.display=currentView==="dashboard"?"none":""}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="maskToggleBtn"||t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking()}},true);
+    document.addEventListener("input",e=>{
+      if(e.target?.id==="dashboardMemoText")localStorage.setItem("solar-dashboard-memo",e.target.value||"");
+    },true);
     function syncViewChrome(){
-      if(currentView==="assignments"){
+      if(currentView==="dashboard"){
+        els.pageTitle.textContent="업무관리";els.pageSub.textContent="시공 일정과 할일, 날씨를 한 화면에서 확인합니다.";els.tableTitle.textContent="시공일정";
+        $("#addProjectBtn").textContent="현장 추가";$("#addContentBtn").textContent="추가";
+      }else if(currentView==="assignments"){
         els.pageTitle.textContent="일정관리";els.pageSub.textContent="회의는 짧게, 성과는 길게 가면 좋겠습니다.";els.tableTitle.textContent="일정관리";
         $("#addProjectBtn").textContent="일정 등록";$("#addContentBtn").textContent="일정 등록";
       }else if(currentView==="todos"){
