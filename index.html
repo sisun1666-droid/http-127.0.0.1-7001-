@@ -250,7 +250,7 @@
         <div class="panel"><div class="panel-title"><h2 id="tableTitle">현장·공무 진행표</h2><div class="row-actions"><button class="btn hidden" id="dbPasteBtn">DB 붙여넣기</button><button class="btn danger hidden" id="undoDbImportBtn">가져오기 취소</button><button class="btn primary" id="addContentBtn">현장 추가</button></div></div><div class="filters" id="tableFilters"><input class="search" id="search" placeholder="전체 검색"><select id="phaseFilter"></select></div><div class="table-wrap" id="tableWrap"><table><thead id="tableHead"></thead><tbody id="rows"></tbody></table></div><div id="assignmentCalendarPanel" class="hidden"><div class="schedule-toolbar"><div class="schedule-left"><button class="btn icon" id="assignmentPrevMonth">‹</button><button class="btn" id="assignmentTodayBtn">오늘</button><button class="btn icon" id="assignmentNextMonth">›</button><div class="schedule-month"><select id="assignmentCalendarYear"></select><select id="assignmentCalendarMonth"></select></div></div><div class="schedule-right"><div class="schedule-view"><button class="active" data-schedule-view="month">월</button><button data-schedule-view="week">주</button><button data-schedule-view="day">일</button></div><button class="btn primary" id="assignmentCalendarAddBtn">일정 등록</button></div></div><div class="schedule-people" id="assignmentPeopleChips"></div><div class="calendar-grid" id="assignmentCalendarGrid"></div></div><div id="todoBoardPanel" class="hidden"></div></div>
         <div class="stack"><div class="tabs hidden" id="employeeTabs"><button class="tab-btn active" data-employee-tab="assignments">업무지시</button><button class="tab-btn" data-employee-tab="workload">직원별 업무량</button><button class="tab-btn" data-employee-tab="kpi">직원 KPI</button></div><div class="panel" id="peoplePanel"><div class="panel-title"><h2>직원별 업무량</h2><button class="btn" id="addPersonBtn">직원 추가</button></div><div id="people"></div></div><div class="panel" id="employeeKpiPanel"><div class="panel-title"><h2>직원 KPI</h2><button class="btn" id="exportKpiBtn">KPI 내보내기</button></div><div class="filters"><select id="kpiYear"></select><select id="kpiMonth"><option value="all">연간</option><option value="01">1월</option><option value="02">2월</option><option value="03">3월</option><option value="04">4월</option><option value="05">5월</option><option value="06">6월</option><option value="07">7월</option><option value="08">8월</option><option value="09">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div><div class="stack" id="employeeKpis"></div></div><div class="panel" id="assignmentsPanel"><div class="panel-title"><h2>직원 업무지시</h2><button class="btn primary" id="addAssignmentBtn">업무 지시</button></div><div class="stack" id="assignments"></div></div><div class="panel" id="todosPanel"><div class="panel-title"><h2>오늘 확인할 항목</h2><button class="btn" id="addTodoBtn">항목 추가</button></div><div class="stack" id="todos"></div></div><div class="panel hidden" id="currentPlantsPanel"><div class="panel-title"><h2>현재 시공중인 발전소</h2></div><div class="stack" id="currentPlants"></div></div><div class="panel hidden" id="upcomingPlantsPanel"><div class="panel-title"><h2>시공 예정 발전소</h2></div><div class="stack" id="upcomingPlants"></div></div><div class="panel hidden" id="constructionReportPanel"><div class="panel-title"><h2>월간 시공 보고서</h2></div><div class="filters"><select id="constructionReportYear"></select><select id="constructionReportMonth"></select><button class="btn primary" id="openConstructionReportBtn">보고서 보기</button></div></div></div>
       </section>
-      <section class="panel" style="margin-top:14px"><strong>공유 저장 사용 중</strong><p class="meta">PC, 스마트폰, 외부 접속 주소가 같은 서버 데이터를 사용합니다. 다른 기기는 새로고침하면 최신 내용이 보입니다.</p></section>
+      <section class="panel" id="sharedNotice" style="margin-top:14px"><strong>공유 저장 사용 중</strong><p class="meta">PC, 스마트폰, 외부 접속 주소가 같은 서버 데이터를 사용합니다. 다른 기기는 새로고침하면 최신 내용이 보입니다.</p></section>
     </main>
   </div>
   <div class="overlay" id="projectModal"><div class="modal"><div class="modal-head"><h2>현장 수정</h2><button class="btn icon" data-close="projectModal">×</button></div><div class="form-grid"><div class="form-row"><label>고객/현장</label><input class="field" id="projectName"></div><div class="form-row"><label>업무단계</label><select id="projectPhase"></select></div><div class="form-row"><label>담당</label><input class="field" id="projectOwner"></div><div class="form-row"><label>마감일</label><input class="field" type="date" id="projectDue"></div><div class="form-row"><label>상태</label><select id="projectStatus"></select></div><div class="form-row full"><label>다음 액션</label><textarea class="field" id="projectNext"></textarea></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveProjectBtn">저장</button><button class="btn danger hidden" id="deleteProjectInModalBtn">삭제</button></div></div></div>
@@ -1203,13 +1203,14 @@
         if(!$("#reportStyle")){
           document.head.insertAdjacentHTML("beforeend",`<style id="reportStyle">
             #reportView{box-shadow:none;background:transparent;border:0;padding:0}
-            .report-shell{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;align-items:start}
-            .report-form,.report-preview,.report-card{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px}
+            .report-shell{display:grid;grid-template-columns:minmax(340px,420px) minmax(0,1fr);gap:18px;align-items:start}
+            .report-form,.report-card{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px}
+            .report-preview{background:transparent;border:0;box-shadow:none;padding:0;overflow:auto}
             .report-form{display:grid;gap:10px}.report-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
             .report-tabs button{min-height:36px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:0 14px;font-weight:900}
             .report-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}
             .report-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.report-form-grid .full{grid-column:1/-1}
-            .photo-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photo-box{border:1px dashed var(--line);border-radius:8px;padding:10px;background:#fbfdfe}
+            .photo-inputs{display:grid;grid-template-columns:1fr;gap:8px}.photo-box{border:1px dashed var(--line);border-radius:8px;padding:10px;background:#fbfdfe}
             .photo-box input{width:100%}.as-sheet{width:794px;max-width:100%;margin:auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
             .as-sheet h2{text-align:center;font-size:22px;margin:18px 0 20px}.as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:7px 12px;background:#fff}
             .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}.as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:7px 9px;white-space:normal;overflow:visible;text-overflow:clip;height:30px}
@@ -1218,6 +1219,7 @@
             .as-photo-label{text-align:center;font-weight:900;font-size:13px;padding-top:4px}.as-photo-cell img{width:100%;height:150px;object-fit:cover;display:block}.as-photo-empty{display:grid;place-items:center;color:#aaa;font-size:12px;background:#fafafa}
             .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}.as-sign-row>div{height:64px;border-right:1px solid #d8d8d8;text-align:center;font-weight:900;padding-top:8px}.as-sign-row>div:last-child{border-right:0}
             .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}
+            body.report-page #sharedNotice{display:none!important}
             @media(max-width:1050px){.report-shell{grid-template-columns:1fr}.as-sheet{width:100%}}@media print{body>*:not(.print-root){display:none!important}.print-root{display:block!important}.as-sheet{border:0;width:100%}}
           </style>`);
         }
@@ -1243,6 +1245,8 @@
         const isReport=currentView==="reports";
         els.reportView.classList.toggle("hidden",!isReport);
         if(els.driveView)els.driveView.classList.toggle("hidden",currentView!=="drive");
+        document.body.classList.toggle("report-page",isReport);
+        $("#sharedNotice")?.classList.toggle("hidden",isReport);
         if(isReport){
           $("#kpis").classList.add("hidden");
           els.dashboardView.classList.add("hidden");
