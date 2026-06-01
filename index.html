@@ -134,8 +134,9 @@
     .risk-late strong{color:#991b1b}
     .risk-soon strong{color:#8a4b00}
     .dashboard-memo-box{width:100%;min-height:112px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;line-height:1.5;background:#fbfdfe}
-    body.masking-mode .project-name,body.masking-mode .todo-card-title,body.masking-mode .linked-item strong,body.masking-mode .today-item strong,body.masking-mode td:first-child,body.masking-mode .name,body.masking-mode .memo-item,body.masking-mode .detail-cell strong{filter:blur(5px);user-select:none}
-    body.masking-mode .project-meta,body.masking-mode .todo-card-meta,body.masking-mode .meta{filter:blur(3px);user-select:none}
+    body.masking-mode main h1,body.masking-mode main h2,body.masking-mode main h3,body.masking-mode main p,body.masking-mode main span,body.masking-mode main strong,body.masking-mode main small,body.masking-mode main label,body.masking-mode main td,body.masking-mode main th,body.masking-mode main input,body.masking-mode main textarea,body.masking-mode main select,body.masking-mode main option,body.masking-mode main button:not(#maskToggleBtn),body.masking-mode aside .brand span,body.masking-mode aside nav .nav-btn span{filter:blur(5px);user-select:none}
+    body.masking-mode main input::placeholder,body.masking-mode main textarea::placeholder{color:transparent}
+    body.masking-mode .project-name,body.masking-mode .project-meta,body.masking-mode .todo-card-title,body.masking-mode .todo-card-meta,body.masking-mode .linked-item,body.masking-mode .today-item,body.masking-mode .memo-item,body.masking-mode .detail-cell,body.masking-mode .meta,body.masking-mode .value,body.masking-mode .label{filter:blur(5px);user-select:none}
     @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
     @media(max-width:1180px){.dashboard-workspace .workspace-dashboard{grid-template-columns:1fr}.dashboard-workspace .dash-side{padding-top:0}.dashboard-risk-list{grid-template-columns:1fr}}
     @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
