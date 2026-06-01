@@ -1251,6 +1251,7 @@
       function renderDbView(){
         injectDbChrome();
         const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
+        const hasQuery=!!dbQuery.trim(),previewRows=hasQuery?results.map(x=>x.row):rows.slice(0,200),showing=hasQuery?results.length:Math.min(rows.length,200);
         els.dbView.innerHTML=`<div class="db-shell">
           <aside class="db-card">
             <div class="panel-title"><h2>DB 파일</h2><span class="badge ${rows.length?"green":"amber"}">${rows.length?`${rows.length}건`:"비어 있음"}</span></div>
@@ -1261,8 +1262,9 @@
           </aside>
           <section class="db-main">
             <div class="panel-title"><h2>DB 검색</h2><input class="search" id="dbSearchInput" placeholder="발전소명, 사업주명, 주소 검색" value="${esc(dbQuery)}"></div>
+            <div class="meta">전체 저장 ${rows.length}건 · ${hasQuery?`검색 결과 ${results.length}건`:`현재 미리보기 ${showing}건`}${!hasQuery&&rows.length>showing?` · 나머지는 검색으로 확인`:""}</div>
             <div class="db-results">${results.length?results.map(x=>`<button class="db-result" data-db-result="${x.i}"><strong>${esc(dbSummary(x.row)||"이름 없는 항목")}</strong><div class="meta">${esc(Object.entries(x.row).slice(0,5).map(([k,v])=>`${k}: ${v}`).join(" · "))}</div></button>`).join(""):`<div class="meta">${rows.length?"검색어를 입력하세요.":"먼저 DB 엑셀 파일을 업로드하세요."}</div>`}</div>
-            <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.slice(0,30).map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
+            <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
           </section>
         </div>`;
         $("#dbSearchInput")?.addEventListener("input",e=>{dbQuery=e.target.value;renderDbView()});
