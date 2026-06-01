@@ -895,6 +895,13 @@
     document.addEventListener("click",e=>{
       if(e.target?.id==="assignmentModal"||e.target?.id==="todoModal")e.target.classList.remove("open");
     });
+    function resetTaskModalScroll(id){
+      requestAnimationFrame(()=>{const modal=$("#"+id+" .modal");if(modal)modal.scrollTop=0});
+    }
+    const openTodoModalScrollTop=openTodoModal;
+    openTodoModal=function(...args){openTodoModalScrollTop(...args);resetTaskModalScroll("todoModal")}
+    const openAssignmentModalScrollTop=openAssignmentModal;
+    openAssignmentModal=function(...args){openAssignmentModalScrollTop(...args);resetTaskModalScroll("assignmentModal")}
     assignmentTaskHtml=function(t){const i=state.assignments.indexOf(t),c=personColor(t.owner),addr=t.location?`<br>주소: ${esc(t.location)}`:"";return `<div class="calendar-task" style="border-left-color:${esc(c)};background:${esc(hexToRgba(c,.22))}" data-open-assignment="${i}" title="${esc([t.detail,t.location].filter(Boolean).join(" / ")||t.title)}"><span class="color-dot" style="background:${esc(c)}"></span>${esc(peopleText(t))} · ${esc(t.title)}<br>${esc(t.status)} · ${esc(t.priority)}${addr}</div>`}
     const renderTodoBoardWithAddress=renderTodoBoard;
     renderTodoBoard=function(){
