@@ -1660,6 +1660,7 @@
           document.head.insertAdjacentHTML("beforeend",`<style id="fieldworkStyle">
             #fieldworkView{box-shadow:none;background:transparent;border:0;padding:0}
             .fieldwork-shell{display:grid;gap:14px}
+            .fieldwork-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
             .fieldwork-kpis{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px}
             .fieldwork-kpi{background:#fff;border:1px solid var(--line);border-radius:8px;padding:13px;box-shadow:var(--shadow)}
             .fieldwork-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
@@ -1669,14 +1670,16 @@
             .fieldwork-actions .btn{min-height:30px;padding:0 9px;font-size:12px}
             .fieldwork-log{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
             .fieldwork-row{display:grid;grid-template-columns:120px 100px minmax(120px,1fr) minmax(120px,1fr) 140px;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;align-items:center}
+            .fieldwork-row.no-time{grid-template-columns:120px 100px minmax(120px,1fr) minmax(120px,1fr)}
             .fieldwork-row.head{background:#f8fbfc;color:var(--muted);font-weight:900;font-size:12px}
             .fieldwork-row:last-child{border-bottom:0}
-            @media(max-width:760px){.fieldwork-kpis{grid-template-columns:repeat(2,1fr)}.fieldwork-row{grid-template-columns:1fr}.fieldwork-row.head{display:none}}
+            @media(max-width:760px){.fieldwork-kpis{grid-template-columns:repeat(2,1fr)}.fieldwork-row,.fieldwork-row.no-time{grid-template-columns:1fr}.fieldwork-row.head{display:none}}
           </style>`);
         }
       }
       function ensureFieldworkState(){
         if(!Array.isArray(state.fieldworkLogs))state.fieldworkLogs=[];
+        state.fieldworkLogs.forEach(x=>{if(!x.date&&x.time)x.date=String(x.time).slice(0,10);if(!x.savedAt)x.savedAt=x.time||new Date().toISOString()});
         if(!state.nav.some(n=>n.label==="외근현황")){
           const adminIndex=state.nav.findIndex(n=>n.label.includes("관리자"));
           state.nav.splice(adminIndex>=0?adminIndex:state.nav.length,0,{icon:"⌖",label:"외근현황"});
@@ -1703,17 +1706,31 @@
       const baseRenderCurrentForFieldwork=renderCurrentContent;
       renderCurrentContent=function(){if(currentView==="fieldwork"){syncViewChrome();renderFieldworkView();return}baseRenderCurrentForFieldwork()};
       const baseSyncForFieldwork=syncViewChrome;
-      syncViewChrome=function(){baseSyncForFieldwork();if(currentView==="fieldwork"){els.pageTitle.textContent="외근현황";els.pageSub.textContent="전국 현장 이동, 출근, 퇴근, 발전소별 작업 상태를 직원별로 확인합니다.";$("#addProjectBtn").textContent="현황 등록"}};
-      function latestFieldworkByPerson(name){return [...(state.fieldworkLogs||[])].reverse().find(x=>x.person===name&&String(x.time||"").startsWith(today))}
+      syncViewChrome=function(){baseSyncForFieldwork();if(currentView==="fieldwork"){els.pageTitle.textContent="외근현황";els.pageSub.textContent="전국 현장 이동, 출근, 퇴근, 발전소별 작업 상태를 직원별로 확인합니다.";$("#addProjectBtn").textContent=adminUnlocked?"엑셀 내보내기":"현황 등록"}};
+      function localFieldworkStamp(){const d=new Date();return `${localDateString(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
+      function latestFieldworkByPerson(name){return [...(state.fieldworkLogs||[])].reverse().find(x=>x.person===name&&(x.date||String(x.time||"").slice(0,10))===today)}
       function fieldworkStatusClass(status){if(status==="퇴근")return"green";if(status==="출근")return"blue";if(status==="이동중")return"amber";if(status==="현장도착"||status==="작업중")return"red";return""}
       function fieldworkKpis(){const people=state.people||[],latest=people.map(p=>latestFieldworkByPerson(p.name)),count=s=>latest.filter(x=>x?.status===s).length;return {total:people.length,checkin:latest.filter(Boolean).length,move:count("이동중"),work:count("현장도착")+count("작업중"),off:count("퇴근")}}
+      function fieldworkWhen(x){return String(x?.time||"").replace("T"," ").slice(0,16)}
+      function csvCell(v){return `"${String(v??"").replaceAll('"','""')}"`}
+      function exportFieldworkExcel(){
+        if(!adminUnlocked&&!unlockAdmin())return;
+        const rows=["날짜,시간,직원,상태,발전소/현장,지역,메모"];
+        (state.fieldworkLogs||[]).slice().reverse().forEach(x=>{const when=fieldworkWhen(x);rows.push([x.date||when.slice(0,10),when.slice(11,16),x.person,x.status,x.site,x.region,x.memo].map(csvCell).join(","))});
+        const blob=new Blob(["\ufeff"+rows.join("\n")],{type:"text/csv;charset=utf-8"});
+        const url=URL.createObjectURL(blob),a=document.createElement("a");
+        a.href=url;a.download=`외근현황_${today}.csv`;a.click();URL.revokeObjectURL(url);
+        toast("외근현황 엑셀 파일을 내보냈습니다.");
+      }
       function renderFieldworkView(){
         ensureFieldworkChrome();ensureFieldworkState();
-        const k=fieldworkKpis(),logs=(state.fieldworkLogs||[]).filter(x=>String(x.time||"").startsWith(today)).slice().reverse();
-        const cards=(state.people||[]).map((p,i)=>{const latest=latestFieldworkByPerson(p.name),status=latest?.status||"출근 전";return `<div class="fieldwork-card"><div class="fieldwork-status"><div><div class="name">${esc(p.name)}</div><div class="meta">${esc(p.role||"직원")} · ${esc(p.area||"담당업무 미입력")}</div></div><span class="badge ${fieldworkStatusClass(status)}">${esc(status)}</span></div><div class="meta">${latest?`${esc(latest.site||"현장 미입력")} · ${esc(latest.region||"지역 미입력")} · ${esc((latest.time||"").slice(11,16))}`:"오늘 기록 없음"}</div><div class="fieldwork-actions"><button class="btn" data-fieldwork-status="출근" data-person="${i}">출근</button><button class="btn" data-fieldwork-status="이동중" data-person="${i}">이동중</button><button class="btn" data-fieldwork-status="현장도착" data-person="${i}">현장도착</button><button class="btn" data-fieldwork-status="작업중" data-person="${i}">작업중</button><button class="btn primary" data-fieldwork-status="퇴근" data-person="${i}">퇴근</button></div></div>`}).join("");
-        els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-kpis"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.checkin}</div></div><div class="fieldwork-kpi"><div class="label">이동중</div><div class="value">${k.move}</div></div><div class="fieldwork-kpi"><div class="label">현장 작업</div><div class="value">${k.work}</div></div><div class="fieldwork-kpi"><div class="label">퇴근</div><div class="value">${k.off}</div></div></div><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row head"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span><span>시간</span></div>${logs.length?logs.map(x=>`<div class="fieldwork-row"><strong>${esc(x.person)}</strong><span><span class="badge ${fieldworkStatusClass(x.status)}">${esc(x.status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span><span>${esc((x.time||"").replace("T"," ").slice(0,16))}</span></div>`).join(""):`<div class="fieldwork-row"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
+        const canSeeTime=adminUnlocked,k=fieldworkKpis(),logs=(state.fieldworkLogs||[]).filter(x=>(x.date||String(x.time||"").slice(0,10))===today).slice().reverse();
+        const cards=(state.people||[]).map((p,i)=>{const latest=latestFieldworkByPerson(p.name),status=latest?.status||"출근 전",place=latest?[latest.site||"현장 미입력",latest.region||"지역 미입력",canSeeTime?fieldworkWhen(latest).slice(11,16):""].filter(Boolean).join(" · "):"오늘 기록 없음";return `<div class="fieldwork-card"><div class="fieldwork-status"><div><div class="name">${esc(p.name)}</div><div class="meta">${esc(p.role||"직원")} · ${esc(p.area||"담당업무 미입력")}</div></div><span class="badge ${fieldworkStatusClass(status)}">${esc(status)}</span></div><div class="meta">${esc(place)}</div><div class="fieldwork-actions"><button class="btn" data-fieldwork-status="출근" data-person="${i}">출근</button><button class="btn" data-fieldwork-status="이동중" data-person="${i}">이동중</button><button class="btn" data-fieldwork-status="현장도착" data-person="${i}">현장도착</button><button class="btn" data-fieldwork-status="작업중" data-person="${i}">작업중</button><button class="btn primary" data-fieldwork-status="퇴근" data-person="${i}">퇴근</button></div></div>`}).join("");
+        const timeHead=canSeeTime?"<span>시간</span>":"";
+        const exportBtn=adminUnlocked?`<button class="btn primary" id="fieldworkExportBtn">엑셀 내보내기</button>`:"";
+        els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">하루 기록은 날짜별 데이터베이스로 계속 저장됩니다. 시간과 엑셀 내보내기는 관리자만 볼 수 있습니다.</div><div class="row-actions">${exportBtn}</div></div><div class="fieldwork-kpis"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.checkin}</div></div><div class="fieldwork-kpi"><div class="label">이동중</div><div class="value">${k.move}</div></div><div class="fieldwork-kpi"><div class="label">현장 작업</div><div class="value">${k.work}</div></div><div class="fieldwork-kpi"><div class="label">퇴근</div><div class="value">${k.off}</div></div></div><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row head ${canSeeTime?"":"no-time"}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${timeHead}</div>${logs.length?logs.map(x=>`<div class="fieldwork-row ${canSeeTime?"":"no-time"}"><strong>${esc(x.person)}</strong><span><span class="badge ${fieldworkStatusClass(x.status)}">${esc(x.status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${canSeeTime?`<span>${esc(fieldworkWhen(x))}</span>`:""}</div>`).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
       }
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";state.fieldworkLogs.unshift({person:person.name,status,site,region,memo,time:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
       ensureFieldworkChrome();ensureFieldworkState();
     })();    (function removeScheduleCategory(){
       function stripScheduleCategory(){
