@@ -1770,6 +1770,81 @@
       }
       document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.deleteFieldwork){if(!adminUnlocked&&!unlockAdmin())return;const id=t.dataset.deleteFieldwork;if(confirm("이 외근 기록을 삭제할까요?")){state.fieldworkLogs=(state.fieldworkLogs||[]).filter(x=>x.id!==id);saveState("외근 기록을 삭제했습니다.");render()}return}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
       ensureFieldworkChrome();ensureFieldworkState();
+    })();
+    (function improveFieldworkWorkflow(){
+      const FW={start:"근무시작",move:"현장출발",onsite:"현장작업",done:"작업완료",off:"퇴근"};
+      function ensureFieldworkPanel(){
+        if(!$("#fieldworkView")){
+          (els.dbView||els.reportView||els.driveView||els.adminView).insertAdjacentHTML("afterend",`<section class="panel hidden" id="fieldworkView"></section>`);
+          els.fieldworkView=$("#fieldworkView");
+        }
+        if(!$("#fieldworkWorkflowStyle")){
+          document.head.insertAdjacentHTML("beforeend",`<style id="fieldworkWorkflowStyle">
+            .fieldwork-kpis.workflow{grid-template-columns:repeat(6,minmax(110px,1fr))}
+            .fieldwork-actions.workflow .btn{min-height:32px}
+            .fieldwork-actions.workflow .btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+            .fieldwork-card .route{font-weight:850;color:#33444d}
+            @media(max-width:760px){.fieldwork-kpis.workflow{grid-template-columns:repeat(2,1fr)}.fieldwork-actions.workflow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.fieldwork-actions.workflow .btn{width:100%;padding:0 6px}}
+          </style>`);
+        }
+      }
+      function ensureFieldworkData(){
+        if(!Array.isArray(state.fieldworkLogs))state.fieldworkLogs=[];
+        state.fieldworkLogs.forEach(x=>{if(!x.id)x.id=uid("fieldwork");if(!x.date&&x.time)x.date=String(x.time).slice(0,10);if(!x.savedAt)x.savedAt=x.time||new Date().toISOString()});
+      }
+      function todayFieldworkRows(){return (state.fieldworkLogs||[]).filter(x=>(x.date||String(x.time||"").slice(0,10))===today)}
+      function latestFieldwork(name){return todayFieldworkRows().find(x=>x.person===name)}
+      function lastKnownSite(name){return todayFieldworkRows().find(x=>x.person===name&&x.site)?.site||""}
+      function lastKnownRegion(name){return todayFieldworkRows().find(x=>x.person===name&&x.region)?.region||""}
+      function destinationForArrival(name){const latest=latestFieldwork(name);return latest?.site||lastKnownSite(name)}
+      function fwClass(status){if(status===FW.off)return"green";if(status===FW.start)return"blue";if(status===FW.move)return"amber";if(status===FW.onsite)return"red";if(status===FW.done)return"green";return""}
+      function fwRank(status){return {[FW.onsite]:0,[FW.move]:1,[FW.done]:2,[FW.start]:3,"출근 전":4,[FW.off]:5}[status]??6}
+      function fwLabel(status){return status==="이동중"?FW.move:status==="현장도착"||status==="작업중"?FW.onsite:status==="출근"?FW.start:status}
+      function fwStamp(){const d=new Date();return `${localDateString(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
+      function addFieldworkLog(person,status,{site="",region="",memo=""}={}){
+        const stamp=fwStamp();
+        state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});
+        saveState(`${person.name} ${status} 기록을 저장했습니다.`);
+        renderFieldworkWorkflow();
+      }
+      function fieldworkWorkflowKpis(){
+        const people=state.people||[],latest=people.map(p=>latestFieldwork(p.name)).map(x=>x&&{...x,status:fwLabel(x.status)}),count=s=>latest.filter(x=>x?.status===s).length;
+        return {total:people.length,recorded:latest.filter(Boolean).length,move:count(FW.move),onsite:count(FW.onsite),done:count(FW.done),off:count(FW.off)};
+      }
+      function renderFieldworkWorkflow(){
+        ensureFieldworkPanel();ensureFieldworkData();
+        if(currentView!=="fieldwork")return;
+        $("#kpis")?.classList.add("hidden");
+        els.dashboardView?.classList.add("hidden");els.adminView?.classList.add("hidden");els.mainGrid?.classList.add("hidden");
+        els.fieldworkView.classList.remove("hidden");
+        els.pageTitle.textContent="외근현황";
+        els.pageSub.textContent="근무 시작, 현장 출발, 도착 확인, 작업 완료, 퇴근 흐름으로 현장 이동을 기록합니다.";
+        $("#addProjectBtn").textContent=adminUnlocked?"엑셀 내보내기":"현황 등록";
+        const k=fieldworkWorkflowKpis(),logs=todayFieldworkRows().slice().sort((a,b)=>fwRank(fwLabel(a.status))-fwRank(fwLabel(b.status))||String(b.time||"").localeCompare(String(a.time||"")));
+        const cards=(state.people||[]).map((p,i)=>({p,i,latest:latestFieldwork(p.name)})).map(x=>({...x,status:fwLabel(x.latest?.status||"출근 전")})).sort((a,b)=>fwRank(a.status)-fwRank(b.status)||a.p.name.localeCompare(b.p.name,"ko")).map(({p,i,latest,status})=>{
+          const site=latest?.site||"현장 미입력",region=latest?.region||"지역 미입력",memo=latest?.memo||"메모 없음";
+          return `<div class="fieldwork-card"><div class="fieldwork-status"><div><div class="name">${esc(p.name)}</div><div class="meta">${esc(p.role||"직원")} · ${esc(p.area||"담당업무 미입력")}</div></div><span class="badge ${fwClass(status)}">${esc(status)}</span></div><div class="meta route">${latest?`${esc(site)} · ${esc(region)}`:"오늘 기록 없음"}</div><div class="meta">${esc(memo)}</div><div class="fieldwork-actions workflow"><button class="btn" data-fw-action="start" data-person="${i}">근무시작</button><button class="btn" data-fw-action="move" data-person="${i}">현장출발</button><button class="btn" data-fw-action="arrive" data-person="${i}">도착확인</button><button class="btn" data-fw-action="done" data-person="${i}">작업완료</button><button class="btn primary" data-fw-action="off" data-person="${i}">퇴근</button></div></div>`;
+        }).join("");
+        els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">현장출발에서 목적지를 입력하면 도착확인은 같은 현장을 이어받습니다. 불필요한 중복 입력을 줄였습니다.</div><div class="row-actions">${adminUnlocked?`<button class="btn primary" id="fieldworkExportBtn">엑셀 내보내기</button>`:""}</div></div><div class="fieldwork-kpis workflow"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.recorded}</div></div><div class="fieldwork-kpi"><div class="label">현장출발</div><div class="value">${k.move}</div></div><div class="fieldwork-kpi"><div class="label">현장작업</div><div class="value">${k.onsite}</div></div><div class="fieldwork-kpi"><div class="label">작업완료</div><div class="value">${k.done}</div></div><div class="fieldwork-kpi"><div class="label">퇴근</div><div class="value">${k.off}</div></div></div><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${adminUnlocked?"<span>관리</span>":""}</div>${logs.length?logs.map(x=>{const status=fwLabel(x.status);return `<div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><strong>${esc(x.person)}</strong><span><span class="badge ${fwClass(status)}">${esc(status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${adminUnlocked?`<span><button class="btn icon danger" data-delete-fieldwork="${esc(x.id)}">삭제</button></span>`:""}</div>`}).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
+      }
+      const baseRenderCurrentForWorkflow=renderCurrentContent;
+      renderCurrentContent=function(){if(currentView==="fieldwork"){renderFieldworkWorkflow();return}baseRenderCurrentForWorkflow()};
+      const baseSyncViewForWorkflow=syncViewChrome;
+      syncViewChrome=function(){baseSyncViewForWorkflow();if(currentView==="fieldwork"){els.pageTitle.textContent="외근현황";els.pageSub.textContent="근무 시작, 현장 출발, 도착 확인, 작업 완료, 퇴근 흐름으로 현장 이동을 기록합니다.";$("#addProjectBtn").textContent=adminUnlocked?"엑셀 내보내기":"현황 등록"}};
+      document.addEventListener("click",e=>{
+        const t=e.target.closest("button")||e.target;
+        if(t.dataset.fwAction){
+          e.preventDefault();e.stopImmediatePropagation();
+          const person=state.people[Number(t.dataset.person)];if(!person)return;
+          const action=t.dataset.fwAction;
+          if(action==="start"){addFieldworkLog(person,FW.start,{memo:prompt("근무 시작 메모가 있으면 입력하세요.","")||""});return}
+          if(action==="move"){const site=prompt("이동할 발전소/현장명을 입력하세요.",lastKnownSite(person.name));if(!site)return;const region=prompt("지역 또는 이동 메모를 입력하세요.",lastKnownRegion(person.name))||"";addFieldworkLog(person,FW.move,{site,region});return}
+          if(action==="arrive"){let site=destinationForArrival(person.name);if(!site)site=prompt("도착한 발전소/현장명을 입력하세요.","")||"";if(!site)return;addFieldworkLog(person,FW.onsite,{site,region:lastKnownRegion(person.name),memo:"도착 확인"});return}
+          if(action==="done"){const site=lastKnownSite(person.name);const memo=prompt("작업 결과나 특이사항을 입력하세요.","")||"";addFieldworkLog(person,FW.done,{site,region:lastKnownRegion(person.name),memo});return}
+          if(action==="off"){const memo=prompt("퇴근 메모가 있으면 입력하세요.","")||"";addFieldworkLog(person,FW.off,{site:lastKnownSite(person.name),region:lastKnownRegion(person.name),memo});return}
+        }
+        if(currentView==="fieldwork"&&t.id==="addProjectBtn"&&!adminUnlocked){e.preventDefault();e.stopImmediatePropagation();toast("직원 카드에서 현장 이동 흐름을 기록합니다.")}
+      },true);
     })();    (function removeScheduleCategory(){
       function stripScheduleCategory(){
         if(Array.isArray(state.nav)) state.nav=state.nav.filter(n=>n.label!=="일정관리"&&n.label!=="직원업무");
