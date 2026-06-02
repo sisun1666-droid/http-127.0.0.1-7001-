@@ -1311,8 +1311,46 @@
     (function setupDbCenter(){
       const dbStoreKey="solar-business-db-v1";
       let dbQuery="";
-      function loadDb(){try{return JSON.parse(localStorage.getItem(dbStoreKey)||"{}")}catch{return{}}}
-      function saveDb(data){localStorage.setItem(dbStoreKey,JSON.stringify(data))}
+      function isUsefulDb(db){return db&&Array.isArray(db.rows)&&db.rows.length}
+      function loadDb(){
+        if(isUsefulDb(state.businessDb))return state.businessDb;
+        try{
+          const local=JSON.parse(localStorage.getItem(dbStoreKey)||"{}");
+          const clearedAt=state.businessDbClearedAt?new Date(state.businessDbClearedAt).getTime():0;
+          const localAt=new Date(local.cloudSavedAt||local.updatedAt||0).getTime();
+          if(isUsefulDb(local)&&clearedAt&&(!localAt||localAt<=clearedAt)){
+            localStorage.removeItem(dbStoreKey);
+            return {};
+          }
+          if(isUsefulDb(local)){
+            state.businessDb=local;
+            state.businessDbSyncedAt=state.businessDbSyncedAt||new Date().toISOString();
+            persistState();
+          }
+          return local;
+        }catch{return{}}
+      }
+      function saveDb(data){
+        const db={...data,cloudSavedAt:new Date().toISOString()};
+        localStorage.setItem(dbStoreKey,JSON.stringify(db));
+        state.businessDb=db;
+        state.businessDbSyncedAt=db.cloudSavedAt;
+        delete state.businessDbClearedAt;
+        persistState();
+      }
+      function clearDb(){
+        localStorage.removeItem(dbStoreKey);
+        delete state.businessDb;
+        state.businessDbSyncedAt=new Date().toISOString();
+        state.businessDbClearedAt=state.businessDbSyncedAt;
+        persistState();
+      }
+      function dbSavedText(db){
+        if(!isUsefulDb(db))return "아직 공유 저장된 DB가 없습니다.";
+        const when=db.cloudSavedAt||db.updatedAt||state.businessDbSyncedAt;
+        const time=when?new Date(when).toLocaleString("ko-KR"):"시간 미확인";
+        return `공유 저장됨 · ${time}`;
+      }
       function dbRows(){const db=loadDb();return Array.isArray(db.rows)?db.rows:[]}
       function dbColumns(){const rows=dbRows();return rows[0]?Object.keys(rows[0]):[]}
       function dbCell(row,names){const keys=Object.keys(row||{});for(const name of names){const found=keys.find(k=>k.replace(/\s/g,"").toLowerCase()===String(name).replace(/\s/g,"").toLowerCase());if(found&&row[found]!==undefined&&row[found]!==null&&String(row[found]).trim()!=="")return String(row[found]).trim()}return""}
@@ -1362,7 +1400,7 @@
       const baseRenderCurrentForDb=renderCurrentContent;
       renderCurrentContent=function(){if(currentView==="db"){syncViewChrome();renderDbView();return}baseRenderCurrentForDb()};
       const baseSyncViewChromeForDb=syncViewChrome;
-      syncViewChrome=function(){baseSyncViewChromeForDb();if(currentView==="db"){els.pageTitle.textContent="DB";els.pageSub.textContent="엑셀 DB 파일을 보관하고 보고서/시공일정 자동입력에 사용합니다.";$("#addProjectBtn").textContent="DB 업로드"}};
+      syncViewChrome=function(){baseSyncViewChromeForDb();if(currentView==="db"){els.pageTitle.textContent="DB";els.pageSub.textContent="엑셀 DB 파일을 공유 저장하고 보고서/시공일정 자동입력에 사용합니다.";$("#addProjectBtn").textContent="DB 업로드"}};
       const baseGoToViewForDb=goToView;
       goToView=function(view,label=""){baseGoToViewForDb(view,label);if(view==="db"){syncViewChrome();renderDbView();applyMasking()}};
       function renderDbView(){
@@ -1375,11 +1413,11 @@
             <label class="db-drop" id="dbDropZone">엑셀(.xlsx) 또는 CSV 파일을<br>여기에 드래그하거나 클릭해서 업로드하세요.<input id="dbFileInput" type="file" accept=".xlsx,.xls,.csv" hidden></label>
             <div class="db-stats"><div class="db-stat"><div class="label">파일명</div><strong>${esc(db.fileName||"-")}</strong></div><div class="db-stat"><div class="label">열 개수</div><strong>${cols.length}</strong></div></div>
             <button class="btn danger" id="dbClearBtn">DB 비우기</button>
-            <p class="meta">업로드한 DB는 이 브라우저에 저장됩니다. 보고서 화면에서 발전소명/사업주명 검색에 사용됩니다.</p>
+            <p class="meta">${esc(dbSavedText(db))}<br>업로드한 DB는 공유 저장되어 집, 회사, 모바일에서 같은 자료를 사용합니다.</p>
           </aside>
           <section class="db-main">
             <div class="panel-title"><h2>DB 검색</h2><input class="search" id="dbSearchInput" placeholder="발전소명, 사업주명, 주소 검색" value="${esc(dbQuery)}"></div>
-            <div class="meta">전체 저장 ${rows.length}건 · ${hasQuery?`검색 결과 ${results.length}건`:`현재 미리보기 ${showing}건`}${!hasQuery&&rows.length>showing?` · 나머지는 검색으로 확인`:""}</div>
+            <div class="meta">전체 저장 ${rows.length}건 · ${hasQuery?`검색 결과 ${results.length}건`:`현재 미리보기 ${showing}건`}${!hasQuery&&rows.length>showing?` · 나머지는 검색으로 확인`:""} · ${esc(dbSavedText(db))}</div>
             <div class="db-results">${results.length?results.map(x=>`<button class="db-result" data-db-result="${x.i}"><strong>${esc(dbSummary(x.row)||"이름 없는 항목")}</strong><div class="meta">${esc(Object.entries(x.row).slice(0,5).map(([k,v])=>`${k}: ${v}`).join(" · "))}</div></button>`).join(""):`<div class="meta">${rows.length?"검색어를 입력하세요.":"먼저 DB 엑셀 파일을 업로드하세요."}</div>`}</div>
             <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
           </section>
@@ -1430,10 +1468,10 @@
           const rows=rawRows.map(compactDbRow).filter(r=>r.발전소명||r.사업주||r.현장주소);
           saveDb({fileName:file.name,updatedAt:new Date().toISOString(),sourceRows:rawRows.length,sourceColumns:Object.keys(rawRows[0]||{}).length,rows});
           window.solarDb={rows:dbRows,columns:dbColumns,search:searchDb,cell:dbCell,summary:dbSummary};
-          toast(`DB ${rows.length}건을 가볍게 저장했습니다.`);renderDbView();
+          toast(`DB ${rows.length}건을 공유 저장했습니다.`);renderDbView();
         }catch(err){toast("DB 파일을 읽지 못했습니다.");console.warn(err)}
       }
-      document.addEventListener("click",e=>{const t=e.target.closest("button,label")||e.target;if(currentView==="db"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();$("#dbFileInput")?.click()}if(t.id==="dbDropZone")$("#dbFileInput")?.click();if(t.id==="dbClearBtn"&&confirm("저장된 DB를 비울까요?")){localStorage.removeItem(dbStoreKey);toast("DB를 비웠습니다.");renderDbView()}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button,label")||e.target;if(currentView==="db"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();$("#dbFileInput")?.click()}if(t.id==="dbDropZone")$("#dbFileInput")?.click();if(t.id==="dbClearBtn"&&confirm("공유 저장된 DB를 비울까요? 모든 기기에서 DB가 비어 보입니다.")){clearDb();toast("공유 DB를 비웠습니다.");renderDbView()}},true);
       document.addEventListener("dragover",e=>{const z=e.target.closest?.("#dbDropZone");if(!z)return;e.preventDefault();z.classList.add("dragover")},true);
       document.addEventListener("dragleave",e=>{const z=e.target.closest?.("#dbDropZone");if(z)z.classList.remove("dragover")},true);
       document.addEventListener("drop",e=>{const z=e.target.closest?.("#dbDropZone");if(!z)return;e.preventDefault();z.classList.remove("dragover");parseDbFile(e.dataTransfer.files[0])},true);
