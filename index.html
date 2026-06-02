@@ -935,8 +935,6 @@
       function constructionKakaoMessage(c){
         const period=[c.start,c.end].filter(Boolean).join(" ~ ");
         return [
-          "[재무팀 전달] 시공일정 확인 요청",
-          "",
           `현장명: ${c.site||"미입력"}`,
           `고객: ${c.customer||"미입력"}`,
           `용량: ${c.kw||"0"}kW`,
@@ -949,9 +947,7 @@
           `일정: ${period||"미입력"}`,
           `소요일: ${c.duration||"미입력"}`,
           "",
-          c.next?`참고사항:\n${c.next}`:"",
-          "",
-          "재무팀 확인 부탁드립니다."
+          c.next?`참고사항:\n${c.next}`:""
         ].filter(v=>v!==null&&v!==undefined).join("\n").replace(/\n{3,}/g,"\n\n").trim();
       }
       document.addEventListener("click",async e=>{
