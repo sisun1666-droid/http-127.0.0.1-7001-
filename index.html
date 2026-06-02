@@ -1903,6 +1903,13 @@
             .fieldwork-map-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
             .fieldwork-map-controls input{min-height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;min-width:260px}
             #fieldworkMap{height:320px;border:1px solid var(--line);border-radius:8px;background:#eef4f5;display:grid;place-items:center;color:var(--muted);font-size:13px;overflow:hidden}
+            .fieldwork-direct-map{position:relative;width:100%;height:100%;background:linear-gradient(135deg,#f7fbfc 0%,#edf4f6 100%);overflow:hidden}
+            .fieldwork-direct-map:before{content:"";position:absolute;inset:18px 32px;border:1px dashed #c8d8de;border-radius:45% 55% 50% 42%;transform:rotate(-12deg);background:rgba(255,255,255,.45)}
+            .fieldwork-map-label{position:absolute;color:#8a9aa3;font-size:11px;font-weight:850}
+            .fieldwork-map-marker{position:absolute;transform:translate(-50%,-100%);display:grid;justify-items:center;gap:3px;z-index:2}
+            .fieldwork-map-pin{min-width:28px;height:28px;border-radius:999px;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900;box-shadow:0 6px 14px rgba(8,125,143,.22);border:2px solid #fff;padding:0 7px}
+            .fieldwork-map-marker .caption{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 7px;box-shadow:0 5px 12px rgba(20,33,42,.08);white-space:nowrap;font-size:11px;color:#263b45;font-weight:850}
+            .fieldwork-map-marker.target .fieldwork-map-pin{background:#d84b3e}
             .fieldwork-nearest{display:grid;gap:6px}
             .fieldwork-nearest-row{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fbfdfe;font-size:12px}
             @media(max-width:760px){.fieldwork-kpis.workflow{grid-template-columns:repeat(2,1fr)}.fieldwork-actions.workflow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.fieldwork-actions.workflow .btn{width:100%;padding:0 6px}}
@@ -1936,18 +1943,39 @@
         saveState(`${person.name} ${status} 기록을 저장했습니다.`);
         renderFieldworkWorkflow();
       }
-      function fieldworkMapProvider(){return localStorage.getItem("fieldwork-map-provider")||"kakao"}
+      const regionPoints=[
+        ["서울",37.5665,126.978],["인천",37.4563,126.7052],["부천",37.5034,126.766],["수원",37.2636,127.0286],["화성",37.1995,126.8312],["평택",36.992,127.112],["파주",37.7599,126.7802],
+        ["춘천",37.8813,127.7298],["원주",37.3422,127.9202],["강릉",37.7519,128.8761],["속초",38.207,128.5918],
+        ["천안",36.8151,127.1139],["아산",36.7898,127.0017],["당진",36.893,126.628],["서산",36.7848,126.45],["공주",36.4466,127.119],["논산",36.1871,127.0988],
+        ["대전",36.3504,127.3845],["청주",36.6424,127.489],["충주",36.991,127.9259],["제천",37.1326,128.191],
+        ["전주",35.8242,127.148],["익산",35.9483,126.9576],["군산",35.9677,126.7366],["정읍",35.5699,126.8559],["남원",35.4164,127.3904],
+        ["광주",35.1595,126.8526],["나주",35.0159,126.7108],["목포",34.8118,126.3922],["순천",34.9506,127.4872],["여수",34.7604,127.6622],["해남",34.5733,126.5989],
+        ["대구",35.8714,128.6014],["구미",36.1195,128.3446],["김천",36.1398,128.1136],["상주",36.4109,128.1591],["안동",36.5684,128.7294],["포항",36.019,129.3435],["경주",35.8562,129.2247],["청도",35.6474,128.734],
+        ["부산",35.1796,129.0756],["울산",35.5384,129.3114],["창원",35.2285,128.6811],["김해",35.228,128.889],["양산",35.335,129.037],["진주",35.1803,128.1087],["밀양",35.5037,128.7467],["거창",35.6867,127.9096],["합천",35.5667,128.1658],["남해",34.8377,127.8926],
+        ["제주",33.4996,126.5312]
+      ].map(([name,lat,lng])=>({name,lat,lng}));
+      function fieldworkMapProvider(){return localStorage.getItem("fieldwork-map-provider")||"manual"}
       function fieldworkMapKeys(){return {kakao:localStorage.getItem("fieldwork-kakao-key")||"",naver:localStorage.getItem("fieldwork-naver-key")||""}}
       function haversineKm(a,b){const R=6371,toRad=d=>d*Math.PI/180,dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng),s=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))}
-      function personLocations(){return (state.people||[]).map(p=>({p,loc:latestLocation(p.name),latest:latestFieldwork(p.name)})).filter(x=>x.loc)}
+      function regionPoint(text){const s=String(text||"").replace(/\s/g,"");return regionPoints.find(r=>s.includes(r.name))||null}
+      function manualLocationFromLog(log){const pt=regionPoint([log?.region,log?.site,log?.memo].filter(Boolean).join(" "));return pt?{lat:pt.lat,lng:pt.lng,label:log.site||pt.name,time:log.time,source:"manual"}:null}
+      function personLocations(){return (state.people||[]).map(p=>{const latest=latestFieldwork(p.name),manual=manualLocationFromLog(latest),gps=latestLocation(p.name),loc=manual||gps;return{p,loc,latest}}).filter(x=>x.loc)}
       function renderNearestList(target=null){const box=$("#fieldworkNearest");if(!box)return;const rows=personLocations().map(x=>({...x,km:target?haversineKm(target,x.loc):null})).sort((a,b)=>(a.km??9999)-(b.km??9999)||fieldworkPeopleRank(a.p.name)-fieldworkPeopleRank(b.p.name));box.innerHTML=rows.length?rows.slice(0,6).map(x=>`<div class="fieldwork-nearest-row"><strong>${esc(x.p.name)}</strong><span>${x.km!==null?`${x.km.toFixed(1)}km · `:""}${esc(x.latest?.site||x.loc.label||"현재 위치")} · ${esc(String(x.loc.time||"").slice(11,16))}</span></div>`).join(""):`<div class="meta">아직 공유된 직원 위치가 없습니다.</div>`}
       function setFieldworkMapStatus(msg){const map=$("#fieldworkMap");if(map)map.innerHTML=`<div>${esc(msg)}</div>`}
       function loadScriptOnce(src,id){return new Promise((resolve,reject)=>{if(id&&document.getElementById(id)){resolve();return}const s=document.createElement("script");if(id)s.id=id;s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+      function renderManualFieldworkMap(target=null){
+        const points=personLocations(),minLat=33.0,maxLat=38.7,minLng=125.9,maxLng=130.2,toXY=loc=>({x:Math.max(4,Math.min(96,(loc.lng-minLng)/(maxLng-minLng)*100)),y:Math.max(6,Math.min(94,(maxLat-loc.lat)/(maxLat-minLat)*100))});
+        const labels=[["수도권",37.6,127.0],["충청",36.6,127.3],["전라",35.2,126.9],["경상",35.6,128.6],["강원",37.6,128.2],["제주",33.5,126.5]].map(([name,lat,lng])=>{const p=toXY({lat,lng});return`<span class="fieldwork-map-label" style="left:${p.x}%;top:${p.y}%">${name}</span>`}).join("");
+        const markers=points.map(({p,loc,latest})=>{const xy=toXY(loc);return`<div class="fieldwork-map-marker" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-pin">${esc(p.name.slice(0,1))}</div><div class="caption">${esc(p.name)} · ${esc(latest?.site||loc.label||"현재 위치")}</div></div>`}).join("");
+        const targetMarker=target?(()=>{const xy=toXY(target);return`<div class="fieldwork-map-marker target" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-pin">!</div><div class="caption">긴급 방문지</div></div>`})():"";
+        const map=$("#fieldworkMap");if(map)map.innerHTML=`<div class="fieldwork-direct-map">${labels}${markers}${targetMarker}</div>`;
+      }
       async function renderFieldworkMap(){
         const provider=fieldworkMapProvider(),keys=fieldworkMapKeys(),points=personLocations();
         renderNearestList();
         if(!$("#fieldworkMap"))return;
-        if(!keys[provider]){setFieldworkMapStatus(`${provider==="kakao"?"카카오":"네이버"} 지도 API 키를 설정하면 지도에 직원 위치가 표시됩니다.`);return}
+        if(provider==="manual"){renderManualFieldworkMap();return}
+        if(!keys[provider]){renderManualFieldworkMap();return}
         const center=points[0]?.loc||{lat:35.5037,lng:128.7467};
         try{
           if(provider==="kakao"){
@@ -1960,7 +1988,7 @@
             const map=new naver.maps.Map("fieldworkMap",{center:new naver.maps.LatLng(center.lat,center.lng),zoom:10});
             points.forEach(({p,loc,latest})=>{const marker=new naver.maps.Marker({map,position:new naver.maps.LatLng(loc.lat,loc.lng),title:p.name});const info=new naver.maps.InfoWindow({content:`<div style="padding:6px 8px;font-size:12px;font-weight:800">${esc(p.name)}<br>${esc(latest?.site||loc.label||"현재 위치")}</div>`});naver.maps.Event.addListener(marker,"click",()=>info.open(map,marker))});
           }
-        }catch{setFieldworkMapStatus("지도 로딩에 실패했습니다. API 키와 등록 도메인을 확인해주세요.")}
+        }catch{renderManualFieldworkMap()}
       }
       function geocodeEmergencyAddress(address){
         const provider=fieldworkMapProvider();
@@ -1968,7 +1996,7 @@
           if(!address)return reject();
           if(provider==="kakao"&&window.kakao?.maps?.services){new kakao.maps.services.Geocoder().addressSearch(address,(res,status)=>status===kakao.maps.services.Status.OK&&res[0]?resolve({lat:Number(res[0].y),lng:Number(res[0].x)}):reject());return}
           if(provider==="naver"&&window.naver?.maps?.Service){naver.maps.Service.geocode({query:address},(status,res)=>status===naver.maps.Service.Status.OK&&res.v2.addresses[0]?resolve({lat:Number(res.v2.addresses[0].y),lng:Number(res.v2.addresses[0].x)}):reject());return}
-          const m=address.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);if(m)resolve({lat:Number(m[1]),lng:Number(m[2])});else reject();
+          const m=address.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);if(m)resolve({lat:Number(m[1]),lng:Number(m[2])});else{const pt=regionPoint(address);pt?resolve(pt):reject()}
         })
       }
       function fieldworkWorkflowKpis(){
@@ -1989,7 +2017,7 @@
           const site=latest?.site||"현장 미입력",region=latest?.region||"지역 미입력",memo=latest?.memo||"메모 없음";
           return `<div class="fieldwork-card"><div class="fieldwork-status"><div><div class="name">${esc(p.name)}</div><div class="meta">${esc(p.role||"직원")} · ${esc(p.area||"담당업무 미입력")}</div></div><span class="badge ${fwClass(status)}">${esc(status)}</span></div><div class="meta route">${latest?`${esc(site)} · ${esc(region)}`:"오늘 기록 없음"}</div><div class="meta">${esc(memo)}</div><div class="fieldwork-actions workflow"><button class="btn primary" data-fw-action="arrive" data-person="${i}">현장도착</button><button class="btn" data-fw-action="done" data-person="${i}">작업완료</button><button class="btn" data-fw-action="return" data-person="${i}">사무실복귀</button></div></div>`;
         }).join("");
-        els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">각 현장에서는 현장도착과 작업완료만 반복하고, 사무실복귀는 마지막 현장을 출발지로 기록합니다.</div><div class="row-actions"></div></div><div class="fieldwork-kpis workflow"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.recorded}</div></div><div class="fieldwork-kpi"><div class="label">현장도착</div><div class="value">${k.onsite}</div></div><div class="fieldwork-kpi"><div class="label">작업완료</div><div class="value">${k.done}</div></div><div class="fieldwork-kpi"><div class="label">사무실복귀</div><div class="value">${k.returning}</div></div></div><section class="fieldwork-map-panel"><div class="fieldwork-map-toolbar"><h2>팀 위치 지도</h2><div class="fieldwork-map-controls"><select id="fieldworkMapProvider"><option value="kakao" ${fieldworkMapProvider()==="kakao"?"selected":""}>카카오맵</option><option value="naver" ${fieldworkMapProvider()==="naver"?"selected":""}>네이버지도</option></select><button class="btn" id="fieldworkMapKeyBtn">API 키 설정</button><button class="btn primary" id="fieldworkShareLocationBtn">내 위치 공유</button></div></div><div class="fieldwork-map-controls"><input id="fieldworkEmergencyAddress" placeholder="긴급 방문지 주소 또는 좌표(lat,lng)"><button class="btn primary" id="fieldworkFindNearestBtn">가까운 직원 찾기</button></div><div id="fieldworkMap">지도 준비 중</div><div class="fieldwork-nearest" id="fieldworkNearest"></div></section><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${adminUnlocked?"<span>관리</span>":""}</div>${logs.length?logs.map(x=>{const status=fwLabel(x.status);return `<div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><strong>${esc(x.person)}</strong><span><span class="badge ${fwClass(status)}">${esc(status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${adminUnlocked?`<span><button class="btn icon danger" data-delete-fieldwork="${esc(x.id)}">삭제</button></span>`:""}</div>`}).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
+        els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">각 현장에서는 현장도착과 작업완료만 반복하고, 사무실복귀는 마지막 현장을 출발지로 기록합니다.</div><div class="row-actions"></div></div><div class="fieldwork-kpis workflow"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.recorded}</div></div><div class="fieldwork-kpi"><div class="label">현장도착</div><div class="value">${k.onsite}</div></div><div class="fieldwork-kpi"><div class="label">작업완료</div><div class="value">${k.done}</div></div><div class="fieldwork-kpi"><div class="label">사무실복귀</div><div class="value">${k.returning}</div></div></div><section class="fieldwork-map-panel"><div class="fieldwork-map-toolbar"><h2>팀 위치 지도</h2><div class="fieldwork-map-controls"><select id="fieldworkMapProvider"><option value="manual" ${fieldworkMapProvider()==="manual"?"selected":""}>직접입력 지도</option><option value="kakao" ${fieldworkMapProvider()==="kakao"?"selected":""}>카카오맵</option><option value="naver" ${fieldworkMapProvider()==="naver"?"selected":""}>네이버지도</option></select><button class="btn" id="fieldworkMapKeyBtn">API 키 설정</button><button class="btn primary" id="fieldworkShareLocationBtn">내 위치 공유</button></div></div><div class="fieldwork-map-controls"><input id="fieldworkEmergencyAddress" placeholder="긴급 방문지 지역/주소 또는 좌표(lat,lng)"><button class="btn primary" id="fieldworkFindNearestBtn">가까운 직원 찾기</button></div><div id="fieldworkMap">지도 준비 중</div><div class="fieldwork-nearest" id="fieldworkNearest"></div></section><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${adminUnlocked?"<span>관리</span>":""}</div>${logs.length?logs.map(x=>{const status=fwLabel(x.status);return `<div class="fieldwork-row no-time ${adminUnlocked?"admin-delete":""}"><strong>${esc(x.person)}</strong><span><span class="badge ${fwClass(status)}">${esc(status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${adminUnlocked?`<span><button class="btn icon danger" data-delete-fieldwork="${esc(x.id)}">삭제</button></span>`:""}</div>`}).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
         renderFieldworkMap();
       }
       const baseRenderCurrentForWorkflow=renderCurrentContent;
@@ -2007,9 +2035,9 @@
           if(action==="return"){const site=lastKnownSite(person.name);if(!site){toast("복귀 출발 현장이 없습니다. 먼저 현장도착을 기록해주세요.");return}const minutes=prompt(`${site}에서 사무실까지 예상 소요시간을 분 단위로 입력하세요.`, "30");const eta=officeEtaText(minutes);const memo=[`출발: ${site}`,eta].filter(Boolean).join(" · ");addFieldworkLog(person,FW.return,{site,region:lastKnownRegion(person.name),memo});return}
         }
         if(t.id==="fieldworkMapProvider"){localStorage.setItem("fieldwork-map-provider",t.value);renderFieldworkMap();return}
-        if(t.id==="fieldworkMapKeyBtn"){const provider=fieldworkMapProvider(),current=fieldworkMapKeys()[provider],key=prompt(`${provider==="kakao"?"카카오 JavaScript 키":"네이버 ncpKeyId"}를 입력하세요.`,current);if(key!==null){localStorage.setItem(provider==="kakao"?"fieldwork-kakao-key":"fieldwork-naver-key",key.trim());renderFieldworkMap()}return}
+        if(t.id==="fieldworkMapKeyBtn"){const provider=fieldworkMapProvider();if(provider==="manual"){toast("직접입력 지도는 API 키 없이 사용할 수 있습니다.");return}const current=fieldworkMapKeys()[provider],key=prompt(`${provider==="kakao"?"카카오 JavaScript 키":"네이버 ncpKeyId"}를 입력하세요.`,current);if(key!==null){localStorage.setItem(provider==="kakao"?"fieldwork-kakao-key":"fieldwork-naver-key",key.trim());renderFieldworkMap()}return}
         if(t.id==="fieldworkShareLocationBtn"){const name=prompt("위치를 공유할 직원 이름을 입력하세요.",state.people[0]?.name||"");if(!name)return;if(!navigator.geolocation){toast("이 브라우저에서는 위치공유를 사용할 수 없습니다.");return}navigator.geolocation.getCurrentPosition(pos=>{state.fieldworkLocations=state.fieldworkLocations||[];state.fieldworkLocations.unshift({id:uid("loc"),person:name,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy,label:"휴대폰 현재 위치",time:new Date().toISOString(),date:today});saveState(`${name} 현재 위치를 공유했습니다.`);renderFieldworkWorkflow()},()=>toast("위치 권한이 거부되었거나 위치를 가져오지 못했습니다."),{enableHighAccuracy:true,timeout:10000});return}
-        if(t.id==="fieldworkFindNearestBtn"){const address=$("#fieldworkEmergencyAddress")?.value||"";geocodeEmergencyAddress(address).then(target=>{renderNearestList(target);toast("가까운 직원 순서로 정렬했습니다.")}).catch(()=>toast("주소 변환에 실패했습니다. 지도 API 키 또는 좌표 입력을 확인해주세요."));return}
+        if(t.id==="fieldworkFindNearestBtn"){const address=$("#fieldworkEmergencyAddress")?.value||"";geocodeEmergencyAddress(address).then(target=>{renderNearestList(target);renderManualFieldworkMap(target);toast("가까운 직원 순서로 정렬했습니다.")}).catch(()=>toast("지역명을 찾지 못했습니다. 예: 아산, 청도, 밀양처럼 입력해주세요."));return}
         if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(!adminUnlocked){toast("엑셀 내보내기는 관리자만 사용할 수 있습니다.");return}exportFieldworkExcel()}
       },true);
       document.addEventListener("change",e=>{const t=e.target;if(t.id==="fieldworkMapProvider"){localStorage.setItem("fieldwork-map-provider",t.value);renderFieldworkMap()}},true);
