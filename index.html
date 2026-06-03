@@ -461,9 +461,9 @@
       if(changed)persistState();
     }
     function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;s.innerHTML=(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");if(!s.value&&state.people?.[0])s.value=state.people[0].name}
-    function staffSession(){try{return JSON.parse(sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
-    function setStaffSession(person){authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};sessionStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}))}
-    function clearStaffSession(){sessionStorage.removeItem(staffSessionKey)}
+    function staffSession(){try{return JSON.parse(localStorage.getItem(staffSessionKey)||sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
+    function setStaffSession(person){authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};localStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}));sessionStorage.removeItem(staffSessionKey)}
+    function clearStaffSession(){localStorage.removeItem(staffSessionKey);sessionStorage.removeItem(staffSessionKey)}
     function acceptStaffSession(){const sess=staffSession();if(!sess?.name)return false;const person=(state.people||[]).find(p=>p.name===sess.name);if(!person)return false;setStaffSession(person);$("#googleLogoutBtn")?.classList.remove("hidden");showApp();return true}
     function staffLogin(){
       const name=$("#staffLoginName")?.value,pin=$("#staffLoginPin")?.value||"",person=(state.people||[]).find(p=>p.name===name);
@@ -474,7 +474,7 @@
       $("#googleLogoutBtn")?.classList.remove("hidden");
       showApp();
     }
-    async function signOutAuth(msg="로그아웃되었습니다."){try{await authClient?.auth?.signOut()}catch{}authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
+    async function signOutAuth(msg="로그아웃되었습니다."){try{await authClient?.auth?.signOut()}catch{}clearStaffSession();authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
     async function acceptAuthUser(user){
       const email=cleanEmail(user?.email);
       if(!email){showAuthGate("구글 계정 이메일을 확인하지 못했습니다.");return}
@@ -494,11 +494,18 @@
       showApp();
     }
     async function initAuthGate(){
-      await loadSharedState();
       ensureDefaultStaffPins();
       fillStaffLoginNames();
       if(acceptStaffSession())return;
-      showAuthGate((state.people||[]).length?"직원 이름과 개인 PIN을 입력해주세요.":"직원이 등록되어 있지 않습니다. 기존 관리자 PIN으로 첫 직원을 등록해주세요.");
+      showAuthGate("직원 이름과 개인 PIN을 입력해주세요.");
+      loadSharedState().then(()=>{
+        ensureDefaultStaffPins();
+        fillStaffLoginNames();
+        if(authReady)render();
+      }).catch(()=>{
+        ensureDefaultStaffPins();
+        fillStaffLoginNames();
+      });
       return;
       const {data}=await authClient.auth.getSession();
       const user=data?.session?.user;
