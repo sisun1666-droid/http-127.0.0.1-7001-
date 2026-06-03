@@ -429,8 +429,8 @@
     }
     function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
-    function ensureDefaultStaffPins(){state.people=Array.isArray(state.people)?state.people:[];let p=state.people.find(x=>x.name==="이재강");if(!p){p={name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"};state.people.unshift(p);persistState();return}if(!staffPin(p)){p.pin="0217";persistState()}}
-    function fillStaffLoginNames(){const s=$("#staffLoginName");if(!s)return;s.innerHTML=(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("")}
+    function ensureDefaultStaffPins(){state.people=Array.isArray(state.people)?state.people:[];let changed=false,p=state.people.find(x=>x.name==="이재강");if(!p){p={name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"};state.people.unshift(p);changed=true}else if(!staffPin(p)){p.pin="0217";changed=true}if(changed)persistState()}
+    function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;s.innerHTML=(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");if(!s.value&&state.people?.[0])s.value=state.people[0].name}
     function staffSession(){try{return JSON.parse(sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
     function setStaffSession(person){authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};sessionStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}))}
     function clearStaffSession(){sessionStorage.removeItem(staffSessionKey)}
