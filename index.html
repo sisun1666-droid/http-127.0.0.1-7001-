@@ -2384,6 +2384,7 @@
       };
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
+        if(e.target?.id==="myWorkPopup"){$("#myWorkPopup")?.classList.remove("open");return}
         if(t.dataset.closeMyWork!==undefined){$("#myWorkPopup")?.classList.remove("open");return}
         if(t.id==="openMyTodoBtn"){const person=currentPerson();$("#myWorkPopup")?.classList.remove("open");if(person){todoOwnerFilter=person.name;todoStatusFilter=KR.all;todoViewMode="board";goToView("todos","할일관리");renderTodoBoard()}return}
         if(t.dataset.myWorkTodo!==undefined){$("#myWorkPopup")?.classList.remove("open");goToView("todos","할일관리");openTodoModal(Number(t.dataset.myWorkTodo));return}
