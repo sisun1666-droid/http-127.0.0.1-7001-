@@ -299,6 +299,10 @@
     body.auth-pending .auth-gate{display:flex}
     .auth-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 22px 56px rgba(20,34,42,.14);padding:24px;display:grid;gap:16px}
     .auth-card .brand{margin:0}.auth-card h1{font-size:24px;margin:0}.auth-card p{margin:0;line-height:1.55}
+    .brand-logo{display:block;width:154px;max-width:100%;height:auto;object-fit:contain}
+    aside .brand{min-height:42px;margin-bottom:18px}
+    aside .brand .mark,aside .brand .brand-text{display:none}
+    .auth-card .brand-logo{width:170px}
     .auth-actions{display:grid;gap:8px}.auth-user{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;background:#f8fbfc;padding:10px 12px;font-size:13px}
     .auth-email-list{display:grid;gap:8px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
     .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
@@ -308,7 +312,7 @@
 <body class="auth-pending">
   <div class="auth-gate" id="authGate">
     <div class="auth-card">
-      <div class="brand"><div class="mark">S</div><span>1577-1577</span></div>
+      <div class="brand"><img class="brand-logo" src="kiwoom-logo.png" alt="KIWOOM"></div>
       <div>
         <h1>로그인이 필요합니다</h1>
         <p class="sub">승인된 구글 계정만 업무관리 사이트를 사용할 수 있습니다.</p>
@@ -321,7 +325,7 @@
     </div>
   </div>
   <div class="app">
-    <aside><div class="brand"><div class="mark">S</div><span id="brandName">Solar Works</span></div><nav id="nav"></nav></aside>
+    <aside><div class="brand"><div class="mark">S</div><img class="brand-logo" src="kiwoom-logo.png" alt="KIWOOM"><span id="brandName" class="brand-text">1577-1577</span></div><nav id="nav"></nav></aside>
     <main>
       <header><div><h1 id="pageTitle">태양광 공무팀 업무관리</h1><div class="sub" id="pageSub">고객 접수부터 인허가, 한전, 시공, 준공, 정산까지 관리합니다.</div></div><div class="toolbar"><button class="btn" id="exportBtn">내보내기</button><button class="btn" id="adminTopBtn">관리자</button><button class="btn primary" id="maskToggleBtn" data-mask-toggle="1" type="button">마스킹 OFF</button><button class="btn primary" id="addProjectBtn">신규 현장</button></div></header>
       <section class="kpis" id="kpis"></section>
