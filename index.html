@@ -429,7 +429,30 @@
     }
     function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
-    function ensureDefaultStaffPins(){state.people=Array.isArray(state.people)?state.people:[];let changed=false,p=state.people.find(x=>x.name==="이재강");if(!p){p={name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"};state.people.unshift(p);changed=true}else if(!staffPin(p)){p.pin="0217";changed=true}if(changed)persistState()}
+    const fallbackStaff=[
+      {name:"이재강",role:"과장",pin:"0217"},
+      {name:"김현지",role:"대리",pin:"1234"},
+      {name:"최호운",role:"과장",pin:"1234"},
+      {name:"최형민",role:"대리",pin:"1234"},
+      {name:"김하린",role:"대리",pin:"1234"},
+      {name:"안승표",role:"대리",pin:"1234"}
+    ];
+    function ensureDefaultStaffPins(){
+      state.people=Array.isArray(state.people)?state.people:[];
+      let changed=false;
+      fallbackStaff.forEach(base=>{
+        let p=state.people.find(x=>x.name===base.name);
+        if(!p){
+          p={name:base.name,role:base.role,area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:base.pin};
+          state.people.push(p);
+          changed=true;
+        }else{
+          if(!p.role)p.role=base.role;
+          if(!staffPin(p)){p.pin=base.pin;changed=true}
+        }
+      });
+      if(changed)persistState();
+    }
     function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;s.innerHTML=(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");if(!s.value&&state.people?.[0])s.value=state.people[0].name}
     function staffSession(){try{return JSON.parse(sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
     function setStaffSession(person){authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};sessionStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}))}
