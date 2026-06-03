@@ -2174,6 +2174,8 @@
         return localStorage.getItem("fieldwork-map-provider")||"manual";
       }
       function fieldworkMapKeys(){return {kakao:localStorage.getItem("fieldwork-kakao-key")||"",naver:localStorage.getItem("fieldwork-naver-key")||""}}
+      const dispatchExcludedPeople=["이재강","김현지"];
+      function isDispatchExcluded(name){return dispatchExcludedPeople.includes(String(name||"").trim())}
       let fieldworkAutoTarget=null,fieldworkAutoTargetRequested=false;
       function requestFieldworkAutoTarget(){
         if(fieldworkAutoTargetRequested||fieldworkAutoTarget||!navigator.geolocation)return;
@@ -2257,7 +2259,7 @@
         return"위치 미입력";
       }
       function dispatchRows(target=null){
-        return (state.people||[]).map(p=>{const latest=latestFieldwork(p.name),loc=manualLocationFromLog(latest)||latestLocation(p.name),status=fwLabel(latest?.status||"출근 전"),place=latest?.site||loc?.label||"위치 없음",region=[latest?.region,latest?.memo].filter(Boolean).join(" · "),km=target&&loc?haversineKm(target,loc):null;return{p,latest,loc,status,place,region,km,zone:dispatchZoneName([latest?.region,latest?.memo,latest?.site,loc?.label].filter(Boolean).join(" "))}}).sort((a,b)=>(a.km??9999)-(b.km??9999)||fieldworkPeopleRank(a.p.name)-fieldworkPeopleRank(b.p.name))}
+        return (state.people||[]).filter(p=>!isDispatchExcluded(p.name)).map(p=>{const latest=latestFieldwork(p.name),loc=manualLocationFromLog(latest)||latestLocation(p.name),status=fwLabel(latest?.status||"출근 전"),place=latest?.site||loc?.label||"위치 없음",region=[latest?.region,latest?.memo].filter(Boolean).join(" · "),km=target&&loc?haversineKm(target,loc):null;return{p,latest,loc,status,place,region,km,zone:dispatchZoneName([latest?.region,latest?.memo,latest?.site,loc?.label].filter(Boolean).join(" "))}}).sort((a,b)=>(a.km??9999)-(b.km??9999)||fieldworkPeopleRank(a.p.name)-fieldworkPeopleRank(b.p.name))}
       function renderDispatchPanel(target=null,targetText=""){
         target=target||fieldworkAutoTarget;
         if(!targetText&&target===fieldworkAutoTarget)targetText="현재 위치";
