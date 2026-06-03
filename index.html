@@ -415,6 +415,12 @@
     function enforceAuthAccess(){if(!authUser?.email)return;const email=cleanEmail(authUser.email);if(isBlockedEmail(email)){signOutAuth(`${email} 계정은 차단되었습니다.`);return}if(!isApprovedEmail(email))signOutAuth(`${email} 계정은 승인 목록에서 제외되었습니다.`)}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="승인된 구글 계정으로 로그인해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
+    async function canReachSupabaseAuth(){
+      try{
+        const r=await fetch(`${SUPABASE_URL}/auth/v1/health`,{cache:"no-store",headers:{apikey:SUPABASE_ANON_KEY}});
+        return r.ok;
+      }catch{return false}
+    }
     function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
     async function signOutAuth(msg="로그아웃되었습니다."){try{await authClient?.auth?.signOut()}catch{}authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
     async function acceptAuthUser(user){
@@ -2417,6 +2423,11 @@
         if(isBlockedMobileWebView()){
           navigator.clipboard?.writeText(SITE_URL).catch(()=>{});
           showAuthGate("현재 앱 내부 브라우저에서는 Google 로그인이 차단됩니다. 오른쪽 위 메뉴에서 '브라우저에서 열기'를 누르거나 Chrome/Safari에서 사이트를 다시 열어주세요. 사이트 주소는 복사되었습니다.");
+          return;
+        }
+        authMsg("로그인 서버 연결을 확인하는 중입니다...");
+        if(!(await canReachSupabaseAuth())){
+          showAuthGate("현재 Supabase 로그인 서버에 연결되지 않습니다. 522 시간초과가 반복되면 잠시 후 다시 시도하거나, 다른 네트워크/모바일 핫스팟/VPN에서 접속해보세요.");
           return;
         }
         const redirectTo=SITE_URL;
