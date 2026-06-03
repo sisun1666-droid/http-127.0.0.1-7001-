@@ -1914,15 +1914,10 @@
             #fieldworkMap{min-height:300px;border:1px solid var(--line);border-radius:8px;background:#eef4f5;display:grid;color:var(--muted);font-size:13px;overflow:hidden}
             .fieldwork-map-toolbar{justify-content:flex-start}
             .fieldwork-map-toolbar .fieldwork-map-controls:first-of-type{display:none}
-            .fieldwork-direct-map{position:relative;width:100%;min-height:300px;background:linear-gradient(180deg,#f6fbfc,#eaf4f5);overflow:hidden}
-            .fieldwork-map-shape{position:absolute;z-index:1;border:1px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(80,120,130,.12);opacity:.96}
-            .fieldwork-map-shape.capital{left:30%;top:15%;width:20%;height:28%;background:#f5c7d3;clip-path:polygon(18% 8%,72% 0%,100% 25%,84% 70%,45% 100%,8% 74%,0% 30%)}
-            .fieldwork-map-shape.gangwon{left:47%;top:8%;width:25%;height:31%;background:#d9c1de;clip-path:polygon(0% 12%,68% 0%,100% 36%,78% 100%,22% 86%)}
-            .fieldwork-map-shape.chungcheong{left:32%;top:39%;width:22%;height:26%;background:#f2d49a;clip-path:polygon(8% 0%,82% 8%,100% 58%,62% 100%,6% 78%,0% 28%)}
-            .fieldwork-map-shape.gyeongbuk{left:53%;top:35%;width:27%;height:36%;background:#becbe6;clip-path:polygon(8% 0%,70% 6%,100% 38%,82% 86%,35% 100%,0% 70%,15% 32%)}
-            .fieldwork-map-shape.jeolla{left:26%;top:62%;width:25%;height:31%;background:#a8dfe5;clip-path:polygon(20% 0%,82% 10%,100% 58%,65% 100%,8% 88%,0% 32%)}
-            .fieldwork-map-shape.gyeongnam{left:50%;top:69%;width:25%;height:25%;background:#b8c5e5;clip-path:polygon(12% 5%,72% 0%,100% 42%,82% 88%,28% 100%,0% 58%)}
-            .fieldwork-map-shape.jeju{left:28%;top:91%;width:12%;height:6%;background:#c8ecf0;border-radius:50%}
+            .fieldwork-direct-map{position:relative;width:100%;min-height:300px;background:linear-gradient(180deg,#f7fbfc,#edf6f8);overflow:hidden}
+            .fieldwork-korea-map{position:absolute;inset:8px 18px 28px;width:calc(100% - 36px);height:calc(100% - 36px);z-index:1}
+            .fieldwork-korea-map .sea{fill:#eaf6f8}.fieldwork-korea-map .land{fill:#f8fbfb;stroke:#aecbd3;stroke-width:1.6;filter:drop-shadow(0 6px 12px rgba(35,78,82,.08))}
+            .fieldwork-korea-map .province{fill:none;stroke:#c9dbe1;stroke-width:1.1;stroke-dasharray:3 3}.fieldwork-korea-map .island{fill:#f8fbfb;stroke:#aecbd3;stroke-width:1.2}
             .fieldwork-map-label{position:absolute;z-index:2;transform:translate(-50%,-50%);font-size:11px;font-weight:900;color:#40535c;background:rgba(255,255,255,.72);border:1px solid #dbe8ed;border-radius:999px;padding:3px 7px}
             .fieldwork-map-marker{position:absolute;z-index:3;transform:translate(-50%,-100%);display:grid;justify-items:center;gap:3px}
             .fieldwork-map-dot{width:24px;height:24px;border-radius:50% 50% 50% 0;background:var(--teal);transform:rotate(-45deg);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 6px 14px rgba(8,125,143,.25)}
@@ -2000,13 +1995,24 @@
         const toXY=loc=>({x:Math.max(5,Math.min(95,(loc.lng-minLng)/(maxLng-minLng)*100)),y:Math.max(8,Math.min(92,(maxLat-loc.lat)/(maxLat-minLat)*100))});
         const regionLabels=[["수도권",37.45,127.05],["강원",37.55,128.15],["충청",36.55,127.35],["전라",35.35,126.95],["경북",36.0,128.45],["경남",35.25,128.45],["제주",33.5,126.52]];
         const labels=regionLabels.map(([name,lat,lng])=>{const xy=toXY({lat,lng});return`<span class="fieldwork-map-label" style="left:${xy.x}%;top:${xy.y}%">${esc(name)}</span>`}).join("");
-        const shapes=`<span class="fieldwork-map-shape capital"></span><span class="fieldwork-map-shape gangwon"></span><span class="fieldwork-map-shape chungcheong"></span><span class="fieldwork-map-shape gyeongbuk"></span><span class="fieldwork-map-shape jeolla"></span><span class="fieldwork-map-shape gyeongnam"></span><span class="fieldwork-map-shape jeju"></span>`;
+        const koreaMap=`<svg class="fieldwork-korea-map" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <rect class="sea" x="0" y="0" width="100" height="100" rx="10"></rect>
+          <path class="land" d="M36 7 L48 5 L61 8 L70 17 L78 28 L75 39 L82 50 L73 61 L72 73 L62 86 L51 95 L40 91 L34 80 L25 71 L28 59 L21 49 L25 36 L31 27 L32 16 Z"></path>
+          <path class="province" d="M32 16 L45 20 L55 19 L70 17"></path>
+          <path class="province" d="M25 36 L39 38 L52 36 L75 39"></path>
+          <path class="province" d="M21 49 L38 52 L50 49 L82 50"></path>
+          <path class="province" d="M28 59 L42 64 L55 63 L73 61"></path>
+          <path class="province" d="M34 80 L47 76 L58 78 L72 73"></path>
+          <path class="province" d="M48 5 L47 21 L52 36 L50 49 L55 63 L58 78 L62 86"></path>
+          <path class="island" d="M18 91 C22 88 31 89 35 92 C31 96 23 97 18 94 Z"></path>
+          <path class="island" d="M12 40 C15 38 18 39 19 42 C17 45 13 44 12 40 Z"></path>
+        </svg>`;
         const grouped=new Map();
         points.forEach(item=>{const key=`${item.loc.lat.toFixed(3)},${item.loc.lng.toFixed(3)}`;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(item)});
         const markers=[...grouped.values()].map((items,groupIndex)=>items.map((item,i)=>{const xy=toXY(item.loc),offset=(i-(items.length-1)/2)*34;return`<div class="fieldwork-map-marker" style="left:calc(${xy.x}% + ${offset}px);top:${xy.y}%"><div class="fieldwork-map-dot"><span>${esc(item.p.name.slice(0,1))}</span></div><div class="fieldwork-map-caption">${esc(item.p.name)} · ${esc(item.latest?.site||item.loc.label||"현재 위치")}</div></div>`}).join("")).join("");
         const targetMarker=target?(()=>{const xy=toXY(target);return`<div class="fieldwork-map-marker target" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-dot"><span>!</span></div><div class="fieldwork-map-caption">긴급 방문지</div></div>`})():"";
         const strip=points.length?`<div class="fieldwork-location-strip">${points.map(({p,latest,loc})=>`<div class="fieldwork-location-card"><strong>${esc(p.name)}</strong><span>${esc(latest?.site||loc.label||"-")}</span></div>`).join("")}</div>`:"";
-        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map"><div class="fieldwork-map-gridline"></div>${shapes}${labels}${markers}${targetMarker}${strip}</div>`}
+        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map"><div class="fieldwork-map-gridline"></div>${koreaMap}${labels}${markers}${targetMarker}${strip}</div>`}
       }
       async function renderFieldworkMap(){
         const provider=fieldworkMapProvider(),keys=fieldworkMapKeys(),points=personLocations();
