@@ -313,6 +313,10 @@
     .auth-actions{display:grid;gap:8px}.auth-user{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;background:#f8fbfc;padding:10px 12px;font-size:13px}
     .auth-email-list{display:grid;gap:8px}.auth-email-list h3{font-size:13px;margin:12px 0 2px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
     .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-email-row .row-actions{justify-content:flex-end}.auth-email-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
+    .auth-events{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:0;margin-top:10px}
+    .auth-events summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;padding:0 10px;font-weight:900;cursor:pointer}
+    .auth-events summary::-webkit-details-marker{display:none}.auth-events summary:after{content:"보기";border:1px solid var(--line);border-radius:999px;background:#fff;padding:5px 9px;font-size:12px}
+    .auth-events[open] summary{border-bottom:1px solid var(--line)}.auth-events[open] summary:after{content:"닫기"}.auth-events-body{display:grid;gap:8px;padding:10px}
     @media(max-width:620px){.auth-card{padding:18px;border-radius:10px}.auth-add-row{grid-template-columns:1fr}.auth-add-row .btn{width:100%}}
     @media(max-width:760px){
       aside{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 8px!important;min-height:48px}
@@ -1438,7 +1442,7 @@
     })();
     (function setupDbCenter(){
       const dbStoreKey="solar-business-db-v1";
-      let dbQuery="";
+      let dbQuery="",dbSearchComposing=false;
       function isUsefulDb(db){return db&&Array.isArray(db.rows)&&db.rows.length}
       function loadDb(){
         if(isUsefulDb(state.businessDb))return state.businessDb;
@@ -1550,7 +1554,15 @@
             <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
           </section>
         </div>`;
-        $("#dbSearchInput")?.addEventListener("input",e=>{dbQuery=e.target.value;renderDbView()});
+        const dbInput=$("#dbSearchInput");
+        function refreshDbSearchInput(){
+          renderDbView();
+          const next=$("#dbSearchInput");
+          if(next){next.focus();next.setSelectionRange(next.value.length,next.value.length)}
+        }
+        dbInput?.addEventListener("compositionstart",()=>{dbSearchComposing=true});
+        dbInput?.addEventListener("compositionend",e=>{dbSearchComposing=false;dbQuery=e.target.value;refreshDbSearchInput()});
+        dbInput?.addEventListener("input",e=>{dbQuery=e.target.value;if(!dbSearchComposing)refreshDbSearchInput()});
         $("#dbFileInput")?.addEventListener("change",e=>parseDbFile(e.target.files[0]));
       }
       function loadXlsxScript(){return new Promise((resolve,reject)=>{if(window.XLSX)return resolve();const src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";if([...document.scripts].some(s=>s.src===src)){const wait=()=>window.XLSX?resolve():setTimeout(wait,100);return wait()}const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
@@ -2273,7 +2285,7 @@
       const blockedRows=state.authBlockedEmails.length?state.authBlockedEmails.map(email=>`<div class="auth-email-row"><strong>${esc(email)}</strong><span class="row-actions"><button class="btn" data-unblock-auth-email="${esc(email)}">차단해제</button></span></div>`).join(""):`<div class="meta">차단된 계정이 없습니다.</div>`;
       const userRows=state.authKnownUsers.length?state.authKnownUsers.map(u=>`<div class="auth-email-row"><div><strong>${esc(u.name||u.email)}</strong><div class="meta">${esc(u.email)} · 최근 ${authTime(u.lastLoginAt)} · ${Number(u.loginCount)||0}회</div></div><span class="row-actions">${authStatusBadge(u.email)}${authUserActions(u.email)}</span></div>`).join(""):`<div class="meta">아직 로그인 기록이 없습니다.</div>`;
       const eventRows=state.authLoginEvents.length?state.authLoginEvents.slice(0,8).map(e=>`<div class="auth-email-row"><div><strong>${esc(e.name||e.email)}</strong><div class="meta">${esc(e.email)} · ${authTime(e.time)}</div></div><span class="badge ${e.status==="차단됨"?"red":e.status==="승인대기"?"amber":"green"}">${esc(e.status||"로그인")}</span></div>`).join(""):`<div class="meta">최근 접속 기록이 없습니다.</div>`;
-      return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>구글 로그인 계정 관리</h2><span class="badge green">승인 ${state.authApprovedEmails.length}명</span></div><div class="auth-add-row"><input class="field" id="authEmailInput" placeholder="승인할 구글 이메일"><button class="btn primary" id="addAuthEmailBtn" type="button">승인 추가</button></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(authUser?.email||"확인 안 됨")}</div><div class="auth-email-list"><h3>승인 계정</h3>${approvedRows}<h3>차단 계정</h3>${blockedRows}<h3>로그인한 사람</h3>${userRows}<h3>최근 접속 기록</h3>${eventRows}</div></div>`;
+      return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>구글 로그인 계정 관리</h2><span class="badge green">승인 ${state.authApprovedEmails.length}명</span></div><div class="auth-add-row"><input class="field" id="authEmailInput" placeholder="승인할 구글 이메일"><button class="btn primary" id="addAuthEmailBtn" type="button">승인 추가</button></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(authUser?.email||"확인 안 됨")}</div><div class="auth-email-list"><h3>승인 계정</h3>${approvedRows}<h3>차단 계정</h3>${blockedRows}<h3>로그인한 사람</h3>${userRows}<details class="auth-events"><summary>최근 접속 기록 <span class="badge blue">${state.authLoginEvents.length}건</span></summary><div class="auth-events-body">${eventRows}</div></details></div></div>`;
     }
     const baseRenderAdminWithAuth=renderAdmin;
     renderAdmin=function(){baseRenderAdminWithAuth();const grid=$("#adminView .admin-grid");if(grid&&!$("#authAdminCard"))grid.insertAdjacentHTML("afterbegin",renderAuthAdminCard())};
