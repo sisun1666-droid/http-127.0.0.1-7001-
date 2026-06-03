@@ -345,8 +345,10 @@
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
     let state=loadState(),currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=sessionStorage.getItem("solar-admin-unlocked")==="true",adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     const authClient=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+    const SITE_URL="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
     let authUser=null,authReady=false;
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
+    function isBlockedMobileWebView(){return /KAKAOTALK|NAVER|FBAN|FBAV|Instagram|Line\/|wv\)/i.test(navigator.userAgent||"")}
     function approvedEmails(){state.authApprovedEmails=Array.isArray(state.authApprovedEmails)?state.authApprovedEmails.map(cleanEmail).filter(Boolean):[];return state.authApprovedEmails}
     function isApprovedEmail(email){const list=approvedEmails();return !list.length||list.includes(cleanEmail(email))}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
@@ -2215,7 +2217,12 @@
       if(t.id==="googleLoginBtn"){
         e.preventDefault();
         if(!authClient){showAuthGate("Supabase 로그인 라이브러리를 불러오지 못했습니다.");return}
-        const redirectTo="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
+        if(isBlockedMobileWebView()){
+          navigator.clipboard?.writeText(SITE_URL).catch(()=>{});
+          showAuthGate("현재 앱 내부 브라우저에서는 Google 로그인이 차단됩니다. 오른쪽 위 메뉴에서 '브라우저에서 열기'를 누르거나 Chrome/Safari에서 사이트를 다시 열어주세요. 사이트 주소는 복사되었습니다.");
+          return;
+        }
+        const redirectTo=SITE_URL;
         const {error}=await authClient.auth.signInWithOAuth({provider:"google",options:{redirectTo}});
         if(error)showAuthGate(`구글 로그인 시작 실패: ${error.message}`);
         return;
