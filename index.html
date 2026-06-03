@@ -2258,7 +2258,7 @@
         const zones=[["수도권","capital"],["강원권","gangwon"],["충청권","chungcheong"],["경북권","gyeongbuk"],["전라권","jeolla"],["경남권","gyeongnam"],["위치 미입력","unknown"]];
         const zoneHtml=zones.map(([z,cls])=>{const people=rows.filter(x=>x.zone===z||z==="위치 미입력"&&x.zone==="제주권");return`<div class="dispatch-zone ${cls}"><strong>${esc(z)}</strong>${people.length?people.map(x=>`<div class="dispatch-person"><span>${esc(x.p.name)}</span><span>${esc(x.place)} · ${esc(x.status)}</span></div>`).join(""):`<div class="meta">없음</div>`}</div>`}).join("");
         const options=`<option value="">방문 지역 선택</option>`+regionPoints.map(r=>`<option value="${esc(r.name)}" ${r.name===targetText?"selected":""}>${esc(r.name)}</option>`).join("");
-        return `<section class="dispatch-panel"><div class="dispatch-head"><h2>출동 추천 관제판</h2><div class="meta">${targetText?`선택 지역: ${esc(targetText)}`:"선택한 지역을 기준으로 추천합니다."} · 사무실 상주 제외: 이재강, 김현지</div></div><div class="dispatch-region"><select id="fieldworkRegionSelect">${options}</select><button class="btn" id="fieldworkClearRegion">초기화</button></div><div class="dispatch-recommend">${topHtml}</div><div class="dispatch-zones">${zoneHtml}</div></section>`;
+        return `<section class="dispatch-panel"><div class="dispatch-head"><h2>출동 추천 관제판</h2></div><div class="dispatch-region"><select id="fieldworkRegionSelect">${options}</select><button class="btn" id="fieldworkClearRegion">초기화</button></div><div class="dispatch-recommend">${topHtml}</div><div class="dispatch-zones">${zoneHtml}</div></section>`;
       }
       function fieldworkWorkflowKpis(){
         const people=state.people||[],latest=people.map(p=>latestFieldwork(p.name)).map(x=>x&&{...x,status:fwLabel(x.status)}),count=s=>latest.filter(x=>x?.status===s).length;
