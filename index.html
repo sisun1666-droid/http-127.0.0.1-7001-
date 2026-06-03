@@ -415,7 +415,7 @@
     function enforceAuthAccess(){if(!authUser?.email)return;const email=cleanEmail(authUser.email);if(isBlockedEmail(email)){signOutAuth(`${email} 계정은 차단되었습니다.`);return}if(!isApprovedEmail(email))signOutAuth(`${email} 계정은 승인 목록에서 제외되었습니다.`)}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="승인된 구글 계정으로 로그인해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState().then(()=>showMyWorkPopup()).catch(()=>showMyWorkPopup())}
+    function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
     async function signOutAuth(msg="로그아웃되었습니다."){try{await authClient?.auth?.signOut()}catch{}authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
     async function acceptAuthUser(user){
       const email=cleanEmail(user?.email);
@@ -1184,7 +1184,7 @@
       baseRenderAssignmentCalendarForDefaultDate();
     }
     const baseGoToViewForCalendar=goToView;
-    goToView=function(view,label=""){const addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}applyMasking()}
+    goToView=function(view,label=""){const previousView=currentView,addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}if(view==="todos"&&previousView!=="todos")setTimeout(()=>showMyWorkPopup(true),0);applyMasking()}
     function addressMeta(item){return item?.location?`<div class="todo-card-meta">주소: ${esc(item.location)}</div>`:""}
     function compactAddress(item){return item?.location?` · 주소: ${esc(item.location)}`:""}
     document.addEventListener("click",e=>{
@@ -2371,8 +2371,8 @@
         </style>`);
         if(!$("#myWorkPopup"))document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="myWorkPopup"><div class="modal my-work-modal"><div class="modal-head"><h2 id="myWorkTitle">내 업무 알림</h2><button class="btn icon" data-close-my-work>×</button></div><div id="myWorkBody"></div><div class="toolbar my-work-actions"><button class="btn" data-close-my-work>닫기</button><button class="btn primary" id="openMyTodoBtn">내 할일 보기</button></div></div></div>`);
       }
-      window.showMyWorkPopup=function(){
-        if(popupShown||!authUser?.email||!Array.isArray(state.people))return;
+      window.showMyWorkPopup=function(force=false){
+        if((popupShown&&!force)||!authUser?.email||!Array.isArray(state.people))return;
         const person=currentPerson();
         if(!person)return;
         popupShown=true;
