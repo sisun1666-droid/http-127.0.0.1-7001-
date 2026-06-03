@@ -314,6 +314,21 @@
     .auth-email-list{display:grid;gap:8px}.auth-email-list h3{font-size:13px;margin:12px 0 2px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
     .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-email-row .row-actions{justify-content:flex-end}.auth-email-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
     @media(max-width:620px){.auth-card{padding:18px;border-radius:10px}.auth-add-row{grid-template-columns:1fr}.auth-add-row .btn{width:100%}}
+    @media(max-width:760px){
+      aside{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 8px!important;min-height:48px}
+      aside .brand{min-height:0!important;margin:0!important;gap:0}
+      aside .brand .kiwoom-wordmark{font-size:11px;transform:scale(.9);transform-origin:left center;white-space:nowrap}
+      aside .brand .kiwoom-loop{width:22px;height:13px;margin:0 1px}
+      aside .brand .kiwoom-loop:before,aside .brand .kiwoom-loop:after{width:12px;height:12px;border-width:5px;top:0}
+      aside nav{min-width:0;padding:0!important}
+      aside .nav-btn{min-height:34px;padding:0 9px}
+      main{padding-top:10px!important}
+    }
+    @media(max-width:420px){
+      aside{grid-template-columns:1fr;min-height:42px}
+      aside .brand{display:none!important}
+      aside nav{width:100%}
+    }
   </style>
 </head>
 <body class="auth-pending">
