@@ -1954,7 +1954,14 @@
         ["부산",35.1796,129.0756],["울산",35.5384,129.3114],["창원",35.2285,128.6811],["김해",35.228,128.889],["양산",35.335,129.037],["진주",35.1803,128.1087],["밀양",35.5037,128.7467],["거창",35.6867,127.9096],["합천",35.5667,128.1658],["남해",34.8377,127.8926],
         ["제주",33.4996,126.5312]
       ].map(([name,lat,lng])=>({name,lat,lng}));
-      function fieldworkMapProvider(){return localStorage.getItem("fieldwork-map-provider")||"manual"}
+      function fieldworkMapProvider(){
+        const migrationKey="fieldwork-manual-map-defaulted-v1";
+        if(localStorage.getItem(migrationKey)!=="true"){
+          localStorage.setItem("fieldwork-map-provider","manual");
+          localStorage.setItem(migrationKey,"true");
+        }
+        return localStorage.getItem("fieldwork-map-provider")||"manual";
+      }
       function fieldworkMapKeys(){return {kakao:localStorage.getItem("fieldwork-kakao-key")||"",naver:localStorage.getItem("fieldwork-naver-key")||""}}
       function haversineKm(a,b){const R=6371,toRad=d=>d*Math.PI/180,dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng),s=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))}
       function regionPoint(text){const s=String(text||"").replace(/\s/g,"");return regionPoints.find(r=>s.includes(r.name))||null}
@@ -1968,7 +1975,7 @@
         const labels=[["수도권",37.6,127.0],["충청",36.6,127.3],["전라",35.2,126.9],["경상",35.6,128.6],["강원",37.6,128.2],["제주",33.5,126.5]].map(([name,lat,lng])=>{const p=toXY({lat,lng});return`<span class="fieldwork-map-label" style="left:${p.x}%;top:${p.y}%">${name}</span>`}).join("");
         const markers=points.map(({p,loc,latest})=>{const xy=toXY(loc);return`<div class="fieldwork-map-marker" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-pin">${esc(p.name.slice(0,1))}</div><div class="caption">${esc(p.name)} · ${esc(latest?.site||loc.label||"현재 위치")}</div></div>`}).join("");
         const targetMarker=target?(()=>{const xy=toXY(target);return`<div class="fieldwork-map-marker target" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-pin">!</div><div class="caption">긴급 방문지</div></div>`})():"";
-        const map=$("#fieldworkMap");if(map)map.innerHTML=`<div class="fieldwork-direct-map">${labels}${markers}${targetMarker}</div>`;
+        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map">${labels}${markers}${targetMarker}</div>`}
       }
       async function renderFieldworkMap(){
         const provider=fieldworkMapProvider(),keys=fieldworkMapKeys(),points=personLocations();
