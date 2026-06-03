@@ -2491,6 +2491,32 @@
     }
     const baseRenderAdminWithAuth=renderAdmin;
     renderAdmin=function(){baseRenderAdminWithAuth();const grid=$("#adminView .admin-grid");if(grid&&!$("#authAdminCard"))grid.insertAdjacentHTML("afterbegin",renderAuthAdminCard())};
+    function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
+    function setStaffAccess(p,role){p.accessRole=role==="admin"?"admin":"member";delete p.email;delete p.googleEmail;delete p.authEmail}
+    function currentStaff(){const name=loginName();return (state.people||[]).find(p=>p.name===name)}
+    function isCurrentAdminUser(){return staffAccess(currentStaff())==="admin"}
+    function navAccess(n){return n?.accessRole||n?.access||n?.permission||(n?.adminOnly?"admin":"")||(String(n?.label||"").includes("관리자")?"admin":"member")}
+    function setNavAccess(n,role){n.access=role==="admin"?"admin":"member";n.adminOnly=n.access==="admin"}
+    function canAccessNav(n){return navAccess(n)!=="admin"||isCurrentAdminUser()}
+    function normalizePermissionState(){state.people=(state.people||[]).map(p=>{if(!staffAccess(p))p.accessRole=p.name==="이재강"?"admin":"member";else p.accessRole=staffAccess(p);delete p.email;delete p.googleEmail;delete p.authEmail;return p});state.nav=(state.nav||[]).map(n=>{if(!n.access)n.access=navAccess(n);n.adminOnly=n.access==="admin";return n})}
+    const baseNormalizeForPermissions=normalizeState;
+    normalizeState=function(){baseNormalizeForPermissions();normalizePermissionState()}
+    const baseRenderNavForPermissions=renderNav;
+    renderNav=function(){normalizePermissionState();els.nav.innerHTML=state.nav.map((n,i)=>canAccessNav(n)?`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`:"").join("")}
+    const baseGoToViewForPermissions=goToView;
+    goToView=function(view,label=""){const n=state.nav.find(x=>x.label===label)||state.nav.find(x=>viewForLabel(x.label)===view);if(n&&!canAccessNav(n)){toast("관리자 권한이 필요한 카테고리입니다.");return}baseGoToViewForPermissions(view,label)}
+    unlockAdmin=function(){if(isCurrentAdminUser()){adminUnlocked=true;sessionStorage.setItem(adminUnlockKey,"true");sessionStorage.setItem(adminOwnerKey,loginName());updateTopButtons();return true}adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);toast("관리자로 지정된 직원만 접근할 수 있습니다.");return false}
+    const baseUpdateTopButtonsForPermissions=updateTopButtons;
+    updateTopButtons=function(){adminUnlocked=isCurrentAdminUser();baseUpdateTopButtonsForPermissions();renderLoginInfo()}
+    renderAuthAdminCard=function(){normalizePermissionState();const rows=(state.people||[]).map((p,i)=>`<div class="auth-email-row"><div><strong>${esc(p.name)}</strong><div class="meta">${esc(p.role||"직원")} · 개인 PIN으로 로그인</div></div><span class="row-actions"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:110px;min-height:30px"><select class="field" data-admin-person-access="${i}" style="width:150px;min-height:30px"><option value="member" ${staffAccess(p)==="admin"?"":"selected"}>팀원</option><option value="admin" ${staffAccess(p)==="admin"?"selected":""}>관리자</option></select></span></div>`).join("");return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>개인 고유 PIN / 권한 관리</h2><span class="badge green">${state.people.length}명</span></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(loginName()||"확인 안 됨")}</div><div class="auth-email-list">${rows||`<div class="meta">등록된 직원이 없습니다.</div>`}</div></div>`}
+    function permissionNavHtml(){return state.nav.map((n,i)=>`<div class="admin-item" style="grid-template-columns:48px minmax(150px,1fr) 130px auto auto auto"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><select class="field" data-admin-nav-access="${i}"><option value="member" ${navAccess(n)==="admin"?"":"selected"}>팀원 이상</option><option value="admin" ${navAccess(n)==="admin"?"selected":""}>관리자 전용</option></select><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}
+    function enhancePermissionAdminUi(){normalizePermissionState();const old=$("#authAdminCard");if(old)old.outerHTML=renderAuthAdminCard();const navCard=[...$$("#adminView .admin-grid .card")].find(card=>card.querySelector("h2")?.textContent.trim()==="메뉴 카테고리");const list=navCard?.querySelector(".admin-list");if(list)list.innerHTML=permissionNavHtml()}
+    const baseRenderAdminForPermissions=renderAdmin;
+    renderAdmin=function(){baseRenderAdminForPermissions();enhancePermissionAdminUi()}
+    function guardPermissionView(){const n=state.nav.find(x=>viewForLabel(x.label)===currentView);if((currentView==="admin"||(n&&navAccess(n)==="admin"))&&!isCurrentAdminUser()){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView);toast("관리자 전용 카테고리는 관리자만 볼 수 있습니다.")}}
+    const baseRenderForPermissionGuard=render;
+    render=function(){normalizePermissionState();guardPermissionView();baseRenderForPermissionGuard()}
+    document.addEventListener("change",e=>{const t=e.target;if(t.dataset.adminPersonAccess!==undefined){const p=state.people[Number(t.dataset.adminPersonAccess)];if(p){const adminCount=state.people.filter(x=>staffAccess(x)==="admin").length;if(staffAccess(p)==="admin"&&t.value!=="admin"&&adminCount<=1){toast("마지막 관리자는 팀원으로 변경할 수 없습니다.");t.value="admin";return}setStaffAccess(p,t.value);saveState("직원 권한을 저장했습니다.");render()}}if(t.dataset.adminNavAccess!==undefined){const n=state.nav[Number(t.dataset.adminNavAccess)];if(n){setNavAccess(n,t.value);saveState("카테고리 권한을 저장했습니다.");render()}}},true);
     document.addEventListener("click",e=>{
       const t=e.target.closest("button");
       if(!t||!["adminTopBtn","googleLogoutBtn","exportBtn"].includes(t.id))return;
