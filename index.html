@@ -1912,17 +1912,19 @@
             .fieldwork-map-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
             .fieldwork-map-controls input{min-height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;min-width:260px}
             #fieldworkMap{min-height:300px;border:1px solid var(--line);border-radius:8px;background:#eef4f5;display:grid;color:var(--muted);font-size:13px;overflow:hidden}
-            .fieldwork-direct-map{width:100%;height:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px;background:#f8fbfc;padding:10px}
-            .fieldwork-zone{position:relative;border:1px solid #d5e2e7;border-radius:8px;background:#fff;display:grid;align-content:start;gap:6px;padding:10px;min-height:72px;overflow:hidden}
-            .fieldwork-zone strong{font-size:13px;color:#263b45}.fieldwork-zone .hint{font-size:10px;color:#8a9aa3}
-            .fieldwork-zone.active{border-color:#8bcbd3;background:#eef8fa;box-shadow:0 6px 14px rgba(8,125,143,.08)}
-            .fieldwork-zone.target{border-color:#f0b2a9;background:#fff5f3}
-            .fieldwork-zone-pins{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-            .fieldwork-map-pin{border:0;border-radius:999px;background:var(--teal);color:#fff;font-size:11px;font-weight:900;min-height:24px;padding:0 8px;box-shadow:0 4px 10px rgba(8,125,143,.18)}
-            .fieldwork-map-pin.target{background:#d84b3e}
-            .fieldwork-location-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px}
-            .fieldwork-location-card{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px}
-            .fieldwork-location-card strong{font-size:12px}
+            .fieldwork-direct-map{position:relative;width:100%;min-height:300px;background:linear-gradient(180deg,#f8fcfd,#edf5f7);overflow:hidden}
+            .fieldwork-direct-map:before{content:"";position:absolute;left:32%;top:4%;width:40%;height:88%;background:rgba(255,255,255,.62);border:1px solid #cfe0e6;border-radius:46% 42% 48% 45%;transform:rotate(12deg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)}
+            .fieldwork-direct-map:after{content:"";position:absolute;left:18%;top:10%;width:64%;height:76%;border:1px dashed #c2d5dc;border-radius:42% 48% 45% 52%;transform:rotate(-14deg)}
+            .fieldwork-map-label{position:absolute;z-index:1;transform:translate(-50%,-50%);font-size:11px;font-weight:900;color:#72858e;background:rgba(255,255,255,.68);border:1px solid #dbe8ed;border-radius:999px;padding:3px 7px}
+            .fieldwork-map-marker{position:absolute;z-index:3;transform:translate(-50%,-100%);display:grid;justify-items:center;gap:3px}
+            .fieldwork-map-dot{width:24px;height:24px;border-radius:50% 50% 50% 0;background:var(--teal);transform:rotate(-45deg);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 6px 14px rgba(8,125,143,.25)}
+            .fieldwork-map-dot span{transform:rotate(45deg);color:#fff;font-size:11px;font-weight:900}
+            .fieldwork-map-caption{white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 7px;font-size:11px;font-weight:900;color:#263b45;box-shadow:0 5px 12px rgba(20,33,42,.1)}
+            .fieldwork-map-marker.target .fieldwork-map-dot{background:#d84b3e}
+            .fieldwork-map-gridline{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(8,125,143,.06) 1px,transparent 1px),linear-gradient(to bottom,rgba(8,125,143,.06) 1px,transparent 1px);background-size:12.5% 20%;z-index:0}
+            .fieldwork-location-strip{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px}
+            .fieldwork-location-card{border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.9);padding:6px 8px;font-size:11px;display:flex;justify-content:space-between;gap:8px;box-shadow:0 4px 10px rgba(20,33,42,.06)}
+            .fieldwork-location-card strong{font-size:11px}
             .fieldwork-nearest{display:grid;gap:6px}
             .fieldwork-nearest-row{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fbfdfe;font-size:12px}
             @media(max-width:1300px){.fieldwork-live-layout .fieldwork-board{grid-template-columns:1fr}}
@@ -1986,25 +1988,16 @@
       function setFieldworkMapStatus(msg){const map=$("#fieldworkMap");if(map)map.innerHTML=`<div>${esc(msg)}</div>`}
       function loadScriptOnce(src,id){return new Promise((resolve,reject)=>{if(id&&document.getElementById(id)){resolve();return}const s=document.createElement("script");if(id)s.id=id;s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
       function renderManualFieldworkMap(target=null){
-        const points=personLocations();
-        const zones=[
-          {id:"capital",name:"수도권",hint:"서울·인천·경기",keys:["서울","인천","부천","수원","화성","평택","파주"]},
-          {id:"gangwon",name:"강원",hint:"춘천·원주·강릉",keys:["춘천","원주","강릉","속초"]},
-          {id:"chungcheong",name:"충청",hint:"천안·아산·청주",keys:["천안","아산","당진","서산","공주","논산","대전","청주","충주","제천"]},
-          {id:"gyeongbuk",name:"경북",hint:"구미·칠곡·청도",keys:["대구","구미","김천","상주","안동","포항","경주","청도","칠곡","성주","고령","영천","영주","문경"]},
-          {id:"jeonbuk",name:"전북",hint:"전주·익산·군산",keys:["전주","익산","군산","정읍","남원"]},
-          {id:"jeonnam",name:"전남",hint:"광주·나주·순천",keys:["광주","나주","목포","순천","여수","해남"]},
-          {id:"gyeongnam",name:"경남",hint:"부산·울산·창원",keys:["부산","울산","창원","김해","양산","진주","밀양","거창","합천","남해"]},
-          {id:"jeju",name:"제주",hint:"제주",keys:["제주"]}
-        ];
-        const zoneForText=text=>zones.find(z=>z.keys.some(k=>String(text||"").replace(/\s/g,"").includes(k)))||null;
-        const zoneForLoc=loc=>zoneForText(regionPoints.find(r=>Math.abs(r.lat-loc.lat)<0.001&&Math.abs(r.lng-loc.lng)<0.001)?.name||loc.label)||zones[0];
-        const byZone=Object.fromEntries(zones.map(z=>[z.id,[]]));
-        points.forEach(x=>{const z=zoneForText([x.latest?.region,x.latest?.memo,x.latest?.site,x.loc?.label].filter(Boolean).join(" "))||zoneForLoc(x.loc);byZone[z.id].push(x)});
-        const targetZone=target?zoneForLoc(target):null;
-        const zoneHtml=zones.map(z=>`<div class="fieldwork-zone ${byZone[z.id].length?"active":""} ${targetZone?.id===z.id?"target":""}"><strong>${esc(z.name)}</strong><span class="hint">${esc(z.hint)}</span><div class="fieldwork-zone-pins">${targetZone?.id===z.id?`<span class="fieldwork-map-pin target">긴급</span>`:""}${byZone[z.id].map(({p,latest,loc})=>`<span class="fieldwork-map-pin" title="${esc(latest?.site||loc.label||"")}">${esc(p.name)} · ${esc(latest?.site||loc.label||"")}</span>`).join("")}</div></div>`).join("");
+        const points=personLocations(),minLat=33.0,maxLat=38.7,minLng=125.9,maxLng=130.2;
+        const toXY=loc=>({x:Math.max(5,Math.min(95,(loc.lng-minLng)/(maxLng-minLng)*100)),y:Math.max(8,Math.min(92,(maxLat-loc.lat)/(maxLat-minLat)*100))});
+        const regionLabels=[["수도권",37.45,127.05],["강원",37.55,128.15],["충청",36.55,127.35],["전라",35.35,126.95],["경북",36.0,128.45],["경남",35.25,128.45],["제주",33.5,126.52]];
+        const labels=regionLabels.map(([name,lat,lng])=>{const xy=toXY({lat,lng});return`<span class="fieldwork-map-label" style="left:${xy.x}%;top:${xy.y}%">${esc(name)}</span>`}).join("");
+        const grouped=new Map();
+        points.forEach(item=>{const key=`${item.loc.lat.toFixed(3)},${item.loc.lng.toFixed(3)}`;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(item)});
+        const markers=[...grouped.values()].map((items,groupIndex)=>items.map((item,i)=>{const xy=toXY(item.loc),offset=(i-(items.length-1)/2)*34;return`<div class="fieldwork-map-marker" style="left:calc(${xy.x}% + ${offset}px);top:${xy.y}%"><div class="fieldwork-map-dot"><span>${esc(item.p.name.slice(0,1))}</span></div><div class="fieldwork-map-caption">${esc(item.p.name)} · ${esc(item.latest?.site||item.loc.label||"현재 위치")}</div></div>`}).join("")).join("");
+        const targetMarker=target?(()=>{const xy=toXY(target);return`<div class="fieldwork-map-marker target" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-dot"><span>!</span></div><div class="fieldwork-map-caption">긴급 방문지</div></div>`})():"";
         const strip=points.length?`<div class="fieldwork-location-strip">${points.map(({p,latest,loc})=>`<div class="fieldwork-location-card"><strong>${esc(p.name)}</strong><span>${esc(latest?.site||loc.label||"-")}</span></div>`).join("")}</div>`:"";
-        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map">${zoneHtml}</div>${strip}`}
+        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map"><div class="fieldwork-map-gridline"></div>${labels}${markers}${targetMarker}${strip}</div>`}
       }
       async function renderFieldworkMap(){
         const provider=fieldworkMapProvider(),keys=fieldworkMapKeys(),points=personLocations();
