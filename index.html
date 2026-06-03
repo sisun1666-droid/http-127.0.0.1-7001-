@@ -1914,17 +1914,22 @@
             #fieldworkMap{min-height:300px;border:1px solid var(--line);border-radius:8px;background:#eef4f5;display:grid;color:var(--muted);font-size:13px;overflow:hidden}
             .fieldwork-map-toolbar{justify-content:flex-start}
             .fieldwork-map-toolbar .fieldwork-map-controls:first-of-type{display:none}
-            .fieldwork-direct-map{position:relative;width:100%;min-height:300px;background:linear-gradient(180deg,#f7fbf8,#eaf3ef);overflow:hidden}
-            .fieldwork-direct-map:before{content:"";position:absolute;left:28%;top:3%;width:45%;height:87%;background:rgba(255,255,255,.7);border:2px solid #bfd8d2;clip-path:polygon(52% 0%,65% 8%,73% 21%,85% 28%,78% 40%,84% 53%,72% 65%,70% 78%,58% 91%,43% 100%,30% 89%,24% 75%,12% 64%,18% 48%,8% 36%,19% 24%,31% 17%,38% 6%);box-shadow:0 8px 20px rgba(35,78,82,.08)}
-            .fieldwork-direct-map:after{content:"";position:absolute;left:33%;top:12%;width:33%;height:68%;border:2px dashed #aac9c4;clip-path:polygon(52% 0%,65% 8%,73% 21%,85% 28%,78% 40%,84% 53%,72% 65%,70% 78%,58% 91%,43% 100%,30% 89%,24% 75%,12% 64%,18% 48%,8% 36%,19% 24%,31% 17%,38% 6%);opacity:.75}
-            .fieldwork-map-road{position:absolute;z-index:1;height:2px;background:#d6c7a4;transform-origin:left center;opacity:.9}
-            .fieldwork-map-label{position:absolute;z-index:1;transform:translate(-50%,-50%);font-size:11px;font-weight:900;color:#72858e;background:rgba(255,255,255,.68);border:1px solid #dbe8ed;border-radius:999px;padding:3px 7px}
+            .fieldwork-direct-map{position:relative;width:100%;min-height:300px;background:linear-gradient(180deg,#f6fbfc,#eaf4f5);overflow:hidden}
+            .fieldwork-map-shape{position:absolute;z-index:1;border:1px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(80,120,130,.12);opacity:.96}
+            .fieldwork-map-shape.capital{left:30%;top:15%;width:20%;height:28%;background:#f5c7d3;clip-path:polygon(18% 8%,72% 0%,100% 25%,84% 70%,45% 100%,8% 74%,0% 30%)}
+            .fieldwork-map-shape.gangwon{left:47%;top:8%;width:25%;height:31%;background:#d9c1de;clip-path:polygon(0% 12%,68% 0%,100% 36%,78% 100%,22% 86%)}
+            .fieldwork-map-shape.chungcheong{left:32%;top:39%;width:22%;height:26%;background:#f2d49a;clip-path:polygon(8% 0%,82% 8%,100% 58%,62% 100%,6% 78%,0% 28%)}
+            .fieldwork-map-shape.gyeongbuk{left:53%;top:35%;width:27%;height:36%;background:#becbe6;clip-path:polygon(8% 0%,70% 6%,100% 38%,82% 86%,35% 100%,0% 70%,15% 32%)}
+            .fieldwork-map-shape.jeolla{left:26%;top:62%;width:25%;height:31%;background:#a8dfe5;clip-path:polygon(20% 0%,82% 10%,100% 58%,65% 100%,8% 88%,0% 32%)}
+            .fieldwork-map-shape.gyeongnam{left:50%;top:69%;width:25%;height:25%;background:#b8c5e5;clip-path:polygon(12% 5%,72% 0%,100% 42%,82% 88%,28% 100%,0% 58%)}
+            .fieldwork-map-shape.jeju{left:28%;top:91%;width:12%;height:6%;background:#c8ecf0;border-radius:50%}
+            .fieldwork-map-label{position:absolute;z-index:2;transform:translate(-50%,-50%);font-size:11px;font-weight:900;color:#40535c;background:rgba(255,255,255,.72);border:1px solid #dbe8ed;border-radius:999px;padding:3px 7px}
             .fieldwork-map-marker{position:absolute;z-index:3;transform:translate(-50%,-100%);display:grid;justify-items:center;gap:3px}
             .fieldwork-map-dot{width:24px;height:24px;border-radius:50% 50% 50% 0;background:var(--teal);transform:rotate(-45deg);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 6px 14px rgba(8,125,143,.25)}
             .fieldwork-map-dot span{transform:rotate(45deg);color:#fff;font-size:11px;font-weight:900}
             .fieldwork-map-caption{white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 7px;font-size:11px;font-weight:900;color:#263b45;box-shadow:0 5px 12px rgba(20,33,42,.1)}
             .fieldwork-map-marker.target .fieldwork-map-dot{background:#d84b3e}
-            .fieldwork-map-gridline{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(8,125,143,.035) 1px,transparent 1px),linear-gradient(to bottom,rgba(8,125,143,.035) 1px,transparent 1px);background-size:12.5% 20%;z-index:0}
+            .fieldwork-map-gridline{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(8,125,143,.025) 1px,transparent 1px),linear-gradient(to bottom,rgba(8,125,143,.025) 1px,transparent 1px);background-size:12.5% 20%;z-index:0}
             .fieldwork-location-strip{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px}
             .fieldwork-location-card{border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.9);padding:6px 8px;font-size:11px;display:flex;justify-content:space-between;gap:8px;box-shadow:0 4px 10px rgba(20,33,42,.06)}
             .fieldwork-location-card strong{font-size:11px}
@@ -1995,22 +2000,13 @@
         const toXY=loc=>({x:Math.max(5,Math.min(95,(loc.lng-minLng)/(maxLng-minLng)*100)),y:Math.max(8,Math.min(92,(maxLat-loc.lat)/(maxLat-minLat)*100))});
         const regionLabels=[["수도권",37.45,127.05],["강원",37.55,128.15],["충청",36.55,127.35],["전라",35.35,126.95],["경북",36.0,128.45],["경남",35.25,128.45],["제주",33.5,126.52]];
         const labels=regionLabels.map(([name,lat,lng])=>{const xy=toXY({lat,lng});return`<span class="fieldwork-map-label" style="left:${xy.x}%;top:${xy.y}%">${esc(name)}</span>`}).join("");
-        const roadSeg=(a,b)=>{const p1=toXY(a),p2=toXY(b),dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;return`<span class="fieldwork-map-road" style="left:${p1.x}%;top:${p1.y}%;width:${len}%;transform:rotate(${ang}deg)"></span>`};
-        const roads=[
-          roadSeg({lat:37.55,lng:126.98},{lat:36.35,lng:127.38}),
-          roadSeg({lat:36.35,lng:127.38},{lat:35.87,lng:128.6}),
-          roadSeg({lat:35.87,lng:128.6},{lat:35.18,lng:129.08}),
-          roadSeg({lat:36.35,lng:127.38},{lat:35.82,lng:127.15}),
-          roadSeg({lat:35.82,lng:127.15},{lat:35.16,lng:126.85}),
-          roadSeg({lat:36.35,lng:127.38},{lat:36.79,lng:127.0}),
-          roadSeg({lat:36.12,lng:128.34},{lat:35.65,lng:128.73})
-        ].join("");
+        const shapes=`<span class="fieldwork-map-shape capital"></span><span class="fieldwork-map-shape gangwon"></span><span class="fieldwork-map-shape chungcheong"></span><span class="fieldwork-map-shape gyeongbuk"></span><span class="fieldwork-map-shape jeolla"></span><span class="fieldwork-map-shape gyeongnam"></span><span class="fieldwork-map-shape jeju"></span>`;
         const grouped=new Map();
         points.forEach(item=>{const key=`${item.loc.lat.toFixed(3)},${item.loc.lng.toFixed(3)}`;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(item)});
         const markers=[...grouped.values()].map((items,groupIndex)=>items.map((item,i)=>{const xy=toXY(item.loc),offset=(i-(items.length-1)/2)*34;return`<div class="fieldwork-map-marker" style="left:calc(${xy.x}% + ${offset}px);top:${xy.y}%"><div class="fieldwork-map-dot"><span>${esc(item.p.name.slice(0,1))}</span></div><div class="fieldwork-map-caption">${esc(item.p.name)} · ${esc(item.latest?.site||item.loc.label||"현재 위치")}</div></div>`}).join("")).join("");
         const targetMarker=target?(()=>{const xy=toXY(target);return`<div class="fieldwork-map-marker target" style="left:${xy.x}%;top:${xy.y}%"><div class="fieldwork-map-dot"><span>!</span></div><div class="fieldwork-map-caption">긴급 방문지</div></div>`})():"";
         const strip=points.length?`<div class="fieldwork-location-strip">${points.map(({p,latest,loc})=>`<div class="fieldwork-location-card"><strong>${esc(p.name)}</strong><span>${esc(latest?.site||loc.label||"-")}</span></div>`).join("")}</div>`:"";
-        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map"><div class="fieldwork-map-gridline"></div>${roads}${labels}${markers}${targetMarker}${strip}</div>`}
+        const map=$("#fieldworkMap");if(map){map.className="";map.removeAttribute("style");map.innerHTML=`<div class="fieldwork-direct-map"><div class="fieldwork-map-gridline"></div>${shapes}${labels}${markers}${targetMarker}${strip}</div>`}
       }
       async function renderFieldworkMap(){
         const provider=fieldworkMapProvider(),keys=fieldworkMapKeys(),points=personLocations();
