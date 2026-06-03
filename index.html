@@ -330,12 +330,8 @@
     aside .brand .mark,aside .brand .brand-text{display:none}
     .auth-card .brand-logo{width:170px}
     .auth-actions{display:grid;gap:8px}.auth-user{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;background:#f8fbfc;padding:10px 12px;font-size:13px}
-    .auth-email-list{display:grid;gap:8px}.auth-email-list h3{font-size:13px;margin:12px 0 2px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
-    .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-email-row .row-actions{justify-content:flex-end}.auth-email-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
-    .auth-events{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:0;margin-top:10px}
-    .auth-events summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;padding:0 10px;font-weight:900;cursor:pointer}
-    .auth-events summary::-webkit-details-marker{display:none}.auth-events summary:after{content:"보기";border:1px solid var(--line);border-radius:999px;background:#fff;padding:5px 9px;font-size:12px}
-    .auth-events[open] summary{border-bottom:1px solid var(--line)}.auth-events[open] summary:after{content:"닫기"}.auth-events-body{display:grid;gap:8px;padding:10px}
+    .auth-list{display:grid;gap:8px}.auth-list h3{font-size:13px;margin:12px 0 2px}.auth-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
+    .auth-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-row .row-actions{justify-content:flex-end}.auth-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
     @media(max-width:620px){.auth-card{padding:18px;border-radius:10px}.auth-add-row{grid-template-columns:1fr}.auth-add-row .btn{width:100%}}
     @media(max-width:760px){
       aside{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 8px!important;min-height:48px}
@@ -376,7 +372,6 @@
       </div>
       <div class="auth-actions">
         <button class="btn primary" id="staffLoginBtn" type="button">업무관리 로그인</button>
-        <button class="btn hidden" id="googleLoginBtn" type="button">Google 계정으로 로그인</button>
       </div>
     </div>
   </div>
@@ -404,48 +399,19 @@
   <div class="overlay" id="kakaoTodoModal"><div class="modal"><div class="modal-head"><h2>카톡 메시지</h2><button class="btn icon" data-close="kakaoTodoModal">×</button></div><div class="form-row full"><label>아래 내용을 복사해서 카톡에 붙여넣으세요</label><textarea class="field" id="kakaoTodoText" style="min-height:240px"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoTodoBtn" type="button">복사</button><button class="btn" id="openKakaoTodoBtn" type="button">카톡 열기</button></div></div></div>
   <div class="overlay" id="kakaoConstructionModal"><div class="modal"><div class="modal-head"><h2>재무팀 카톡메세지</h2><button class="btn icon" data-close="kakaoConstructionModal">×</button></div><div class="form-row full"><textarea class="kakao-message-box" id="kakaoConstructionText"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoConstructionBtn" type="button">복사</button><button class="btn" id="openKakaoConstructionBtn" type="button">카톡 열기</button></div></div></div>
   <div class="toast" id="toast"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://jixvsvylddnpzmrvpxiu.supabase.co",SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppeHZzdnlsZGRucHptcnZweGl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDYxNTIsImV4cCI6MjA5NTc4MjE1Mn0.0pn-NYMbdCe56b-75dmPZBLK110yVOxIFpVlY8nZ7Cw",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",authApprovedEmails:[],authBlockedEmails:[],authKnownUsers:[],authLoginEvents:[],nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
     let state=loadState(),currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
-    const authClient=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
-    const SITE_URL="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
     let authUser=null,authReady=false;
     const staffSessionKey="solar-staff-session-v1";
     const adminUnlockKey="solar-admin-unlocked",adminOwnerKey="solar-admin-owner";
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
-    function isBlockedMobileWebView(){return /KAKAOTALK|NAVER|FBAN|FBAV|Instagram|Line\/|wv\)/i.test(navigator.userAgent||"")}
-    function authLists(){state.authApprovedEmails=Array.isArray(state.authApprovedEmails)?[...new Set(state.authApprovedEmails.map(cleanEmail).filter(Boolean))]:[];state.authBlockedEmails=Array.isArray(state.authBlockedEmails)?[...new Set(state.authBlockedEmails.map(cleanEmail).filter(Boolean))]:[];state.authKnownUsers=Array.isArray(state.authKnownUsers)?state.authKnownUsers.filter(u=>cleanEmail(u?.email)):[];state.authLoginEvents=Array.isArray(state.authLoginEvents)?state.authLoginEvents.filter(e=>cleanEmail(e?.email)):[];return state}
-    function approvedEmails(){authLists();return state.authApprovedEmails}
-    function blockedEmails(){authLists();return state.authBlockedEmails}
-    function isApprovedEmail(email){const list=approvedEmails();return !list.length||list.includes(cleanEmail(email))}
-    function isBlockedEmail(email){return blockedEmails().includes(cleanEmail(email))}
-    function recordAuthUser(user,status="로그인"){
-      authLists();
-      const email=cleanEmail(user?.email),now=new Date().toISOString();
-      if(!email)return;
-      const idx=state.authKnownUsers.findIndex(u=>cleanEmail(u.email)===email);
-      const item={email,name:user?.user_metadata?.full_name||user?.user_metadata?.name||"",avatar:user?.user_metadata?.avatar_url||"",provider:user?.app_metadata?.provider||"google",firstLoginAt:now,lastLoginAt:now,lastStatus:status,loginCount:1};
-      if(idx>=0)state.authKnownUsers[idx]={...state.authKnownUsers[idx],...item,firstLoginAt:state.authKnownUsers[idx].firstLoginAt||now,loginCount:(Number(state.authKnownUsers[idx].loginCount)||0)+1};
-      else state.authKnownUsers.unshift(item);
-      state.authKnownUsers=state.authKnownUsers.slice(0,80);
-      state.authLoginEvents.unshift({email,name:item.name,status,time:now});
-      state.authLoginEvents=state.authLoginEvents.slice(0,80);
-      persistState();
-    }
-    function enforceAuthAccess(){if(!authUser?.email)return;const email=cleanEmail(authUser.email);if(isBlockedEmail(email)){signOutAuth(`${email} 계정은 차단되었습니다.`);return}if(!isApprovedEmail(email))signOutAuth(`${email} 계정은 승인 목록에서 제외되었습니다.`)}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
-    function showAuthGate(msg="승인된 구글 계정으로 로그인해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    async function canReachSupabaseAuth(){
-      try{
-        const r=await fetch(`${SUPABASE_URL}/auth/v1/health`,{cache:"no-store",headers:{apikey:SUPABASE_ANON_KEY}});
-        return r.ok;
-      }catch{return false}
-    }
+    function showAuthGate(msg="직원 이름과 개인 PIN을 입력해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
     function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
     const fallbackStaff=[
@@ -487,25 +453,7 @@
       $("#googleLogoutBtn")?.classList.remove("hidden");
       showApp();
     }
-    async function signOutAuth(msg="로그아웃되었습니다."){try{await authClient?.auth?.signOut()}catch{}clearStaffSession();authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
-    async function acceptAuthUser(user){
-      const email=cleanEmail(user?.email);
-      if(!email){showAuthGate("구글 계정 이메일을 확인하지 못했습니다.");return}
-      authUser=user;
-      authLists();
-      if(isBlockedEmail(email)){recordAuthUser(user,"차단됨");await signOutAuth(`${email} 계정은 차단되었습니다.`);return}
-      if(!state.authApprovedEmails.length){
-        state.authApprovedEmails=[email];
-        adminUnlocked=true;
-        sessionStorage.setItem("solar-admin-unlocked","true");
-        persistState();
-        authMsg(`${email} 계정을 첫 승인 관리자로 등록했습니다.`);
-      }
-      if(!isApprovedEmail(email)){recordAuthUser(user,"승인대기");await signOutAuth(`${email} 계정은 아직 승인되지 않았습니다. 관리자에게 승인 요청해주세요.`);return}
-      recordAuthUser(user,"승인 로그인");
-      const logout=$("#googleLogoutBtn");if(logout)logout.classList.remove("hidden");
-      showApp();
-    }
+    async function signOutAuth(msg="로그아웃되었습니다."){clearStaffSession();authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
     async function initAuthGate(){
       ensureDefaultStaffPins();
       fillStaffLoginNames();
@@ -520,10 +468,6 @@
         fillStaffLoginNames();
       });
       return;
-      const {data}=await authClient.auth.getSession();
-      const user=data?.session?.user;
-      if(user){await acceptAuthUser(user);return}
-      showAuthGate(state.authApprovedEmails.length?"승인된 구글 계정으로 로그인해주세요.":"처음 로그인한 구글 계정이 승인 관리자로 등록됩니다.");
     }
     function clone(v){return JSON.parse(JSON.stringify(v))}
     function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
@@ -661,7 +605,7 @@
     function todoCardStyle(t){const c=personColor(t.owner);return `border-left-color:${c};background:${hexToRgba(c,.14)}`}
     todoListHtml=function(rows){return `<div class="todo-list"><div class="todo-list-row head"><span>제목</span><span>담당</span><span>상태</span><span>우선</span><span>마감</span><span>관리</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||"보통")}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">등록된 할일이 없습니다.</span></div>`}</div>`}
     renderTodoBoard=function(){ensureConfigLists();ensureTaskLinks();const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=["전체",...state.people.map(p=>p.name)],filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter==="전체"||t.status===todoStatusFilter)&&(todoOwnerFilter==="전체"||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter==="전체"?"active":""}" data-todo-status-filter="전체">전체 <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o==="전체"?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o==="전체"?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||"보통")} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||"일반업무")} · ${esc(t.type||"일반업무")}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button></div>`}).join("")}</div>`;panel.classList.remove("hidden");panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;$("#todoSearch")?.addEventListener("input",renderTodoBoard)}
-    renderAdmin=function(){ensureConfigLists();$("#adminBrand").value=state.brand;$("#adminTitle").value=state.title;$("#adminSubtitle").value=state.subtitle;$("#adminPin").value=state.adminPin;["#adminBrand","#adminTitle","#adminSubtitle","#adminPin"].forEach(id=>$(id).readOnly=!adminBasicEditMode);$("#saveAdminBasicBtn").disabled=!adminBasicEditMode;$("#editAdminBasicBtn").textContent=adminBasicEditMode?"수정 중":"수정 시작";const nav=`<div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list">${state.nav.map((n,i)=>`<div class="admin-item"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}</div></div>`;const people=`<div class="card"><div class="panel-title"><h2>담당자 / 직원</h2><button class="btn" data-add-admin-person>직원 추가</button></div><div class="admin-list">${state.people.map((p,i)=>`<div class="admin-item"><input class="person-color" type="color" data-admin-person-color="${i}" value="${esc(p.color||personColor(p.name))}"><input class="field" data-admin-person-name="${i}" value="${esc(p.name)}" placeholder="이름"><input class="field" data-admin-person-role="${i}" value="${esc(p.role||"")}" placeholder="직책"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:96px"><input class="field" data-admin-person-email="${i}" value="${esc(p.email||p.googleEmail||p.authEmail||"")}" placeholder="구글 이메일(선택)" style="min-width:190px"><button class="btn icon" data-move-admin-person="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-person="${i}" data-dir="1" ${i===state.people.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-person="${i}">&times;</button></div>`).join("")}</div></div>`;const projects=`<div class="card"><div class="panel-title"><h2>현장/프로젝트</h2><button class="btn" data-add-admin-project>프로젝트 추가</button></div><div class="admin-list">${state.projects.map((p,i)=>`<div class="admin-item single"><input class="field" data-admin-project-name="${i}" value="${esc(p.name)}" placeholder="현장/프로젝트명"><button class="btn icon" data-move-admin-project="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-project="${i}" data-dir="1" ${i===state.projects.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-project="${i}">&times;</button></div>`).join("")}</div></div>`;$("#adminView .admin-grid").innerHTML=nav+people+projects+adminCard("현장/프로젝트 상태","admin-status","새 상태","상태 추가")+adminCard("현장 업무단계","admin-phase","새 단계","단계 추가")+adminCard("일정/업무 상태","admin-assignment-status","새 상태","상태 추가")+adminCard("할일 상태","admin-todo-status","새 상태","상태 추가")+adminCard("우선순위","admin-priority","새 우선순위","우선순위 추가")+adminCard("구분","admin-assignment-type","새 구분","구분 추가")+adminCard("시공일정 단계","admin-construction-phase","새 단계","단계 추가")+adminCard("시공사","admin-team","새 시공사","시공사 추가")+adminCard("구조물팀","admin-structure-team","새 팀","팀 추가")}
+    renderAdmin=function(){ensureConfigLists();$("#adminBrand").value=state.brand;$("#adminTitle").value=state.title;$("#adminSubtitle").value=state.subtitle;$("#adminPin").value=state.adminPin;["#adminBrand","#adminTitle","#adminSubtitle","#adminPin"].forEach(id=>$(id).readOnly=!adminBasicEditMode);$("#saveAdminBasicBtn").disabled=!adminBasicEditMode;$("#editAdminBasicBtn").textContent=adminBasicEditMode?"수정 중":"수정 시작";const nav=`<div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list">${state.nav.map((n,i)=>`<div class="admin-item"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}</div></div>`;const people=`<div class="card"><div class="panel-title"><h2>담당자 / 직원</h2><button class="btn" data-add-admin-person>직원 추가</button></div><div class="admin-list">${state.people.map((p,i)=>`<div class="admin-item"><input class="person-color" type="color" data-admin-person-color="${i}" value="${esc(p.color||personColor(p.name))}"><input class="field" data-admin-person-name="${i}" value="${esc(p.name)}" placeholder="이름"><input class="field" data-admin-person-role="${i}" value="${esc(p.role||"")}" placeholder="직책"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:96px"><button class="btn icon" data-move-admin-person="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-person="${i}" data-dir="1" ${i===state.people.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-person="${i}">&times;</button></div>`).join("")}</div></div>`;const projects=`<div class="card"><div class="panel-title"><h2>현장/프로젝트</h2><button class="btn" data-add-admin-project>프로젝트 추가</button></div><div class="admin-list">${state.projects.map((p,i)=>`<div class="admin-item single"><input class="field" data-admin-project-name="${i}" value="${esc(p.name)}" placeholder="현장/프로젝트명"><button class="btn icon" data-move-admin-project="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-project="${i}" data-dir="1" ${i===state.projects.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-project="${i}">&times;</button></div>`).join("")}</div></div>`;$("#adminView .admin-grid").innerHTML=nav+people+projects+adminCard("현장/프로젝트 상태","admin-status","새 상태","상태 추가")+adminCard("현장 업무단계","admin-phase","새 단계","단계 추가")+adminCard("일정/업무 상태","admin-assignment-status","새 상태","상태 추가")+adminCard("할일 상태","admin-todo-status","새 상태","상태 추가")+adminCard("우선순위","admin-priority","새 우선순위","우선순위 추가")+adminCard("구분","admin-assignment-type","새 구분","구분 추가")+adminCard("시공일정 단계","admin-construction-phase","새 단계","단계 추가")+adminCard("시공사","admin-team","새 시공사","시공사 추가")+adminCard("구조물팀","admin-structure-team","새 팀","팀 추가")}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.hasAttribute?.("data-add-admin-person")){e.preventDefault();e.stopImmediatePropagation();state.people.push({name:"새 직원",role:"직원",area:"",monthlyTarget:30,yearlyTarget:360,color:pastelPalette[state.people.length%pastelPalette.length]});saveState("직원을 추가했습니다.");render()}if(t.hasAttribute?.("data-add-admin-project")){e.preventDefault();e.stopImmediatePropagation();state.projects.push({name:"새 프로젝트"});saveState("프로젝트를 추가했습니다.");render()}if(t.dataset.todoDurationMin){setTodoTimeByDuration(t.dataset.todoDurationMin)}},true)
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminPersonColor){state.people[Number(t.dataset.adminPersonColor)].color=t.value;persistState();renderFilters()}},true)
     document.addEventListener("change",e=>{const t=e.target;if(t.id==="assignmentOwner")renderHelperChecks("assignmentHelpers",readHelperChecks("assignmentHelpers"),t.value);if(t.id==="todoOwner")renderHelperChecks("todoHelpers",readHelperChecks("todoHelpers"),t.value);if(t.id==="todoStart"&&!$("#todoDue").value)$("#todoDue").value=t.value;if(t.id==="todoStartTime")setTodoTimeByDuration($$("[data-todo-duration-min].primary")[0]?.dataset.todoDurationMin||60)},true)
@@ -705,7 +649,6 @@
     renderAssignmentCalendar=function(){ensureConfigLists();renderAssignmentPeopleChips();renderScheduleViewButtons();const y=Number(els.assignmentCalendarYear.value),m=Number(els.assignmentCalendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"],days=assignmentCalendarView==="month"?42:assignmentCalendarView==="week"?7:1;let html=(assignmentCalendarView==="day"?["일정"]:names).map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<days;i++){const d=assignmentCalendarView==="day"?new Date(y,m,1):new Date(start);if(assignmentCalendarView!=="day")d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>(assignmentPersonFilter===KR.all||taskPeople(a).includes(assignmentPersonFilter))&&(a.start===iso||a.due===iso));html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(assignmentTaskHtml).join("")}</div>`}els.assignmentCalendarGrid.style.gridTemplateColumns=assignmentCalendarView==="day"?"1fr":"repeat(7,minmax(0,1fr))";els.assignmentCalendarGrid.innerHTML=html}
     renderAdmin=function(){ensureConfigLists();$("#adminBrand").value=state.brand;$("#adminTitle").value=state.title;$("#adminSubtitle").value=state.subtitle;$("#adminPin").value=state.adminPin;["#adminBrand","#adminTitle","#adminSubtitle","#adminPin"].forEach(id=>$(id).readOnly=!adminBasicEditMode);$("#saveAdminBasicBtn").disabled=!adminBasicEditMode;$("#editAdminBasicBtn").textContent=adminBasicEditMode?"수정 중":"수정 시작";const nav=`<div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list">${state.nav.map((n,i)=>`<div class="admin-item"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}</div></div>`;const people=`<div class="card"><div class="panel-title"><h2>담당자 / 직원</h2><button class="btn" data-add-admin-person>직원 추가</button></div><div class="admin-list">${state.people.map((p,i)=>`<div class="admin-item"><input class="person-color" type="color" data-admin-person-color="${i}" value="${esc(p.color||personColor(p.name))}"><input class="field" data-admin-person-name="${i}" value="${esc(p.name)}" placeholder="이름"><input class="field" data-admin-person-role="${i}" value="${esc(p.role||"")}" placeholder="직책"><button class="btn icon" data-move-admin-person="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-person="${i}" data-dir="1" ${i===state.people.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-person="${i}">&times;</button></div>`).join("")}</div></div>`;const projects=`<div class="card"><div class="panel-title"><h2>현장/프로젝트</h2><button class="btn" data-add-admin-project>프로젝트 추가</button></div><div class="admin-list">${state.projects.map((p,i)=>`<div class="admin-item single"><input class="field" data-admin-project-name="${i}" value="${esc(p.name)}" placeholder="현장/프로젝트명"><button class="btn icon" data-move-admin-project="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-project="${i}" data-dir="1" ${i===state.projects.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-project="${i}">&times;</button></div>`).join("")}</div></div>`;$("#adminView .admin-grid").innerHTML=nav+people+projects+adminCard("현장/프로젝트 상태","admin-status","새 상태","상태 추가")+adminCard("현장 업무단계","admin-phase","새 단계","단계 추가")+adminCard("일정/업무 상태","admin-assignment-status","새 상태","상태 추가")+adminCard("할일 상태","admin-todo-status","새 상태","상태 추가")+adminCard("우선순위","admin-priority","새 우선순위","우선순위 추가")+adminCard("구분","admin-assignment-type","새 구분","구분 추가")+adminCard("시공일정 단계","admin-construction-phase","새 단계","단계 추가")+adminCard("시공사","admin-team","새 시공사","시공사 추가")+adminCard("구조물팀","admin-structure-team","새 팀","팀 추가")}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.hasAttribute?.("data-add-admin-person")){e.preventDefault();e.stopImmediatePropagation();state.people.push({name:KR.newEmployee,role:KR.employee,area:"",monthlyTarget:30,yearlyTarget:360,color:pastelPalette[state.people.length%pastelPalette.length]});saveState("직원을 추가했습니다.");render()}if(t.hasAttribute?.("data-add-admin-project")){e.preventDefault();e.stopImmediatePropagation();state.projects.push({name:KR.newProject});saveState("프로젝트를 추가했습니다.");render()}},true)
-    document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminPersonEmail){const p=state.people[Number(t.dataset.adminPersonEmail)];if(p){p.email=cleanEmail(t.value);persistState()}}},true)
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminPersonPin){const p=state.people[Number(t.dataset.adminPersonPin)];if(p){p.pin=t.value.trim();persistState()}}},true)
     let dashboardSelectedConstruction=0,dashboardDate=today;
     function linkedByProjectName(name){
@@ -2433,11 +2376,12 @@
     })();
     (function myWorkPopup(){
       let popupShown=false;
-      function authDisplayName(){return authUser?.user_metadata?.full_name||authUser?.user_metadata?.name||authUser?.email?.split("@")[0]||""}
-      function personEmail(p){return cleanEmail(p?.email||p?.googleEmail||p?.authEmail||p?.loginEmail)}
+      function authDisplayName(){return authUser?.user_metadata?.full_name||authUser?.user_metadata?.name||""}
       function currentPerson(){
-        const email=cleanEmail(authUser?.email),name=String(authDisplayName()).replace(/\s/g,"");
-        return (state.people||[]).find(p=>personEmail(p)&&personEmail(p)===email)||(state.people||[]).find(p=>String(p.name||"").replace(/\s/g,"")===name)||null;
+        const current=currentStaff();
+        if(current)return current;
+        const name=String(authDisplayName()).replace(/\s/g,"");
+        return (state.people||[]).find(p=>String(p.name||"").replace(/\s/g,"")===name)||null;
       }
       function taskBelongsTo(t,name){return [t.owner,...(Array.isArray(t.helpers)?t.helpers:[])].filter(Boolean).includes(name)}
       function openTasksFor(name){
@@ -2458,7 +2402,7 @@
         if(!$("#myWorkPopup"))document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="myWorkPopup"><div class="modal my-work-modal"><div class="modal-head"><h2 id="myWorkTitle">내 업무 알림</h2><button class="btn icon" data-close-my-work>×</button></div><div id="myWorkBody"></div><div class="toolbar my-work-actions"><button class="btn" data-close-my-work>닫기</button><button class="btn primary" id="openMyTodoBtn">내 할일 보기</button></div></div></div>`);
       }
       window.showMyWorkPopup=function(force=false){
-        if((popupShown&&!force)||!authUser?.email||!Array.isArray(state.people))return;
+        if((popupShown&&!force)||!loginName()||!Array.isArray(state.people))return;
         const person=currentPerson();
         if(!person)return;
         popupShown=true;
@@ -2476,19 +2420,6 @@
         if(t.dataset.myWorkTodo!==undefined){$("#myWorkPopup")?.classList.remove("open");goToView("todos","할일관리");openTodoModal(Number(t.dataset.myWorkTodo));return}
       },true);
     })();
-    function authTime(v){if(!v)return"-";try{return new Date(v).toLocaleString("ko-KR",{hour12:false})}catch{return v}}
-    function authStatusBadge(email){email=cleanEmail(email);return isBlockedEmail(email)?`<span class="badge red">차단</span>`:isApprovedEmail(email)?`<span class="badge green">승인</span>`:`<span class="badge amber">승인대기</span>`}
-    function authUserActions(email){
-      email=cleanEmail(email);
-      const isSelf=authUser?.email&&cleanEmail(authUser.email)===email;
-      const lastAdmin=isSelf&&state.authApprovedEmails.length===1;
-      if(isBlockedEmail(email))return `<button class="btn" data-unblock-auth-email="${esc(email)}">차단해제</button>`;
-      return `${state.authApprovedEmails.includes(email)?"":`<button class="btn primary" data-approve-auth-email="${esc(email)}">승인</button>`}<button class="btn danger" data-block-auth-email="${esc(email)}" ${lastAdmin?"disabled":""}>차단</button>`;
-    }
-    function renderAuthAdminCard(){
-      const rows=(state.people||[]).map((p,i)=>`<div class="auth-email-row"><div><strong>${esc(p.name)}</strong><div class="meta">${esc(p.role||"직원")} · 개인 PIN으로 로그인</div></div><span class="row-actions"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:110px;min-height:30px"><input class="field" data-admin-person-email="${i}" value="${esc(p.email||"")}" placeholder="이메일 선택" style="width:180px;min-height:30px"></span></div>`).join("");
-      return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>개인 고유 PIN 관리</h2><span class="badge green">${state.people.length}명</span></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(authUser?.user_metadata?.name||authUser?.email||"확인 안 됨")}</div><div class="auth-email-list">${rows||`<div class="meta">등록된 직원이 없습니다.</div>`}</div></div>`;
-    }
     const baseRenderAdminWithAuth=renderAdmin;
     renderAdmin=function(){baseRenderAdminWithAuth();const grid=$("#adminView .admin-grid");if(grid&&!$("#authAdminCard"))grid.insertAdjacentHTML("afterbegin",renderAuthAdminCard())};
     function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
@@ -2508,7 +2439,7 @@
     unlockAdmin=function(){if(isCurrentAdminUser()){adminUnlocked=true;sessionStorage.setItem(adminUnlockKey,"true");sessionStorage.setItem(adminOwnerKey,loginName());updateTopButtons();return true}adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);toast("관리자로 지정된 직원만 접근할 수 있습니다.");return false}
     const baseUpdateTopButtonsForPermissions=updateTopButtons;
     updateTopButtons=function(){adminUnlocked=isCurrentAdminUser();baseUpdateTopButtonsForPermissions();renderLoginInfo()}
-    renderAuthAdminCard=function(){normalizePermissionState();const rows=(state.people||[]).map((p,i)=>`<div class="auth-email-row"><div><strong>${esc(p.name)}</strong><div class="meta">${esc(p.role||"직원")} · 개인 PIN으로 로그인</div></div><span class="row-actions"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:110px;min-height:30px"><select class="field" data-admin-person-access="${i}" style="width:150px;min-height:30px"><option value="member" ${staffAccess(p)==="admin"?"":"selected"}>팀원</option><option value="admin" ${staffAccess(p)==="admin"?"selected":""}>관리자</option></select></span></div>`).join("");return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>개인 고유 PIN / 권한 관리</h2><span class="badge green">${state.people.length}명</span></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(loginName()||"확인 안 됨")}</div><div class="auth-email-list">${rows||`<div class="meta">등록된 직원이 없습니다.</div>`}</div></div>`}
+    renderAuthAdminCard=function(){normalizePermissionState();const rows=(state.people||[]).map((p,i)=>`<div class="auth-row"><div><strong>${esc(p.name)}</strong><div class="meta">${esc(p.role||"직원")} · 개인 PIN으로 로그인</div></div><span class="row-actions"><input class="field" data-admin-person-pin="${i}" value="${esc(staffPin(p))}" placeholder="개인 PIN" style="width:110px;min-height:30px"><select class="field" data-admin-person-access="${i}" style="width:150px;min-height:30px"><option value="member" ${staffAccess(p)==="admin"?"":"selected"}>팀원</option><option value="admin" ${staffAccess(p)==="admin"?"selected":""}>관리자</option></select></span></div>`).join("");return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>개인 고유 PIN / 권한 관리</h2><span class="badge green">${state.people.length}명</span></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(loginName()||"확인 안 됨")}</div><div class="auth-list">${rows||`<div class="meta">등록된 직원이 없습니다.</div>`}</div></div>`}
     function permissionNavHtml(){return state.nav.map((n,i)=>`<div class="admin-item" style="grid-template-columns:48px minmax(150px,1fr) 130px auto auto auto"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><select class="field" data-admin-nav-access="${i}"><option value="member" ${navAccess(n)==="admin"?"":"selected"}>팀원 이상</option><option value="admin" ${navAccess(n)==="admin"?"selected":""}>관리자 전용</option></select><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("")}
     function enhancePermissionAdminUi(){normalizePermissionState();const old=$("#authAdminCard");if(old)old.outerHTML=renderAuthAdminCard();const navCard=[...$$("#adminView .admin-grid .card")].find(card=>card.querySelector("h2")?.textContent.trim()==="메뉴 카테고리");const list=navCard?.querySelector(".admin-list");if(list)list.innerHTML=permissionNavHtml()}
     const baseRenderAdminForPermissions=renderAdmin;
@@ -2525,84 +2456,8 @@
     document.addEventListener("click",async e=>{
       const t=e.target.closest("button")||e.target;
       if(t.id==="staffLoginBtn"){e.preventDefault();staffLogin();return}
-      if(t.id==="googleLoginBtn"){
-        e.preventDefault();
-        if(!authClient){showAuthGate("Supabase 로그인 라이브러리를 불러오지 못했습니다.");return}
-        if(isBlockedMobileWebView()){
-          navigator.clipboard?.writeText(SITE_URL).catch(()=>{});
-          showAuthGate("현재 앱 내부 브라우저에서는 Google 로그인이 차단됩니다. 오른쪽 위 메뉴에서 '브라우저에서 열기'를 누르거나 Chrome/Safari에서 사이트를 다시 열어주세요. 사이트 주소는 복사되었습니다.");
-          return;
-        }
-        authMsg("로그인 서버 연결을 확인하는 중입니다...");
-        if(!(await canReachSupabaseAuth())){
-          showAuthGate("현재 Supabase 로그인 서버에 연결되지 않습니다. 522 시간초과가 반복되면 잠시 후 다시 시도하거나, 다른 네트워크/모바일 핫스팟/VPN에서 접속해보세요.");
-          return;
-        }
-        const redirectTo=SITE_URL;
-        const {error}=await authClient.auth.signInWithOAuth({provider:"google",options:{redirectTo}});
-        if(error)showAuthGate(`구글 로그인 시작 실패: ${error.message}`);
-        return;
-      }
       if(t.id==="googleLogoutBtn"){e.preventDefault();clearStaffSession();await signOutAuth("다른 직원으로 다시 로그인해주세요.");fillStaffLoginNames();return}
-      if(t.id==="addAuthEmailBtn"){
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!unlockAdmin())return;
-        const email=cleanEmail($("#authEmailInput")?.value);
-        if(!email||!email.includes("@")){toast("올바른 이메일을 입력해주세요.");return}
-        authLists();
-        if(!state.authApprovedEmails.includes(email))state.authApprovedEmails.push(email);
-        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
-        $("#authEmailInput").value="";
-        saveState("승인 이메일을 추가했습니다.");
-        render();
-        return;
-      }
-      if(t.dataset.deleteAuthEmail){
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!unlockAdmin())return;
-        const i=Number(t.dataset.deleteAuthEmail),email=state.authApprovedEmails[i];
-        if(authUser?.email&&cleanEmail(authUser.email)===email&&state.authApprovedEmails.length===1){toast("마지막 관리자 계정은 삭제할 수 없습니다.");return}
-        if(confirm(`${email} 승인을 삭제할까요?`)){state.authApprovedEmails.splice(i,1);saveState("승인 이메일을 삭제했습니다.");render()}
-        return;
-      }
-      if(t.dataset.approveAuthEmail){
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!unlockAdmin())return;
-        const email=cleanEmail(t.dataset.approveAuthEmail);
-        authLists();
-        if(!state.authApprovedEmails.includes(email))state.authApprovedEmails.push(email);
-        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
-        saveState("계정을 승인했습니다.");
-        render();
-        return;
-      }
-      if(t.dataset.blockAuthEmail){
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!unlockAdmin())return;
-        const email=cleanEmail(t.dataset.blockAuthEmail),self=authUser?.email&&cleanEmail(authUser.email)===email;
-        authLists();
-        if(self&&state.authApprovedEmails.length===1){toast("현재 로그인한 마지막 관리자 계정은 차단할 수 없습니다.");return}
-        if(confirm(`${email} 계정을 차단할까요?`)){
-          state.authApprovedEmails=state.authApprovedEmails.filter(x=>x!==email);
-          if(!state.authBlockedEmails.includes(email))state.authBlockedEmails.push(email);
-          saveState("계정을 차단했습니다.");
-          if(self)await signOutAuth("현재 계정이 차단되었습니다.");
-          else render();
-        }
-        return;
-      }
-      if(t.dataset.unblockAuthEmail){
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!unlockAdmin())return;
-        const email=cleanEmail(t.dataset.unblockAuthEmail);
-        authLists();
-        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
-        saveState("계정 차단을 해제했습니다.");
-        render();
-        return;
-      }
     },true);
-    authClient?.auth?.onAuthStateChange?.((_event,session)=>{if(session?.user)acceptAuthUser(session.user)});
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
     document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady)loadSharedState()});
     setInterval(()=>{if(!document.hidden&&authReady)loadSharedState()},5000);
