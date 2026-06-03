@@ -2215,7 +2215,7 @@
       if(t.id==="googleLoginBtn"){
         e.preventDefault();
         if(!authClient){showAuthGate("Supabase 로그인 라이브러리를 불러오지 못했습니다.");return}
-        const redirectTo=location.href.split("#")[0];
+        const redirectTo="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
         const {error}=await authClient.auth.signInWithOAuth({provider:"google",options:{redirectTo}});
         if(error)showAuthGate(`구글 로그인 시작 실패: ${error.message}`);
         return;
