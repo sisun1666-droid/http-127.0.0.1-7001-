@@ -300,6 +300,13 @@
     .auth-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 22px 56px rgba(20,34,42,.14);padding:24px;display:grid;gap:16px}
     .auth-card .brand{margin:0}.auth-card h1{font-size:24px;margin:0}.auth-card p{margin:0;line-height:1.55}
     .brand-logo{display:block;width:154px;max-width:100%;height:auto;object-fit:contain}
+    .kiwoom-wordmark{display:inline-flex;align-items:center;gap:2px;color:#172957;font-size:22px;font-weight:950;letter-spacing:0;line-height:1;font-family:Arial Black,Impact,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .kiwoom-wordmark .kiwoom-loop{position:relative;display:inline-block;width:38px;height:22px;margin:0 2px}
+    .kiwoom-wordmark .kiwoom-loop:before,.kiwoom-wordmark .kiwoom-loop:after{content:"";position:absolute;top:1px;width:19px;height:19px;border:8px solid #ffd91a;border-radius:50%;box-sizing:border-box}
+    .kiwoom-wordmark .kiwoom-loop:before{left:0;transform:rotate(-20deg)}
+    .kiwoom-wordmark .kiwoom-loop:after{right:0;transform:rotate(20deg)}
+    .brand .kiwoom-wordmark{font-size:18px}
+    .auth-card .kiwoom-wordmark{font-size:24px}
     aside .brand{min-height:42px;margin-bottom:18px}
     aside .brand .mark,aside .brand .brand-text{display:none}
     .auth-card .brand-logo{width:170px}
@@ -312,7 +319,7 @@
 <body class="auth-pending">
   <div class="auth-gate" id="authGate">
     <div class="auth-card">
-      <div class="brand"><img class="brand-logo" src="kiwoom-logo.png" alt="KIWOOM"></div>
+      <div class="brand"><span class="kiwoom-wordmark" aria-label="KIWOOM">KIW<span class="kiwoom-loop"></span>M</span></div>
       <div>
         <h1>로그인이 필요합니다</h1>
         <p class="sub">승인된 구글 계정만 업무관리 사이트를 사용할 수 있습니다.</p>
@@ -325,7 +332,7 @@
     </div>
   </div>
   <div class="app">
-    <aside><div class="brand"><div class="mark">S</div><img class="brand-logo" src="kiwoom-logo.png" alt="KIWOOM"><span id="brandName" class="brand-text">1577-1577</span></div><nav id="nav"></nav></aside>
+    <aside><div class="brand"><div class="mark">S</div><span class="kiwoom-wordmark" aria-label="KIWOOM">KIW<span class="kiwoom-loop"></span>M</span><span id="brandName" class="brand-text">1577-1577</span></div><nav id="nav"></nav></aside>
     <main>
       <header><div><h1 id="pageTitle">태양광 공무팀 업무관리</h1><div class="sub" id="pageSub">고객 접수부터 인허가, 한전, 시공, 준공, 정산까지 관리합니다.</div></div><div class="toolbar"><button class="btn" id="exportBtn">내보내기</button><button class="btn" id="adminTopBtn">관리자</button><button class="btn primary" id="maskToggleBtn" data-mask-toggle="1" type="button">마스킹 OFF</button><button class="btn primary" id="addProjectBtn">신규 현장</button></div></header>
       <section class="kpis" id="kpis"></section>
