@@ -304,8 +304,8 @@
     aside .brand .mark,aside .brand .brand-text{display:none}
     .auth-card .brand-logo{width:170px}
     .auth-actions{display:grid;gap:8px}.auth-user{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;background:#f8fbfc;padding:10px 12px;font-size:13px}
-    .auth-email-list{display:grid;gap:8px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
-    .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
+    .auth-email-list{display:grid;gap:8px}.auth-email-list h3{font-size:13px;margin:12px 0 2px}.auth-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
+    .auth-email-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-email-row .row-actions{justify-content:flex-end}.auth-email-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
     @media(max-width:620px){.auth-card{padding:18px;border-radius:10px}.auth-add-row{grid-template-columns:1fr}.auth-add-row .btn{width:100%}}
   </style>
 </head>
@@ -353,7 +353,7 @@
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://jixvsvylddnpzmrvpxiu.supabase.co",SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppeHZzdnlsZGRucHptcnZweGl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDYxNTIsImV4cCI6MjA5NTc4MjE1Mn0.0pn-NYMbdCe56b-75dmPZBLK110yVOxIFpVlY8nZ7Cw",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",authApprovedEmails:[],nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",authApprovedEmails:[],authBlockedEmails:[],authKnownUsers:[],authLoginEvents:[],nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
     let state=loadState(),currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=sessionStorage.getItem("solar-admin-unlocked")==="true",adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     const authClient=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
@@ -361,8 +361,25 @@
     let authUser=null,authReady=false;
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
     function isBlockedMobileWebView(){return /KAKAOTALK|NAVER|FBAN|FBAV|Instagram|Line\/|wv\)/i.test(navigator.userAgent||"")}
-    function approvedEmails(){state.authApprovedEmails=Array.isArray(state.authApprovedEmails)?state.authApprovedEmails.map(cleanEmail).filter(Boolean):[];return state.authApprovedEmails}
+    function authLists(){state.authApprovedEmails=Array.isArray(state.authApprovedEmails)?[...new Set(state.authApprovedEmails.map(cleanEmail).filter(Boolean))]:[];state.authBlockedEmails=Array.isArray(state.authBlockedEmails)?[...new Set(state.authBlockedEmails.map(cleanEmail).filter(Boolean))]:[];state.authKnownUsers=Array.isArray(state.authKnownUsers)?state.authKnownUsers.filter(u=>cleanEmail(u?.email)):[];state.authLoginEvents=Array.isArray(state.authLoginEvents)?state.authLoginEvents.filter(e=>cleanEmail(e?.email)):[];return state}
+    function approvedEmails(){authLists();return state.authApprovedEmails}
+    function blockedEmails(){authLists();return state.authBlockedEmails}
     function isApprovedEmail(email){const list=approvedEmails();return !list.length||list.includes(cleanEmail(email))}
+    function isBlockedEmail(email){return blockedEmails().includes(cleanEmail(email))}
+    function recordAuthUser(user,status="로그인"){
+      authLists();
+      const email=cleanEmail(user?.email),now=new Date().toISOString();
+      if(!email)return;
+      const idx=state.authKnownUsers.findIndex(u=>cleanEmail(u.email)===email);
+      const item={email,name:user?.user_metadata?.full_name||user?.user_metadata?.name||"",avatar:user?.user_metadata?.avatar_url||"",provider:user?.app_metadata?.provider||"google",firstLoginAt:now,lastLoginAt:now,lastStatus:status,loginCount:1};
+      if(idx>=0)state.authKnownUsers[idx]={...state.authKnownUsers[idx],...item,firstLoginAt:state.authKnownUsers[idx].firstLoginAt||now,loginCount:(Number(state.authKnownUsers[idx].loginCount)||0)+1};
+      else state.authKnownUsers.unshift(item);
+      state.authKnownUsers=state.authKnownUsers.slice(0,80);
+      state.authLoginEvents.unshift({email,name:item.name,status,time:now});
+      state.authLoginEvents=state.authLoginEvents.slice(0,80);
+      persistState();
+    }
+    function enforceAuthAccess(){if(!authUser?.email)return;const email=cleanEmail(authUser.email);if(isBlockedEmail(email)){signOutAuth(`${email} 계정은 차단되었습니다.`);return}if(!isApprovedEmail(email))signOutAuth(`${email} 계정은 승인 목록에서 제외되었습니다.`)}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="승인된 구글 계정으로 로그인해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
     function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
@@ -371,7 +388,8 @@
       const email=cleanEmail(user?.email);
       if(!email){showAuthGate("구글 계정 이메일을 확인하지 못했습니다.");return}
       authUser=user;
-      approvedEmails();
+      authLists();
+      if(isBlockedEmail(email)){recordAuthUser(user,"차단됨");await signOutAuth(`${email} 계정은 차단되었습니다.`);return}
       if(!state.authApprovedEmails.length){
         state.authApprovedEmails=[email];
         adminUnlocked=true;
@@ -379,7 +397,8 @@
         persistState();
         authMsg(`${email} 계정을 첫 승인 관리자로 등록했습니다.`);
       }
-      if(!isApprovedEmail(email)){await signOutAuth(`${email} 계정은 아직 승인되지 않았습니다. 관리자에게 승인 요청해주세요.`);return}
+      if(!isApprovedEmail(email)){recordAuthUser(user,"승인대기");await signOutAuth(`${email} 계정은 아직 승인되지 않았습니다. 관리자에게 승인 요청해주세요.`);return}
+      recordAuthUser(user,"승인 로그인");
       const logout=$("#googleLogoutBtn");if(logout)logout.classList.remove("hidden");
       showApp();
     }
@@ -2217,10 +2236,22 @@
       normalizeState=function(){baseNormalizeWithoutSchedule();stripScheduleCategory()};
       stripScheduleCategory();
     })();
+    function authTime(v){if(!v)return"-";try{return new Date(v).toLocaleString("ko-KR",{hour12:false})}catch{return v}}
+    function authStatusBadge(email){email=cleanEmail(email);return isBlockedEmail(email)?`<span class="badge red">차단</span>`:isApprovedEmail(email)?`<span class="badge green">승인</span>`:`<span class="badge amber">승인대기</span>`}
+    function authUserActions(email){
+      email=cleanEmail(email);
+      const isSelf=authUser?.email&&cleanEmail(authUser.email)===email;
+      const lastAdmin=isSelf&&state.authApprovedEmails.length===1;
+      if(isBlockedEmail(email))return `<button class="btn" data-unblock-auth-email="${esc(email)}">차단해제</button>`;
+      return `${state.authApprovedEmails.includes(email)?"":`<button class="btn primary" data-approve-auth-email="${esc(email)}">승인</button>`}<button class="btn danger" data-block-auth-email="${esc(email)}" ${lastAdmin?"disabled":""}>차단</button>`;
+    }
     function renderAuthAdminCard(){
-      approvedEmails();
-      const rows=state.authApprovedEmails.length?state.authApprovedEmails.map((email,i)=>`<div class="auth-email-row"><strong>${esc(email)}</strong><button class="btn icon danger" data-delete-auth-email="${i}" ${authUser?.email&&cleanEmail(authUser.email)===email&&state.authApprovedEmails.length===1?"disabled":""}>삭제</button></div>`).join(""):`<div class="meta">승인된 이메일이 없습니다. 다음 로그인 계정이 자동 승인됩니다.</div>`;
-      return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>구글 로그인 승인 계정</h2><span class="badge green">${state.authApprovedEmails.length}명</span></div><div class="auth-email-list">${rows}</div><div class="auth-add-row"><input class="field" id="authEmailInput" placeholder="승인할 구글 이메일"><button class="btn primary" id="addAuthEmailBtn" type="button">승인 추가</button></div><div class="meta" style="margin-top:8px">현재 로그인: ${esc(authUser?.email||"확인 안 됨")}</div></div>`;
+      authLists();
+      const approvedRows=state.authApprovedEmails.length?state.authApprovedEmails.map((email,i)=>`<div class="auth-email-row"><strong>${esc(email)}</strong><span class="row-actions"><button class="btn icon danger" data-delete-auth-email="${i}" ${authUser?.email&&cleanEmail(authUser.email)===email&&state.authApprovedEmails.length===1?"disabled":""}>삭제</button></span></div>`).join(""):`<div class="meta">승인된 이메일이 없습니다. 다음 로그인 계정이 자동 승인됩니다.</div>`;
+      const blockedRows=state.authBlockedEmails.length?state.authBlockedEmails.map(email=>`<div class="auth-email-row"><strong>${esc(email)}</strong><span class="row-actions"><button class="btn" data-unblock-auth-email="${esc(email)}">차단해제</button></span></div>`).join(""):`<div class="meta">차단된 계정이 없습니다.</div>`;
+      const userRows=state.authKnownUsers.length?state.authKnownUsers.map(u=>`<div class="auth-email-row"><div><strong>${esc(u.name||u.email)}</strong><div class="meta">${esc(u.email)} · 최근 ${authTime(u.lastLoginAt)} · ${Number(u.loginCount)||0}회</div></div><span class="row-actions">${authStatusBadge(u.email)}${authUserActions(u.email)}</span></div>`).join(""):`<div class="meta">아직 로그인 기록이 없습니다.</div>`;
+      const eventRows=state.authLoginEvents.length?state.authLoginEvents.slice(0,8).map(e=>`<div class="auth-email-row"><div><strong>${esc(e.name||e.email)}</strong><div class="meta">${esc(e.email)} · ${authTime(e.time)}</div></div><span class="badge ${e.status==="차단됨"?"red":e.status==="승인대기"?"amber":"green"}">${esc(e.status||"로그인")}</span></div>`).join(""):`<div class="meta">최근 접속 기록이 없습니다.</div>`;
+      return `<div class="card" id="authAdminCard"><div class="panel-title"><h2>구글 로그인 계정 관리</h2><span class="badge green">승인 ${state.authApprovedEmails.length}명</span></div><div class="auth-add-row"><input class="field" id="authEmailInput" placeholder="승인할 구글 이메일"><button class="btn primary" id="addAuthEmailBtn" type="button">승인 추가</button></div><div class="meta" style="margin:8px 0 12px">현재 로그인: ${esc(authUser?.email||"확인 안 됨")}</div><div class="auth-email-list"><h3>승인 계정</h3>${approvedRows}<h3>차단 계정</h3>${blockedRows}<h3>로그인한 사람</h3>${userRows}<h3>최근 접속 기록</h3>${eventRows}</div></div>`;
     }
     const baseRenderAdminWithAuth=renderAdmin;
     renderAdmin=function(){baseRenderAdminWithAuth();const grid=$("#adminView .admin-grid");if(grid&&!$("#authAdminCard"))grid.insertAdjacentHTML("afterbegin",renderAuthAdminCard())};
@@ -2245,8 +2276,9 @@
         if(!unlockAdmin())return;
         const email=cleanEmail($("#authEmailInput")?.value);
         if(!email||!email.includes("@")){toast("올바른 이메일을 입력해주세요.");return}
-        approvedEmails();
+        authLists();
         if(!state.authApprovedEmails.includes(email))state.authApprovedEmails.push(email);
+        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
         $("#authEmailInput").value="";
         saveState("승인 이메일을 추가했습니다.");
         render();
@@ -2260,11 +2292,47 @@
         if(confirm(`${email} 승인을 삭제할까요?`)){state.authApprovedEmails.splice(i,1);saveState("승인 이메일을 삭제했습니다.");render()}
         return;
       }
+      if(t.dataset.approveAuthEmail){
+        e.preventDefault();e.stopImmediatePropagation();
+        if(!unlockAdmin())return;
+        const email=cleanEmail(t.dataset.approveAuthEmail);
+        authLists();
+        if(!state.authApprovedEmails.includes(email))state.authApprovedEmails.push(email);
+        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
+        saveState("계정을 승인했습니다.");
+        render();
+        return;
+      }
+      if(t.dataset.blockAuthEmail){
+        e.preventDefault();e.stopImmediatePropagation();
+        if(!unlockAdmin())return;
+        const email=cleanEmail(t.dataset.blockAuthEmail),self=authUser?.email&&cleanEmail(authUser.email)===email;
+        authLists();
+        if(self&&state.authApprovedEmails.length===1){toast("현재 로그인한 마지막 관리자 계정은 차단할 수 없습니다.");return}
+        if(confirm(`${email} 계정을 차단할까요?`)){
+          state.authApprovedEmails=state.authApprovedEmails.filter(x=>x!==email);
+          if(!state.authBlockedEmails.includes(email))state.authBlockedEmails.push(email);
+          saveState("계정을 차단했습니다.");
+          if(self)await signOutAuth("현재 계정이 차단되었습니다.");
+          else render();
+        }
+        return;
+      }
+      if(t.dataset.unblockAuthEmail){
+        e.preventDefault();e.stopImmediatePropagation();
+        if(!unlockAdmin())return;
+        const email=cleanEmail(t.dataset.unblockAuthEmail);
+        authLists();
+        state.authBlockedEmails=state.authBlockedEmails.filter(x=>x!==email);
+        saveState("계정 차단을 해제했습니다.");
+        render();
+        return;
+      }
     },true);
     authClient?.auth?.onAuthStateChange?.((_event,session)=>{if(session?.user)acceptAuthUser(session.user)});
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady)loadSharedState()});
-    setInterval(()=>{if(!document.hidden&&authReady)loadSharedState()},5000);
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady)loadSharedState().then(enforceAuthAccess)});
+    setInterval(()=>{if(!document.hidden&&authReady)loadSharedState().then(enforceAuthAccess)},5000);
     setInterval(updateClock,30000);
     initAuthGate();
   </script>
