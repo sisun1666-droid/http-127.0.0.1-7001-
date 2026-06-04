@@ -2527,12 +2527,56 @@
       function meetingFormPeopleOptions(){return (state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("")||`<option>이재강</option>`}
       function renderMeetingAttendeeChecks(selected=[]){const names=(state.people||[]).map(p=>p.name);const picked=new Set((selected||[]).filter(Boolean));if(!picked.size){const fallback=loginName()||names[0]||"이재강";picked.add(fallback)}$("#meetingAttendees").innerHTML=(names.length?names:["이재강"]).map(name=>`<label><input type="checkbox" value="${esc(name)}" ${picked.has(name)?"checked":""}>${esc(name)}</label>`).join("")}
       function readMeetingAttendeeChecks(){const checked=$$("#meetingAttendees input:checked").map(x=>x.value);return checked.length?checked:[$("#meetingHost")?.value||loginName()||"이재강"]}
+      function meetingAiLabels(){return ["회의 제목","제목","회의일","날짜","일자","시간","회의 시간","주관자","주관","참석자","참석","현장/프로젝트","현장","프로젝트","구분","회의 구분","회의 요약","요약","결정사항","결정 사항"]}
+      function meetingAiSection(text,label){
+        const labels=meetingAiLabels().map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|");
+        const re=new RegExp(`(?:^|\\n)\\s*(?:${label})\\s*[:：]\\s*([\\s\\S]*?)(?=\\n\\s*(?:${labels})\\s*[:：]|$)`,"i");
+        const m=String(text||"").match(re);
+        return m?m[1].trim():"";
+      }
+      function parseMeetingDate(v){const s=String(v||"").trim();let m=s.match(/(20\d{2})[-.\/\uB144\s]+(\d{1,2})[-.\/\uC6D4\s]+(\d{1,2})/);if(!m)m=s.match(/(\d{1,2})[-.\/\uC6D4\s]+(\d{1,2})/);if(m&&m.length===4)return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;if(m&&m.length===3)return `${today.slice(0,4)}-${String(m[1]).padStart(2,"0")}-${String(m[2]).padStart(2,"0")}`;return /^\d{4}-\d{2}-\d{2}$/.test(s)?s:""}
+      function parseMeetingTime(v){const s=String(v||"").trim();let m=s.match(/(\uC624\uC804|\uC624\uD6C4|AM|PM)?\s*(\d{1,2})\s*[:\uC2DC]\s*(\d{1,2})?/i);if(!m)return"";let h=Number(m[2]),min=Number(m[3]||0),ap=(m[1]||"").toLowerCase();if((ap==="오후"||ap==="pm")&&h<12)h+=12;if((ap==="오전"||ap==="am")&&h===12)h=0;return `${String(h).padStart(2,"0")}:${String(min).padStart(2,"0")}`}
+      function splitMeetingList(v){return String(v||"").split(/[,，·ㆍ\/\n]/).map(x=>x.replace(/^[-*•\d.)\s]+/,"").trim()).filter(Boolean)}
+      function knownMeetingPeople(text){const raw=String(text||"");return (state.people||[]).map(p=>p.name).filter(name=>raw.includes(name))}
+      function parseMeetingAiText(text){
+        const get=(...labels)=>labels.map(l=>meetingAiSection(text,l)).find(Boolean)||"";
+        const decisionsRaw=get("결정사항","결정 사항");
+        const decisions=decisionsRaw?decisionsRaw.split(/\r?\n/).map(x=>x.replace(/^[-*•\d.)\s]+/,"").trim()).filter(Boolean):[];
+        const attendees=splitMeetingList(get("참석자","참석")).filter(x=>(state.people||[]).some(p=>p.name===x));
+        return {
+          title:get("회의 제목","제목"),
+          date:parseMeetingDate(get("회의일","날짜","일자")),
+          time:parseMeetingTime(get("시간","회의 시간")),
+          host:get("주관자","주관"),
+          attendees:attendees.length?attendees:knownMeetingPeople(text),
+          project:get("현장/프로젝트","현장","프로젝트"),
+          type:get("구분","회의 구분"),
+          summary:get("회의 요약","요약"),
+          decisions
+        }
+      }
+      function applyMeetingAiText(){
+        const raw=$("#meetingAiText")?.value||"";
+        if(!raw.trim()){toast("붙여넣은 회의 요약 내용이 없습니다.");return}
+        const data=parseMeetingAiText(raw);
+        if(data.title)$("#meetingTitle").value=data.title;
+        if(data.date)$("#meetingDate").value=data.date;
+        if(data.time)$("#meetingTime").value=data.time;
+        if(data.host){$("#meetingHost").value=data.host;if($("#meetingHost").value!==data.host){const matched=(state.people||[]).find(p=>data.host.includes(p.name));if(matched)$("#meetingHost").value=matched.name}}
+        if(data.type)$("#meetingType").value=data.type;
+        if(data.attendees.length)renderMeetingAttendeeChecks(data.attendees);
+        if(data.project)$("#meetingProject").value=data.project;
+        if(data.summary)$("#meetingSummary").value=data.summary;
+        if(data.decisions.length)$("#meetingDecisions").value=data.decisions.join("\n");
+        toast("AI 요약 내용을 회의록에 자동 입력했습니다.");
+      }
       function ensureMeetingModal(){
         if(!$("#meetingModalStyle"))document.head.insertAdjacentHTML("beforeend",`<style id="meetingModalStyle">
-          .meeting-modal{width:min(820px,calc(100vw - 34px))}.meeting-modal textarea{min-height:92px}.meeting-modal .helper-grid{min-height:42px}.meeting-form-help{font-size:12px;color:var(--muted);line-height:1.55;margin-top:4px}.meeting-modal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meeting-modal-grid .full{grid-column:1/-1}@media(max-width:720px){.meeting-modal-grid{grid-template-columns:1fr}}
+          .meeting-modal{width:min(820px,calc(100vw - 34px))}.meeting-modal textarea{min-height:92px}.meeting-modal .helper-grid{min-height:42px}.meeting-ai-box{border:1px dashed #b8d8de;background:#f5fbfc;border-radius:8px;padding:10px;margin:0 0 12px}.meeting-ai-box textarea{min-height:150px;margin-top:8px}.meeting-ai-actions{display:flex;gap:8px;align-items:center;justify-content:space-between}.meeting-ai-actions .meta{font-size:12px}.meeting-form-help{font-size:12px;color:var(--muted);line-height:1.55;margin-top:4px}.meeting-modal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meeting-modal-grid .full{grid-column:1/-1}@media(max-width:720px){.meeting-modal-grid{grid-template-columns:1fr}.meeting-ai-actions{display:grid}}
         </style>`);
         if($("#meetingModal"))return;
         document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="meetingModal"><div class="modal meeting-modal"><div class="modal-head"><h2 id="meetingModalTitle">회의록 추가</h2><button class="btn icon" data-close-meeting-modal>×</button></div><div class="meeting-modal-grid"><div class="form-row full"><label>회의 제목</label><input class="field" id="meetingTitle" placeholder="예: 주간 공무팀 업무회의"></div><div class="form-row"><label>회의일</label><input class="field" type="date" id="meetingDate"></div><div class="form-row"><label>시간</label><input class="field" type="time" id="meetingTime"></div><div class="form-row"><label>주관자</label><select id="meetingHost"></select></div><div class="form-row"><label>구분</label><input class="field" id="meetingType" placeholder="주간회의 / 현장점검 / 개선회의"></div><div class="form-row full"><label>참석자</label><div class="helper-grid" id="meetingAttendees"></div></div><div class="form-row full"><label>현장/프로젝트</label><input class="field" id="meetingProject" placeholder="일반업무 또는 현장명"></div><div class="form-row full"><label>회의 요약</label><textarea class="field" id="meetingSummary" placeholder="회의 핵심 내용을 입력하세요."></textarea></div><div class="form-row full"><label>결정사항</label><textarea class="field" id="meetingDecisions" placeholder="한 줄에 하나씩 입력"></textarea></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveMeetingBtn">회의록 저장</button><button class="btn danger hidden" id="deleteMeetingBtn">삭제</button></div></div></div>`);
+        $("#meetingModal .modal-head").insertAdjacentHTML("afterend",`<div class="meeting-ai-box"><div class="meeting-ai-actions"><button class="btn" id="toggleMeetingAiBtn" type="button">AI 요약 붙여넣기</button><span class="meta">Gemini 요약문을 붙여넣으면 회의록 칸을 자동으로 채웁니다.</span></div><div id="meetingAiPanel" class="hidden"><textarea class="field" id="meetingAiText" placeholder="Gemini가 정리한 회의록 텍스트를 여기에 붙여넣으세요.&#10;&#10;예)&#10;회의 제목: 주간 공무팀 업무회의&#10;회의일: 2026-06-05&#10;시간: 오전 9:00&#10;주관자: 이재강&#10;참석자: 이재강, 김현지&#10;현장/프로젝트: 일반업무&#10;회의 요약: ...&#10;결정사항:&#10;- ..."></textarea><div class="toolbar" style="margin-top:8px"><button class="btn primary" id="applyMeetingAiBtn" type="button">자동 입력</button><button class="btn" id="clearMeetingAiBtn" type="button">비우기</button></div></div></div>`);
       }
       function blankMeeting(){return {id:"",date:today,time:"09:00",title:"",host:loginName()||state.people?.[0]?.name||"이재강",attendees:[loginName()||state.people?.[0]?.name||"이재강"],project:"일반업무",type:"회의",summary:"",decisions:[]}}
       function fillMeetingModal(m=blankMeeting()){
@@ -2575,7 +2619,7 @@
       const baseSyncForMeetings=syncViewChrome;
       syncViewChrome=function(){baseSyncForMeetings();if(currentView==="meetings"){els.pageTitle.textContent="회의록";els.pageSub.textContent="회의 내용과 결정사항을 기록합니다.";$("#addProjectBtn").textContent="회의록 추가"}}
       function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;state.meetingSamplesSeeded=true;state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";saveState("회의록을 삭제했습니다.");render()}
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.meetingId){e.preventDefault();e.stopImmediatePropagation();selectedMeetingId=t.dataset.meetingId;renderMeetingView();return}if(t.dataset.deleteMeeting){e.preventDefault();e.stopImmediatePropagation();deleteMeetingById(t.dataset.deleteMeeting);return}if(t.id==="addMeetingBtn"||t.id==="addMeetingBtnSide"||currentView==="meetings"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openMeetingModal();return}if(t.dataset.editMeeting){e.preventDefault();e.stopImmediatePropagation();const m=state.meetings.find(x=>x.id===t.dataset.editMeeting);if(m)openMeetingModal(m);return}if(t.id==="saveMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();saveMeetingFromModal();return}if(t.id==="deleteMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();deleteMeetingFromModal();return}if(t.dataset.closeMeetingModal!==undefined||e.target?.id==="meetingModal"){e.preventDefault();e.stopImmediatePropagation();$("#meetingModal")?.classList.remove("open");return}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.meetingId){e.preventDefault();e.stopImmediatePropagation();selectedMeetingId=t.dataset.meetingId;renderMeetingView();return}if(t.dataset.deleteMeeting){e.preventDefault();e.stopImmediatePropagation();deleteMeetingById(t.dataset.deleteMeeting);return}if(t.id==="addMeetingBtn"||t.id==="addMeetingBtnSide"||currentView==="meetings"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openMeetingModal();return}if(t.dataset.editMeeting){e.preventDefault();e.stopImmediatePropagation();const m=state.meetings.find(x=>x.id===t.dataset.editMeeting);if(m)openMeetingModal(m);return}if(t.id==="toggleMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiPanel")?.classList.toggle("hidden");return}if(t.id==="applyMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();applyMeetingAiText();return}if(t.id==="clearMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiText").value="";$("#meetingAiText").focus();return}if(t.id==="saveMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();saveMeetingFromModal();return}if(t.id==="deleteMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();deleteMeetingFromModal();return}if(t.dataset.closeMeetingModal!==undefined||e.target?.id==="meetingModal"){e.preventDefault();e.stopImmediatePropagation();$("#meetingModal")?.classList.remove("open");return}},true);
     })();
     function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
     function setStaffAccess(p,role){p.accessRole=role==="admin"?"admin":"member";delete p.email;delete p.googleEmail;delete p.authEmail}
