@@ -332,6 +332,13 @@
     .auth-actions{display:grid;gap:8px}.auth-user{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;background:#f8fbfc;padding:10px 12px;font-size:13px}
     .auth-list{display:grid;gap:8px}.auth-list h3{font-size:13px;margin:12px 0 2px}.auth-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:8px 10px}
     .auth-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-row .row-actions{justify-content:flex-end}.auth-row .btn{min-height:30px;padding:0 9px}.auth-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
+    #staffLoginBtn{position:relative;transition:transform .12s ease,box-shadow .16s ease,background .16s ease}
+    #staffLoginBtn:active,#staffLoginBtn.auth-clicked{transform:translateY(2px) scale(.985);box-shadow:inset 0 2px 7px rgba(0,0,0,.2)}
+    #staffLoginBtn.auth-loading{pointer-events:none;opacity:.9;background:#0a6f79}
+    #staffLoginBtn.auth-loading:after{content:"";width:14px;height:14px;border:2px solid rgba(255,255,255,.55);border-top-color:#fff;border-radius:50%;display:inline-block;margin-left:8px;vertical-align:-2px;animation:authSpin .7s linear infinite}
+    .auth-card.auth-error{animation:authShake .26s ease}
+    @keyframes authSpin{to{transform:rotate(360deg)}}
+    @keyframes authShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
     @media(max-width:620px){.auth-card{padding:18px;border-radius:10px}.auth-add-row{grid-template-columns:1fr}.auth-add-row .btn{width:100%}}
     @media(max-width:760px){
       aside{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 8px!important;min-height:48px}
@@ -445,15 +452,19 @@
     function setStaffSession(person){if(sessionStorage.getItem(adminOwnerKey)!==person.name){adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey)}authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};localStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}));sessionStorage.removeItem(staffSessionKey)}
     function clearStaffSession(){adminUnlocked=false;localStorage.removeItem(staffSessionKey);sessionStorage.removeItem(staffSessionKey);sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);if(currentView==="admin"){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}}
     function acceptStaffSession(){const sess=staffSession();if(!sess?.name)return false;const person=(state.people||[]).find(p=>p.name===sess.name);if(!person)return false;setStaffSession(person);$("#googleLogoutBtn")?.classList.remove("hidden");showApp();return true}
+    function setLoginButtonState(loading=false,label="업무관리 로그인"){const b=$("#staffLoginBtn");if(!b)return;b.classList.toggle("auth-loading",loading);b.classList.remove("auth-clicked");b.disabled=!!loading;b.textContent=label}
+    function showLoginError(msg){setLoginButtonState(false);authMsg(msg);const card=$(".auth-card");card?.classList.remove("auth-error");void card?.offsetWidth;card?.classList.add("auth-error")}
     function staffLogin(){
+      const btn=$("#staffLoginBtn");
+      btn?.classList.add("auth-clicked");
+      authMsg("로그인 정보를 확인 중입니다...");
+      setLoginButtonState(true,"확인 중");
       const name=$("#staffLoginName")?.value,pin=$("#staffLoginPin")?.value||"",person=(state.people||[]).find(p=>p.name===name);
-      if(!name){showAuthGate("직원을 선택해주세요.");return}
-      if(!person){showAuthGate("등록된 직원을 선택해주세요.");return}
+      if(!name){showLoginError("직원을 선택해주세요.");return}
+      if(!person){showLoginError("등록된 직원을 선택해주세요.");return}
       const validPin=staffPin(person)||state.adminPin;
-      if(pin!==validPin){showAuthGate("PIN이 맞지 않습니다. 관리자에게 개인 PIN을 확인해주세요.");return}
-      setStaffSession(person);
-      $("#googleLogoutBtn")?.classList.remove("hidden");
-      showApp();
+      if(pin!==validPin){showLoginError("PIN이 맞지 않습니다. 관리자에게 개인 PIN을 확인해주세요.");return}
+      setTimeout(()=>{setStaffSession(person);$("#googleLogoutBtn")?.classList.remove("hidden");setLoginButtonState(false);showApp()},180);
     }
     async function signOutAuth(msg="로그아웃되었습니다."){clearStaffSession();authUser=null;$("#googleLogoutBtn")?.classList.add("hidden");showAuthGate(msg)}
     async function initAuthGate(){
