@@ -1699,6 +1699,7 @@
     (function setupReports(){
       const reportTabs=["A/S","시공월별보고서","기타"];
       let reportTab="A/S",beforePhotos=[],afterPhotos=[];
+      const asDraftKey="solar-as-report-draft-v1",asFieldIds=["asNo","asReceived","asCompleted","asPhone","asSite","asClient","asAddress","asKw","asRoof","asBuilt","asDefectType","asDefectArea","asSymptom","asCause","asAction","asMaterial","asFinish","asCustomerCheck","asNotice"];
       function injectReportChrome(){
         if(!$("#reportView")){
           (els.driveView||els.adminView).insertAdjacentHTML("afterend",`<section class="panel hidden" id="reportView"></section>`);
@@ -1721,6 +1722,8 @@
             .report-drop-zone.dragover{border-color:var(--teal);background:#e8f8fa;transform:translateY(-1px)}
             .report-drop-title{font-size:15px}.report-drop-hint{font-size:12px;color:var(--muted);font-weight:700;line-height:1.45}
             .report-drop-count{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:999px;background:#e8eef1;color:#52636b;padding:0 9px;font-size:12px;font-weight:900}
+            .report-drop-zone{cursor:pointer}.report-drop-zone:active{transform:translateY(1px);box-shadow:inset 0 2px 8px rgba(0,0,0,.08)}
+            .report-printing{transform:translateY(1px);box-shadow:inset 0 2px 7px rgba(0,0,0,.18)!important}
             .as-sheet{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
             .as-sheet h2{text-align:center;font-size:22px;margin:18px 0 20px}.as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:7px 12px;background:#fff}
             .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}.as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:7px 9px;white-space:normal;overflow:visible;text-overflow:clip;height:30px}
@@ -1775,7 +1778,8 @@
         if(currentView==="reports"){
           els.pageTitle.textContent="보고서";
           els.pageSub.textContent="A/S, 시공월별보고서, 기타 보고서를 작성하고 출력합니다.";
-          $("#addProjectBtn").textContent=reportTab==="A/S"?"보고서 인쇄":"보고서";
+          const top=$("#addProjectBtn");
+          if(top){top.textContent=reportTab==="A/S"?"보고서 인쇄":"양식 준비 중";top.disabled=false;top.classList.toggle("primary",reportTab==="A/S")}
         }
       };
       const baseGoToViewForReports=goToView;
@@ -1842,8 +1846,13 @@
             <div class="report-drop-zone" data-photo-drop="before"><span class="report-drop-title">작업 전 사진</span><span class="report-drop-hint">사진을 여기에 끌어놓으면<br>보고서 작업 전 칸에 순서대로 들어갑니다.</span><span class="report-drop-count" id="beforePhotoCount">0/3장</span></div>
             <div class="report-drop-zone" data-photo-drop="after"><span class="report-drop-title">작업 후 사진</span><span class="report-drop-hint">사진을 여기에 끌어놓으면<br>보고서 작업 후 칸에 순서대로 들어갑니다.</span><span class="report-drop-count" id="afterPhotoCount">0/3장</span></div>
           </div>
+          <input class="hidden" type="file" id="asBeforeInput" accept="image/*" multiple>
+          <input class="hidden" type="file" id="asAfterInput" accept="image/*" multiple>
         </div>`;
       }
+      function readAsDraft(){try{return JSON.parse(localStorage.getItem(asDraftKey)||"{}")}catch{return{}}}
+      function saveAsDraft(){const data={};asFieldIds.forEach(id=>{const el=$("#"+id);if(el)data[id]=el.value||""});localStorage.setItem(asDraftKey,JSON.stringify(data))}
+      function restoreAsDraft(){const data=readAsDraft();asFieldIds.forEach(id=>{const el=$("#"+id);if(el&&data[id]!==undefined)el.value=data[id]});$(".report-preview").innerHTML=renderAsSheet()}
       function updatePhotoCounts(){
         const before=$("#beforePhotoCount"),after=$("#afterPhotoCount");
         if(before)before.textContent=`${beforePhotos.length}/3장`;
@@ -1852,9 +1861,13 @@
       function renderReportView(){
         injectReportChrome();
         els.reportView.innerHTML=`<div class="report-tabs">${reportTabs.map(t=>`<button class="${reportTab===t?"active":""}" data-report-tab="${esc(t)}">${esc(t)}</button>`).join("")}</div>${reportTab==="A/S"?`<div class="report-shell"><aside>${renderReportForm()}</aside><section class="report-preview">${renderAsSheet()}</section></div>`:`<div class="report-card report-placeholder"><div><h2>${esc(reportTab)}</h2><p>양식 준비 영역입니다.<br>필요한 항목을 정하면 같은 방식으로 자동 보고서 양식을 붙일 수 있습니다.</p></div></div>`}`;
-        $$(`#reportView input,#reportView textarea`).forEach(el=>el.addEventListener("input",()=>{$(".report-preview").innerHTML=renderAsSheet()}));
+        if(reportTab==="A/S")restoreAsDraft();
+        $$(`#reportView input,#reportView textarea`).forEach(el=>el.addEventListener("input",()=>{saveAsDraft();$(".report-preview").innerHTML=renderAsSheet()}));
+        $("#asBeforeInput")?.addEventListener("change",e=>{readPhotos([...e.target.files].filter(f=>f.type.startsWith("image/")),"before",true);e.target.value=""});
+        $("#asAfterInput")?.addEventListener("change",e=>{readPhotos([...e.target.files].filter(f=>f.type.startsWith("image/")),"after",true);e.target.value=""});
         $("#asDbSearch")?.addEventListener("input",renderAsDbResults);
         $$("#reportView [data-photo-drop]").forEach(zone=>{
+          zone.addEventListener("click",()=>$("#"+(zone.dataset.photoDrop==="before"?"asBeforeInput":"asAfterInput"))?.click());
           zone.addEventListener("dragover",e=>{e.preventDefault();e.stopPropagation();$("#asPhotoDropBoard")?.classList.add("dragging");zone.classList.add("dragover");e.dataTransfer.dropEffect="copy"});
           zone.addEventListener("dragleave",()=>{$("#asPhotoDropBoard")?.classList.remove("dragging");zone.classList.remove("dragover")});
           zone.addEventListener("drop",e=>{
@@ -1884,6 +1897,7 @@
         setReportField("asCause",c(row,["AS원인","A/S원인"]));
         setReportField("asFinish",c(row,["AS처리여부","A/S처리여부"]));
         setReportField("asCompleted",c(row,["AS완료일자","A/S완료일자"]));
+        saveAsDraft();
         $(".report-preview").innerHTML=renderAsSheet();
         $("#asDbResults").innerHTML="";
         toast("DB 정보로 보고서를 자동 입력했습니다.");
@@ -1900,17 +1914,19 @@
         });
       }
       function printAsReport(){
+        const button=$("#addProjectBtn");
+        if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
         const html=renderAsSheet();
         const root=document.createElement("div");
         root.className="print-root";
         root.innerHTML=html;
         document.body.appendChild(root);
         window.print();
-        setTimeout(()=>root.remove(),500);
+        setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="보고서 인쇄"}},500);
       }
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
-        if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport()}
+        if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
         if(t.dataset.reportTab){reportTab=t.dataset.reportTab;syncViewChrome();renderReportView()}
         if(t.dataset.asDbRow!==undefined){const row=window.solarDb?.rows()[Number(t.dataset.asDbRow)];if(row)applyDbRowToAs(row)}
         if(t.dataset.printAsReport!==undefined)printAsReport();
