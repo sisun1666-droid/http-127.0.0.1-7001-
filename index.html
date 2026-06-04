@@ -409,7 +409,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-05-0219",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://jixvsvylddnpzmrvpxiu.supabase.co",SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppeHZzdnlsZGRucHptcnZweGl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDYxNTIsImV4cCI6MjA5NTc4MjE1Mn0.0pn-NYMbdCe56b-75dmPZBLK110yVOxIFpVlY8nZ7Cw",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -492,6 +492,24 @@
     function isSharedNewer(shared){return !sharedLoaded||(Number(shared?.__updatedAt)||0)>(Number(state?.__updatedAt)||0)}
     async function loadSharedState(){try{const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(r.ok){const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;if(shared&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}return}}catch{}try{const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();if(shared&&shared.__updatedAt&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}}catch{}}
     function toast(msg){els.toast.textContent=msg;els.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove("show"),1500)}
+    function ensureUpdateNotice(){
+      if($("#appUpdateNotice"))return $("#appUpdateNotice");
+      document.head.insertAdjacentHTML("beforeend",`<style id="appUpdateNoticeStyle">.app-update-notice{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;width:min(560px,calc(100vw - 28px));display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #b8d8de;border-radius:8px;background:#fff;box-shadow:0 16px 42px rgba(19,35,42,.22);padding:12px 14px}.app-update-notice strong{font-size:14px}.app-update-notice span{display:block;color:var(--muted);font-size:12px;margin-top:2px}.app-update-notice.hidden{display:none}@media(max-width:620px){.app-update-notice{grid-template-columns:1fr}.app-update-notice .btn{width:100%}}</style>`);
+      document.body.insertAdjacentHTML("beforeend",`<div class="app-update-notice hidden" id="appUpdateNotice"><div><strong>새 버전이 있습니다.</strong><span>최신 기능을 사용하려면 새로고침하세요.</span></div><button class="btn primary" id="reloadLatestBtn" type="button">새로고침</button><button class="btn" id="dismissUpdateBtn" type="button">나중에</button></div>`);
+      return $("#appUpdateNotice");
+    }
+    function showUpdateNotice(version){const n=ensureUpdateNotice();n.dataset.latestVersion=version||"";n.classList.remove("hidden")}
+    async function checkAppVersion(){
+      if(location.protocol==="file:")return;
+      try{
+        const url=`${location.origin}${location.pathname}?version-check=${Date.now()}`;
+        const r=await fetch(url,{cache:"no-store"});
+        if(!r.ok)return;
+        const html=await r.text(),m=html.match(/appBuildVersion="([^"]+)"/);
+        const latest=m?.[1]||"";
+        if(latest&&latest!==appBuildVersion&&localStorage.getItem("dismissed-app-version")!==latest)showUpdateNotice(latest);
+      }catch{}
+    }
     function uid(prefix){return prefix+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)}
     function assignmentToTodoStatus(a){if(a.status==="완료")return"완료";if(a.status==="보류")return"백로그";if(a.status==="진행"||a.status==="검토요청")return"진행중";return"할 일"}
     function todoToAssignmentStatus(t){if(t.status==="완료")return"완료";if(t.status==="취소")return"보류";if(t.status==="진행중")return"진행";return"지시"}
@@ -2656,12 +2674,16 @@
       const t=e.target.closest("button")||e.target;
       if(t.id==="staffLoginBtn"){e.preventDefault();staffLogin();return}
       if(t.id==="googleLogoutBtn"){e.preventDefault();clearStaffSession();await signOutAuth("다른 직원으로 다시 로그인해주세요.");fillStaffLoginNames();return}
+      if(t.id==="reloadLatestBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion||Date.now();location.href=`${location.origin}${location.pathname}?v=${encodeURIComponent(version)}`;return}
+      if(t.id==="dismissUpdateBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion;if(version)localStorage.setItem("dismissed-app-version",version);$("#appUpdateNotice")?.classList.add("hidden");return}
     },true);
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady)loadSharedState()});
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady){loadSharedState();checkAppVersion()}});
     setInterval(()=>{if(!document.hidden&&authReady)loadSharedState()},5000);
+    setInterval(()=>{if(!document.hidden)checkAppVersion()},180000);
     setInterval(updateClock,30000);
     initAuthGate();
+    setTimeout(checkAppVersion,2500);
   </script>
 </body>
 </html>
