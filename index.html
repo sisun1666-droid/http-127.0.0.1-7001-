@@ -402,7 +402,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),storageKey="solar-admin-state-v1",stateBackupKey="solar-admin-state-backups-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://jixvsvylddnpzmrvpxiu.supabase.co",SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppeHZzdnlsZGRucHptcnZweGl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDYxNTIsImV4cCI6MjA5NTc4MjE1Mn0.0pn-NYMbdCe56b-75dmPZBLK110yVOxIFpVlY8nZ7Cw",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const removedNavLabels=new Set(["고객·계약","고객계약","현장관리","설계·자재","설계자재"]);
@@ -439,7 +439,7 @@
           if(!staffPin(p)){p.pin=base.pin;changed=true}
         }
       });
-      if(changed)persistState();
+      if(changed&&sharedLoaded)persistState();
     }
     function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;s.innerHTML=`<option value="" selected>직원 선택</option>`+(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");s.value="";const pin=$("#staffLoginPin");if(pin){pin.value="";pin.setAttribute("readonly","readonly");setTimeout(()=>{pin.value=""},150)}}
     function staffSession(){try{return JSON.parse(localStorage.getItem(staffSessionKey)||sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
@@ -477,10 +477,12 @@
     function loadState(){const saved=localStorage.getItem(storageKey)||legacyStorageKeys.map(k=>localStorage.getItem(k)).find(Boolean);if(!saved)return clone(defaults);try{return{...clone(defaults),...JSON.parse(saved)}}catch{return clone(defaults)}}
     function supabaseHeaders(extra={}){return{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,"Content-Type":"application/json",...extra}}
     async function saveToSupabase(){const body=JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()});let r=await fetch(SUPABASE_STATE_URL,{method:"PATCH",headers:supabaseHeaders({Prefer:"return=minimal"}),body});if(r.status===404||r.status===406){r=await fetch(`${SUPABASE_URL}/rest/v1/app_state`,{method:"POST",headers:supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"}),body})}if(!r.ok)throw new Error(`Supabase save failed: ${r.status}`)}
-    function persistState(){state.__updatedAt=Date.now();localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;saveToSupabase().catch(()=>fetch("/api/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(state)}).catch(()=>{}))}
+    function workCount(s){return["todos","assignments","projects","construction"].reduce((n,k)=>n+(Array.isArray(s?.[k])?s[k].length:0),0)}
+    function backupLocalState(reason="auto"){try{const raw=localStorage.getItem(storageKey);if(!raw)return;const prev=JSON.parse(raw);if(workCount(prev)<1)return;const backups=JSON.parse(localStorage.getItem(stateBackupKey)||"[]");backups.unshift({at:Date.now(),reason,count:workCount(prev),data:prev});localStorage.setItem(stateBackupKey,JSON.stringify(backups.slice(0,12)))}catch{}}
+    function persistState(){backupLocalState("before-save");state.__updatedAt=Date.now();localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;saveToSupabase().catch(()=>fetch("/api/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(state)}).catch(()=>{}))}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
-    function isSharedNewer(shared){return !sharedLoaded||(Number(shared?.__updatedAt)||0)>(Number(state?.__updatedAt)||0)}
-    async function loadSharedState(){try{const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(r.ok){const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;if(shared&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}return}}catch{}try{const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();if(shared&&shared.__updatedAt&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}}catch{}}
+    function isSharedNewer(shared){const localWork=workCount(state),sharedWork=workCount(shared);if(localWork>sharedWork&&sharedWork===0)return false;return !sharedLoaded||(Number(shared?.__updatedAt)||0)>(Number(state?.__updatedAt)||0)}
+    async function loadSharedState(){try{const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(r.ok){const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;if(shared&&isSharedNewer(shared)){backupLocalState("before-shared-load");sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}return}}catch{}try{const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();if(shared&&shared.__updatedAt&&isSharedNewer(shared)){backupLocalState("before-api-load");sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}}catch{}}
     function toast(msg){els.toast.textContent=msg;els.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove("show"),1500)}
     function uid(prefix){return prefix+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)}
     function assignmentToTodoStatus(a){if(a.status==="완료")return"완료";if(a.status==="보류")return"백로그";if(a.status==="진행"||a.status==="검토요청")return"진행중";return"할 일"}
