@@ -360,8 +360,8 @@
       </div>
       <div id="authMessage" class="meta">직원 이름과 개인 PIN을 입력해주세요.</div>
       <div class="auth-add-row">
-        <select class="field" id="staffLoginName" autocomplete="off">
-          <option value="" selected>직원 선택</option>
+        <select class="field" id="staffLoginName">
+          <option value="">직원 선택</option>
           <option value="이재강">이재강</option>
           <option value="김현지">김현지</option>
           <option value="최호운">최호운</option>
@@ -369,7 +369,7 @@
           <option value="김하린">김하린</option>
           <option value="안승표">안승표</option>
         </select>
-        <input class="field" id="staffLoginPin" type="password" inputmode="numeric" placeholder="개인 PIN" autocomplete="one-time-code" value="" readonly onfocus="this.removeAttribute('readonly')">
+        <input class="field" id="staffLoginPin" type="password" inputmode="numeric" placeholder="개인 PIN">
       </div>
       <div class="auth-actions">
         <button class="btn primary" id="staffLoginBtn" type="button">업무관리 로그인</button>
@@ -439,7 +439,7 @@
       });
       if(changed)persistState();
     }
-    function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;s.innerHTML=`<option value="" selected>직원 선택</option>`+(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");s.value="";const pin=$("#staffLoginPin");if(pin){pin.value="";pin.setAttribute("readonly","readonly");setTimeout(()=>{pin.value=""},150)}}
+    function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;const current=s.value||"";s.innerHTML=`<option value="">직원 선택</option>`+(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");s.value=[...s.options].some(o=>o.value===current)?current:""}
     function staffSession(){try{return JSON.parse(localStorage.getItem(staffSessionKey)||sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
     function loginName(){return authUser?.user_metadata?.name||authUser?.user_metadata?.full_name||authUser?.email||""}
     function setStaffSession(person){if(sessionStorage.getItem(adminOwnerKey)!==person.name){adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey)}authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};localStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}));sessionStorage.removeItem(staffSessionKey)}
@@ -447,6 +447,7 @@
     function acceptStaffSession(){const sess=staffSession();if(!sess?.name)return false;const person=(state.people||[]).find(p=>p.name===sess.name);if(!person)return false;setStaffSession(person);$("#googleLogoutBtn")?.classList.remove("hidden");showApp();return true}
     function staffLogin(){
       const name=$("#staffLoginName")?.value,pin=$("#staffLoginPin")?.value||"",person=(state.people||[]).find(p=>p.name===name);
+      if(!name){showAuthGate("직원을 선택해주세요.");return}
       if(!person){showAuthGate("등록된 직원을 선택해주세요.");return}
       const validPin=staffPin(person)||state.adminPin;
       if(pin!==validPin){showAuthGate("PIN이 맞지 않습니다. 관리자에게 개인 PIN을 확인해주세요.");return}
@@ -1168,6 +1169,146 @@
           location.href="kakaotalk://";
         }
       },true);
+    })();
+    (function setupKakaoWorkMining(){
+      const workTypes=["일정","자재","구조물","전기","한전","인허가","정산","민원","현장확인","기타"];
+      const statusHints=[["완료","완료"],["확인","완료"],["처리","완료"],["진행","진행중"],["예정","할 일"],["내일","할 일"],["지연","진행중"],["보류","백로그"],["취소","취소"]];
+      const typeHints=[["자재","자재"],["입고","자재"],["발주","자재"],["구조","구조물"],["구조물","구조물"],["전기","전기"],["한전","한전"],["인허가","인허가"],["허가","인허가"],["정산","정산"],["민원","민원"],["현장","현장확인"],["방문","현장확인"],["일정","일정"]];
+      function ensureKakaoReports(){state.kakaoReports=Array.isArray(state.kakaoReports)?state.kakaoReports:[]}
+      const baseNormalizeForKakaoReports=normalizeState;
+      normalizeState=function(){baseNormalizeForKakaoReports();ensureKakaoReports()}
+      function compactText(v){return String(v||"").replace(/\s+/g," ").trim()}
+      function guessPerson(text){
+        const flat=compactText(text).replace(/\s/g,"");
+        return (state.people||[]).find(p=>flat.includes(String(p.name||"").replace(/\s/g,"")))?.name||loginName()||state.people?.[0]?.name||"";
+      }
+      function guessProject(text){
+        const flat=compactText(text);
+        const project=(state.projects||[]).find(p=>flat.includes(p.name));
+        if(project)return project.name;
+        const construction=(state.construction||[]).find(c=>c.site&&flat.includes(c.site));
+        if(construction)return construction.site;
+        const m=flat.match(/([가-힣A-Za-z0-9_.-]{2,}(?:발전소|현장|태양광|공사|프로젝트))/);
+        return m?m[1]:"일반업무";
+      }
+      function guessType(text){return typeHints.find(([key])=>text.includes(key))?.[1]||"기타"}
+      function guessStatus(text){return statusHints.find(([key])=>text.includes(key))?.[1]||"진행중"}
+      function guessDate(text){
+        const now=new Date(),year=now.getFullYear();
+        if(/내일/.test(text)){const d=new Date(now);d.setDate(d.getDate()+1);return localDateString(d)}
+        if(/어제/.test(text)){const d=new Date(now);d.setDate(d.getDate()-1);return localDateString(d)}
+        const iso=text.match(/(20\d{2})[.\-/년\s]*(\d{1,2})[.\-/월\s]*(\d{1,2})/);
+        if(iso)return `${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
+        const md=text.match(/(\d{1,2})[.\-/월\s]+(\d{1,2})일?/);
+        if(md)return `${year}-${md[1].padStart(2,"0")}-${md[2].padStart(2,"0")}`;
+        return today;
+      }
+      function guessNext(text){
+        const m=text.match(/(?:다음|내일|추후|예정|필요|요청)[^\n.。]*/);
+        return compactText(m?.[0]||"");
+      }
+      function reportTitle(raw,project,type){
+        const line=String(raw||"").split(/\r?\n/).map(compactText).find(Boolean)||"카톡 업무 보고";
+        const cleaned=line.replace(/^[-*\d.\s]+/,"").slice(0,46);
+        return cleaned||`${project} ${type} 보고`;
+      }
+      function parseKakaoReport(raw){
+        const text=String(raw||"").trim(),type=guessType(text),project=guessProject(text);
+        return {id:uid("kakao-report"),source:"카톡",rawText:text,reporter:guessPerson(text),date:guessDate(text),project,type,status:guessStatus(text),title:reportTitle(text,project,type),result:compactText(text).slice(0,180),nextAction:guessNext(text),createdAt:new Date().toISOString()};
+      }
+      function kakaoReportStats(){
+        ensureKakaoReports();
+        const rows=state.kakaoReports,open=rows.filter(r=>r.status!=="완료"&&r.status!=="취소").length;
+        const byType=Object.entries(rows.reduce((a,r)=>(a[r.type||"기타"]=(a[r.type||"기타"]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]).slice(0,4);
+        const byPerson=Object.entries(rows.reduce((a,r)=>(a[r.reporter||"미지정"]=(a[r.reporter||"미지정"]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]).slice(0,4);
+        return {total:rows.length,open,byType,byPerson,recent:rows.slice(0,5)};
+      }
+      function renderKakaoWorkPanel(){
+        if(currentView!=="todos")return;
+        const panel=$("#todoBoardPanel");
+        if(!panel||$("#kakaoWorkPanel"))return;
+        const s=kakaoReportStats();
+        panel.insertAdjacentHTML("afterbegin",`<div class="panel kakao-work-panel" id="kakaoWorkPanel"><div class="panel-title"><h2>카톡 업무 데이터</h2><div class="row-actions"><button class="btn" id="openKakaoReportBtn">카톡 보고 가져오기</button><button class="btn" id="clearKakaoReportFormBtn">새 보고</button></div></div><div class="kakao-stats"><div><span class="label">누적 보고</span><strong>${s.total}</strong></div><div><span class="label">진행/확인 필요</span><strong>${s.open}</strong></div><div><span class="label">주요 업무</span><strong>${s.byType.map(x=>`${esc(x[0])} ${x[1]}`).join(" · ")||"없음"}</strong></div><div><span class="label">보고자</span><strong>${s.byPerson.map(x=>`${esc(x[0])} ${x[1]}`).join(" · ")||"없음"}</strong></div></div><div class="kakao-recent">${s.recent.length?s.recent.map(r=>`<button class="kakao-report-row" data-open-kakao-report="${esc(r.id)}"><strong>${esc(r.title)}</strong><span>${esc(r.reporter)} · ${esc(r.project)} · ${esc(r.type)} · ${esc(r.status)} · ${esc(r.date)}</span></button>`).join(""):`<div class="meta">아직 누적된 카톡 업무 데이터가 없습니다.</div>`}</div></div>`);
+      }
+      function ensureKakaoReportModal(){
+        if(!$("#kakaoWorkStyle"))document.head.insertAdjacentHTML("beforeend",`<style id="kakaoWorkStyle">
+          .kakao-work-panel{border-color:#b9dfe4;background:#f7fcfd}.kakao-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}.kakao-stats>div{border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px}.kakao-stats strong{display:block;margin-top:4px;font-size:16px}.kakao-recent{display:grid;gap:7px}.kakao-report-row{text-align:left;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 10px}.kakao-report-row strong{display:block}.kakao-report-row span{display:block;margin-top:4px;color:var(--muted);font-size:12px}.kakao-modal{width:min(760px,calc(100vw - 34px))}.kakao-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kakao-grid .full{grid-column:1/-1}.kakao-raw{min-height:150px}.kakao-preview{border:1px solid var(--line);border-radius:8px;background:#f8fbfc;padding:10px;white-space:pre-wrap}@media(max-width:720px){.kakao-stats,.kakao-grid{grid-template-columns:1fr}}
+        </style>`);
+        if($("#kakaoReportModal"))return;
+        const people=(state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("");
+        const types=workTypes.map(t=>`<option>${esc(t)}</option>`).join("");
+        const statuses=(state.todoStatuses||["백로그","할 일","진행중","완료","취소"]).map(s=>`<option>${esc(s)}</option>`).join("");
+        document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="kakaoReportModal"><div class="modal kakao-modal"><div class="modal-head"><h2>카톡 업무수집</h2><button class="btn icon" data-close-kakao-report>×</button></div><div class="form-grid"><div class="form-row full"><label>카톡 원문 붙여넣기</label><textarea class="field kakao-raw" id="kakaoRawText" placeholder="카톡 보고 내용을 그대로 붙여넣으세요."></textarea></div><div class="form-row"><label>보고자</label><select id="kakaoReporter">${people}</select></div><div class="form-row"><label>보고일</label><input class="field" type="date" id="kakaoDate"></div><div class="form-row"><label>현장/프로젝트</label><input class="field" id="kakaoProject" placeholder="현장명 또는 일반업무"></div><div class="form-row"><label>업무유형</label><select id="kakaoType">${types}</select></div><div class="form-row"><label>처리상태</label><select id="kakaoStatus">${statuses}</select></div><div class="form-row"><label>할일 제목</label><input class="field" id="kakaoTitle"></div><div class="form-row full"><label>결과 요약</label><textarea class="field" id="kakaoResult"></textarea></div><div class="form-row full"><label>다음 조치</label><input class="field" id="kakaoNextAction" placeholder="다음 확인할 일"></div><div class="form-row full"><label>분류 미리보기</label><div class="kakao-preview" id="kakaoPreview">원문을 붙여넣으면 자동 분류됩니다.</div></div></div><div class="toolbar" style="margin-top:14px"><button class="btn" id="parseKakaoReportBtn">자동 분류</button><button class="btn primary" id="saveKakaoReportBtn">업무 데이터로 저장</button><button class="btn danger hidden" id="deleteKakaoReportBtn">삭제</button></div></div></div>`);
+      }
+      function fillKakaoForm(r){
+        ensureKakaoReportModal();
+        $("#kakaoReportModal").dataset.editingId=r.id||"";
+        $("#kakaoRawText").value=r.rawText||"";
+        $("#kakaoReporter").innerHTML=(state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("");
+        $("#kakaoReporter").value=r.reporter||state.people?.[0]?.name||"";
+        $("#kakaoDate").value=r.date||today;
+        $("#kakaoProject").value=r.project||"일반업무";
+        $("#kakaoType").value=r.type||"기타";
+        $("#kakaoStatus").value=r.status||"진행중";
+        $("#kakaoTitle").value=r.title||"";
+        $("#kakaoResult").value=r.result||"";
+        $("#kakaoNextAction").value=r.nextAction||"";
+        $("#deleteKakaoReportBtn").classList.toggle("hidden",!r.id);
+        updateKakaoPreview();
+      }
+      function readKakaoForm(){
+        return {id:$("#kakaoReportModal").dataset.editingId||uid("kakao-report"),source:"카톡",rawText:$("#kakaoRawText").value.trim(),reporter:$("#kakaoReporter").value,date:$("#kakaoDate").value||today,project:$("#kakaoProject").value||"일반업무",type:$("#kakaoType").value||"기타",status:$("#kakaoStatus").value||"진행중",title:$("#kakaoTitle").value||"카톡 업무 보고",result:$("#kakaoResult").value||"",nextAction:$("#kakaoNextAction").value||"",createdAt:new Date().toISOString()};
+      }
+      function updateKakaoPreview(){
+        const r=readKakaoForm(),preview=$("#kakaoPreview");
+        if(preview)preview.textContent=`보고자: ${r.reporter}\n현장: ${r.project}\n업무유형: ${r.type}\n상태: ${r.status}\n보고일: ${r.date}\n다음 조치: ${r.nextAction||"-"}`;
+      }
+      function openKakaoReport(raw=""){
+        ensureKakaoReportModal();
+        fillKakaoForm(parseKakaoReport(raw));
+        $("#kakaoReportModal").classList.add("open");
+        setTimeout(()=>$("#kakaoRawText")?.focus(),0);
+      }
+      function parseCurrentKakaoReport(){fillKakaoForm(parseKakaoReport($("#kakaoRawText")?.value||""))}
+      function saveKakaoReport(){
+        ensureKakaoReports();
+        const r=readKakaoForm();
+        if(!r.rawText&&!r.title){toast("카톡 원문이나 제목을 입력해주세요.");return}
+        const idx=state.kakaoReports.findIndex(x=>x.id===r.id);
+        idx>=0?state.kakaoReports[idx]=r:state.kakaoReports.unshift(r);
+        const todo={title:r.title,owner:r.reporter,helpers:[],project:r.project,type:r.type,status:r.status,priority:r.status==="완료"?"보통":"보통",start:r.date,due:r.date,startTime:"09:00",endTime:"10:00",repeat:"반복 없음",location:"",detail:`[카톡 보고]\n${r.result||r.rawText}\n${r.nextAction?`\n다음 조치: ${r.nextAction}`:""}`,result:r.result,source:"카톡",kakaoReportId:r.id,kakaoSharedAt:new Date().toLocaleString("ko-KR"),kakaoSharedBy:r.reporter};
+        const todoIdx=state.todos.findIndex(t=>t.kakaoReportId===r.id);
+        if(todoIdx>=0){todo.id=state.todos[todoIdx].id;todo.linkedAssignmentId=state.todos[todoIdx].linkedAssignmentId;state.todos[todoIdx]=normalizeTodo({...state.todos[todoIdx],...todo})}
+        else state.todos.unshift(normalizeTodo(todo));
+        $("#kakaoReportModal").classList.remove("open");
+        saveState("카톡 보고를 업무 데이터로 저장했습니다.");
+        render();
+      }
+      function deleteKakaoReport(){
+        const id=$("#kakaoReportModal")?.dataset.editingId;
+        if(!id||!confirm("이 카톡 업무 데이터를 삭제할까요?"))return;
+        state.kakaoReports=(state.kakaoReports||[]).filter(r=>r.id!==id);
+        state.todos=(state.todos||[]).filter(t=>t.kakaoReportId!==id);
+        $("#kakaoReportModal").classList.remove("open");
+        saveState("카톡 업무 데이터를 삭제했습니다.");
+        render();
+      }
+      const baseRenderTodoBoardForKakao=renderTodoBoard;
+      renderTodoBoard=function(){baseRenderTodoBoardForKakao();renderKakaoWorkPanel()}
+      document.addEventListener("click",e=>{
+        const t=e.target.closest("button")||e.target;
+        if(t.id==="openKakaoReportBtn"||t.id==="clearKakaoReportFormBtn"){e.preventDefault();openKakaoReport();return}
+        if(t.id==="parseKakaoReportBtn"){e.preventDefault();parseCurrentKakaoReport();return}
+        if(t.id==="saveKakaoReportBtn"){e.preventDefault();saveKakaoReport();return}
+        if(t.id==="deleteKakaoReportBtn"){e.preventDefault();deleteKakaoReport();return}
+        if(t.dataset.openKakaoReport){const r=(state.kakaoReports||[]).find(x=>x.id===t.dataset.openKakaoReport);if(r){e.preventDefault();fillKakaoForm(r);$("#kakaoReportModal").classList.add("open")}return}
+        if(t.dataset.closeKakaoReport!==undefined||e.target?.id==="kakaoReportModal"){$("#kakaoReportModal")?.classList.remove("open");return}
+      },true);
+      document.addEventListener("input",e=>{
+        if(e.target?.id==="kakaoRawText")parseCurrentKakaoReport();
+        if(["kakaoReporter","kakaoDate","kakaoProject","kakaoType","kakaoStatus","kakaoTitle","kakaoResult","kakaoNextAction"].includes(e.target?.id))updateKakaoPreview();
+      },true);
+      document.addEventListener("change",e=>{if(["kakaoReporter","kakaoDate","kakaoType","kakaoStatus"].includes(e.target?.id))updateKakaoPreview()},true);
     })();
     function applyMasking(){document.body.classList.toggle("masking-mode",maskingMode);const b=$("#maskToggleBtn"),add=$("#addProjectBtn");if(b){b.textContent=maskingMode?"마스킹 ON":"마스킹 OFF";b.classList.toggle("primary",true);b.setAttribute("aria-pressed",maskingMode?"true":"false")}if(add)add.style.display=currentView==="dashboard"?"none":""}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="maskToggleBtn"||t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();pulseTopButton(t,maskingMode?"마스킹을 해제합니다.":"마스킹을 켭니다.");maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking();updateTopButtons()}},true);
@@ -2463,7 +2604,6 @@
   </script>
 </body>
 </html>
-
 
 
 
