@@ -2677,6 +2677,38 @@
       if(t.id==="reloadLatestBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion||Date.now();location.href=`${location.origin}${location.pathname}?v=${encodeURIComponent(version)}`;return}
       if(t.id==="dismissUpdateBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion;if(version)localStorage.setItem("dismissed-app-version",version);$("#appUpdateNotice")?.classList.add("hidden");return}
     },true);
+    (function lockPreferredNavOrder(){
+      const preferredNavOrder=["할일관리","외근현황","보고서","회의록","시공일정","DB","프로젝트 파일","관리자"];
+      const preferredNavDefaults={
+        "할일관리":{icon:"☑",label:"할일관리",access:"member"},
+        "외근현황":{icon:"⌖",label:"외근현황",access:"member"},
+        "보고서":{icon:"▣",label:"보고서",access:"member"},
+        "회의록":{icon:"▤",label:"회의록",access:"member"},
+        "시공일정":{icon:"◉",label:"시공일정",access:"admin"},
+        "DB":{icon:"▦",label:"DB",access:"admin"},
+        "프로젝트 파일":{icon:"▤",label:"프로젝트 파일",access:"admin"},
+        "관리자":{icon:"⚙",label:"관리자",access:"admin"}
+      };
+      function preferredNavLabel(label){
+        const compact=String(label||"").replace(/\s/g,"");
+        if(compact==="프로젝트파일")return "프로젝트 파일";
+        return preferredNavOrder.find(x=>x.replace(/\s/g,"")===compact)||label;
+      }
+      function applyPreferredNavOrder(){
+        if(!Array.isArray(state.nav))state.nav=[];
+        state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels.filter(x=>!preferredNavOrder.includes(preferredNavLabel(x))):[];
+        const current=state.nav.map(n=>({...n,label:preferredNavLabel(n.label)}));
+        state.nav=preferredNavOrder.map(label=>current.find(n=>n.label===label)||{...preferredNavDefaults[label]});
+        normalizePermissionState?.();
+        if(currentView==="dashboard"||currentView==="projects"||currentView==="assignments"){
+          currentView="todos";
+          localStorage.setItem(viewStorageKey,currentView);
+        }
+      }
+      const baseNormalizeForPreferredNav=normalizeState;
+      normalizeState=function(){baseNormalizeForPreferredNav();applyPreferredNavOrder()};
+      applyPreferredNavOrder();
+    })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
     document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady){loadSharedState();checkAppVersion()}});
     setInterval(()=>{if(!document.hidden&&authReady)loadSharedState()},5000);
@@ -2687,6 +2719,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
