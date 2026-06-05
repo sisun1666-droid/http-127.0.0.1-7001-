@@ -523,10 +523,12 @@
     function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;const action=googleSheetsEnabled()?`<div class="toolbar" style="margin-top:10px"><button class="btn primary" id="forceSheetUploadBtn" type="button">구글 시트로 지금 저장</button><button class="btn" id="checkSheetLoadBtn" type="button">저장 확인</button></div>`:"";n.innerHTML=`<strong>${kind==="ok"?`${googleSheetsName()} 저장 연결됨`:kind==="saving"?`${googleSheetsName()} 저장 중`:`${googleSheetsName()} 저장 확인 필요`}</strong><p class="meta">${esc(msg)}</p>${action}`}
     function ensureSheetSyncButton(){if(!googleSheetsEnabled()||$("#sheetSyncFloatBtn"))return;document.body.insertAdjacentHTML("beforeend",`<button class="btn primary" id="sheetSyncFloatBtn" type="button" style="position:fixed;right:18px;bottom:76px;z-index:9998;box-shadow:0 10px 26px rgba(8,125,143,.28)">구글 시트로 저장</button>`)}
     async function pushSharedState(){try{setSyncNotice("saving",`${googleSheetsName()} 저장소에 최신 내용을 올리는 중입니다.`);if(googleSheetsEnabled())await saveToGoogleSheets();else await saveToSupabase();delete state.__pendingCloudSync;localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("ok",googleSheetsEnabled()?"구글 시트를 통해 크롬, 엣지, 스마트폰, 다른 컴퓨터가 같은 최신 데이터를 사용합니다.":"크롬, 엣지, 스마트폰, 다른 컴퓨터가 같은 최신 데이터를 사용합니다.");return true}catch(err){state.__pendingCloudSync=true;localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("warn","공유 저장소 연결이 실패했습니다. 이 상태에서는 브라우저마다 데이터가 다르게 보일 수 있습니다. 인터넷 연결 후 새로고침하거나 다시 저장해주세요.");return false}}
+    async function refreshFromGoogleSheetsBeforeManualSave(){if(!googleSheetsEnabled())return;const shared=await loadFromGoogleSheets().catch(()=>null);if(shared&&hasUsefulWorkData(shared)&&!state.__pendingCloudSync&&workDataCount(shared)!==workDataCount(state))applySharedState(shared)}
     function persistState(){state.__updatedAt=Date.now();state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;pushSharedState()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
     function hasUsefulWorkData(data){return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].some(k=>Array.isArray(data?.[k])&&data[k].length>0)||Array.isArray(data?.dbRows)&&data.dbRows.length>0||Array.isArray(data?.db?.rows)&&data.db.rows.length>0}
-    function shouldUseSharedState(shared){if(!shared)return false;const sharedHas=hasUsefulWorkData(shared),localHas=hasUsefulWorkData(state);if(sharedHas&&!localHas)return true;if(!sharedHas&&localHas)return false;return !sharedLoaded||(Number(shared.__updatedAt)||0)>(Number(state.__updatedAt)||0)}
+    function workDataCount(data){return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].reduce((sum,k)=>sum+(Array.isArray(data?.[k])?data[k].length:0),0)}
+    function shouldUseSharedState(shared){if(!shared)return false;const sharedHas=hasUsefulWorkData(shared),localHas=hasUsefulWorkData(state);if(sharedHas&&!localHas)return true;if(!sharedHas&&localHas)return false;if(googleSheetsEnabled()&&sharedHas&&!state.__pendingCloudSync){return !sharedLoaded||workDataCount(shared)!==workDataCount(state)||(Number(shared.__updatedAt)||0)>=(Number(state.__updatedAt)||0)}return !sharedLoaded||(Number(shared.__updatedAt)||0)>(Number(state.__updatedAt)||0)}
     function applySharedState(shared){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("ok",googleSheetsEnabled()?"구글 시트의 최신 데이터를 불러왔습니다.":"공유 저장소의 최신 데이터를 불러왔습니다.");render()}
     async function loadSharedState(silent=false){
       if(!silent)setSyncNotice("saving",`${googleSheetsName()} 저장소에서 최신 데이터를 확인하는 중입니다.`);
@@ -539,7 +541,7 @@
           const rows=await r.json();
           shared=rows&&rows[0]&&rows[0].data;
         }
-        if(googleSheetsEnabled()&&!hasUsefulWorkData(shared)&&hasUsefulWorkData(state)){
+        if(googleSheetsEnabled()&&!hasUsefulWorkData(shared)&&hasUsefulWorkData(state)&&state.__pendingCloudSync){
           sharedLoaded=true;
           setSyncNotice("saving","현재 브라우저에 있는 업무 데이터를 구글 시트에 처음 올리는 중입니다.");
           pushSharedState();
@@ -2776,7 +2778,7 @@
     },true);
     document.addEventListener("click",async e=>{
       const t=e.target.closest("button")||e.target;
-      if(t.id==="forceSheetUploadBtn"||t.id==="sheetSyncFloatBtn"){e.preventDefault();state.__updatedAt=Date.now();pushSharedState();toast("구글 시트로 저장을 다시 보냈습니다.");return}
+      if(t.id==="forceSheetUploadBtn"||t.id==="sheetSyncFloatBtn"){e.preventDefault();await refreshFromGoogleSheetsBeforeManualSave();state.__updatedAt=Date.now();pushSharedState();toast("구글 시트로 저장을 다시 보냈습니다.");return}
       if(t.id==="checkSheetLoadBtn"){e.preventDefault();loadSharedState(false);toast("구글 시트 저장 상태를 확인합니다.");return}
       if(t.id==="staffLoginBtn"){e.preventDefault();staffLogin();return}
       if(t.id==="googleLogoutBtn"){e.preventDefault();clearStaffSession();await signOutAuth("다른 직원으로 다시 로그인해주세요.");fillStaffLoginNames();return}
@@ -2857,9 +2859,18 @@
         if(presenceSaving){presencePending=true;return}
         presenceSaving=true;
         try{
-          localStorage.setItem(storageKey,JSON.stringify(state));
-          if(googleSheetsEnabled())await saveToGoogleSheets();
-          else await saveToSupabase();
+          if(googleSheetsEnabled()){
+            const shared=await loadFromGoogleSheets().catch(()=>null);
+            if(shared&&hasUsefulWorkData(shared)){
+              const localPresence=Array.isArray(state.onlineUsers)?state.onlineUsers:[];
+              state={...clone(defaults),...shared,onlineUsers:localPresence,__presenceUpdatedAt:state.__presenceUpdatedAt};
+              localStorage.setItem(storageKey,JSON.stringify(state));
+            }
+            await saveToGoogleSheets();
+          }else{
+            localStorage.setItem(storageKey,JSON.stringify(state));
+            await saveToSupabase();
+          }
         }catch{}
         presenceSaving=false;
         if(presencePending){presencePending=false;setTimeout(pushPresenceSilently,600)}
