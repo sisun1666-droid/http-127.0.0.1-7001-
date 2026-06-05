@@ -2731,6 +2731,15 @@
       if(t.id==="reloadLatestBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion||Date.now();location.href=`${location.origin}${location.pathname}?v=${encodeURIComponent(version)}`;return}
       if(t.id==="dismissUpdateBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion;if(version)localStorage.setItem("dismissed-app-version",version);$("#appUpdateNotice")?.classList.add("hidden");return}
     },true);
+    document.addEventListener("keydown",e=>{
+      if(e.key!=="Enter")return;
+      const target=e.target;
+      if(!target||!["staffLoginName","staffLoginPin"].includes(target.id))return;
+      const btn=$("#staffLoginBtn");
+      if(btn?.disabled)return;
+      e.preventDefault();
+      staffLogin();
+    },true);
     (function lockPreferredNavOrder(){
       const preferredNavOrder=["할일관리","외근현황","보고서","회의록","시공일정","DB","프로젝트 파일","관리자"];
       const preferredNavDefaults={
