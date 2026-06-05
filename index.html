@@ -523,6 +523,12 @@
           pushSharedState();
           return;
         }
+        if(shared&&Number(shared.__presenceUpdatedAt||0)>Number(state.__presenceUpdatedAt||0)){
+          state.onlineUsers=Array.isArray(shared.onlineUsers)?shared.onlineUsers:[];
+          state.__presenceUpdatedAt=shared.__presenceUpdatedAt;
+          localStorage.setItem(storageKey,JSON.stringify(state));
+          window.renderPresenceUi?.();
+        }
         if(shouldUseSharedState(shared))applySharedState(shared);
         else {sharedLoaded=true;if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");}
         return;
@@ -2756,6 +2762,111 @@
       const baseNormalizeForPreferredNav=normalizeState;
       normalizeState=function(){baseNormalizeForPreferredNav();applyPreferredNavOrder()};
       applyPreferredNavOrder();
+    })();
+    (function setupOnlinePresence(){
+      const presenceDeviceKey="solar-presence-device-id-v1";
+      const presenceTtlMs=2*60*1000;
+      const staleKeepMs=24*60*60*1000;
+      let presenceTimer=null,presenceSaving=false,presencePending=false;
+      function presenceDeviceId(){
+        let id=localStorage.getItem(presenceDeviceKey);
+        if(!id){id=uid("presence");localStorage.setItem(presenceDeviceKey,id)}
+        return id;
+      }
+      function presenceViewLabel(){
+        const found=(state.nav||[]).find(n=>viewForLabel(n.label)===currentView);
+        return found?.label||els.pageTitle?.textContent||currentView||"화면";
+      }
+      function presenceRows(){
+        state.onlineUsers=Array.isArray(state.onlineUsers)?state.onlineUsers:[];
+        const now=Date.now();
+        state.onlineUsers=state.onlineUsers.filter(u=>u&&u.id&&u.name&&now-Number(u.lastSeen||0)<staleKeepMs);
+        return state.onlineUsers;
+      }
+      function activePresenceRows(){
+        const now=Date.now();
+        return presenceRows().map(u=>({...u,online:now-Number(u.lastSeen||0)<=presenceTtlMs&&u.status!=="offline"})).sort((a,b)=>Number(b.lastSeen||0)-Number(a.lastSeen||0));
+      }
+      function currentPresencePayload(status="online"){
+        const person=currentStaff?.(),name=loginName();
+        if(!name)return null;
+        return {id:presenceDeviceId(),name,role:person?.role||"직원",access:staffAccess?.(person)||"member",status,view:presenceViewLabel(),lastSeen:Date.now(),lastSeenText:new Date().toLocaleString("ko-KR"),userAgent:navigator.userAgent.slice(0,120)};
+      }
+      async function pushPresenceSilently(){
+        if(presenceSaving){presencePending=true;return}
+        presenceSaving=true;
+        try{
+          localStorage.setItem(storageKey,JSON.stringify(state));
+          if(googleSheetsEnabled())await saveToGoogleSheets();
+          else await saveToSupabase();
+        }catch{}
+        presenceSaving=false;
+        if(presencePending){presencePending=false;setTimeout(pushPresenceSilently,600)}
+      }
+      function upsertPresence(status="online",sync=true){
+        const payload=currentPresencePayload(status);
+        if(!payload)return;
+        const rows=presenceRows().filter(u=>u.id!==payload.id);
+        const previous=state.onlineUsers.find(u=>u.id===payload.id);
+        state.onlineUsers=[{...previous,...payload,loginAt:previous?.loginAt||Date.now()},...rows];
+        state.__presenceUpdatedAt=Date.now();
+        localStorage.setItem(storageKey,JSON.stringify(state));
+        renderPresenceUi();
+        if(sync)pushPresenceSilently();
+      }
+      function markOffline(){
+        if(!loginName())return;
+        upsertPresence("offline",false);
+        try{
+          if(!googleSheetsEnabled())fetch(SUPABASE_STATE_URL,{method:"PATCH",headers:supabaseHeaders({Prefer:"return=minimal"}),body:JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()}),keepalive:true});
+        }catch{}
+      }
+      function schedulePresenceTouch(delay=700){
+        clearTimeout(presenceTimer);
+        presenceTimer=setTimeout(()=>upsertPresence("online",true),delay);
+      }
+      function syncPresenceAfterLoad(){
+        if(!authReady||!loginName())return;
+        upsertPresence("online",true);
+      }
+      function relativePresenceTime(ts){
+        const diff=Math.max(0,Date.now()-Number(ts||0));
+        if(diff<60000)return "방금 전";
+        if(diff<3600000)return `${Math.floor(diff/60000)}분 전`;
+        return `${Math.floor(diff/3600000)}시간 전`;
+      }
+      function presenceCardHtml(){
+        const rows=activePresenceRows(),online=rows.filter(u=>u.online);
+        return `<div class="card" id="onlinePresenceCard"><div class="panel-title"><h2>접속자 현황</h2><span class="badge green">접속중 ${online.length}명</span></div><div class="meta" style="margin:8px 0 12px">2분 안에 신호가 있으면 접속중으로 표시합니다. 브라우저를 강제 종료하면 잠시 뒤 오프라인으로 바뀝니다.</div><div class="admin-list">${rows.length?rows.map(u=>`<div class="auth-row online-row ${u.online?"is-online":"is-offline"}"><div><strong>${esc(u.name)}</strong><div class="meta">${esc(u.role||"직원")} · ${esc(u.view||"화면")} · ${relativePresenceTime(u.lastSeen)}</div></div><span class="badge ${u.online?"green":"amber"}">${u.online?"접속중":"오프라인"}</span></div>`).join(""):`<div class="meta">아직 접속 기록이 없습니다.</div>`}</div></div>`;
+      }
+      function renderPresenceUi(){
+        const rows=activePresenceRows(),online=rows.filter(u=>u.online);
+        const box=$("#loginInfo");
+        if(box&&loginName()){
+          box.title=online.length?`현재 접속중: ${online.map(u=>u.name).join(", ")}`:"접속자 확인 중";
+          if(!$("#onlineCountBadge"))box.insertAdjacentHTML("beforeend",`<span class="role" id="onlineCountBadge"> · 접속중 ${online.length}명</span>`);
+          else $("#onlineCountBadge").textContent=` · 접속중 ${online.length}명`;
+        }
+        const card=$("#onlinePresenceCard"),grid=$("#adminView .admin-grid");
+        if(card)card.outerHTML=presenceCardHtml();
+        else if(grid&&currentView==="admin")grid.insertAdjacentHTML("afterbegin",presenceCardHtml());
+      }
+      window.renderPresenceUi=renderPresenceUi;
+      const baseSetStaffSessionForPresence=setStaffSession;
+      setStaffSession=function(person){baseSetStaffSessionForPresence(person);schedulePresenceTouch(200)};
+      const baseClearStaffSessionForPresence=clearStaffSession;
+      clearStaffSession=function(){markOffline();baseClearStaffSessionForPresence()};
+      const baseLoadSharedStateForPresence=loadSharedState;
+      loadSharedState=async function(silent=false){const result=await baseLoadSharedStateForPresence(silent);syncPresenceAfterLoad();return result};
+      const baseRenderLoginInfoForPresence=renderLoginInfo;
+      renderLoginInfo=function(){baseRenderLoginInfoForPresence();renderPresenceUi()};
+      const baseRenderAdminForPresence=renderAdmin;
+      renderAdmin=function(){baseRenderAdminForPresence();renderPresenceUi()};
+      const baseGoToViewForPresence=goToView;
+      goToView=function(view,label=""){baseGoToViewForPresence(view,label);schedulePresenceTouch(500)};
+      window.addEventListener("beforeunload",markOffline);
+      document.addEventListener("visibilitychange",()=>{if(document.hidden)markOffline();else schedulePresenceTouch(300)});
+      setInterval(()=>{if(authReady&&loginName()&&!document.hidden)schedulePresenceTouch(100)},45000);
     })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
     document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady){loadSharedState(true);checkAppVersion()}});
