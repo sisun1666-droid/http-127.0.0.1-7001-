@@ -514,14 +514,14 @@
         if(r.ok){
           const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;
           if(shouldUseSharedState(shared))applySharedState(shared);
-          else sharedLoaded=true;
+          else { sharedLoaded=true; if(hasUsefulWorkData(state)&&!hasUsefulWorkData(shared))saveToSupabase().catch(()=>{}); }
           return;
         }
       }catch{}
       try{
         const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();
         if(shouldUseSharedState(shared))applySharedState(shared);
-        else sharedLoaded=true;
+        else { sharedLoaded=true; if(hasUsefulWorkData(state)&&!hasUsefulWorkData(shared))saveToSupabase().catch(()=>{}); }
       }catch{}
     }
     function toast(msg){els.toast.textContent=msg;els.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove("show"),1500)}
@@ -2752,6 +2752,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
