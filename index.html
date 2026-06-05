@@ -496,7 +496,7 @@
     async function saveToGoogleSheets(){if(!googleSheetsEnabled())throw new Error("Google Sheets web app URL is empty");const iframe=document.createElement("iframe"),form=document.createElement("form"),payload=document.createElement("input");const frameName=`googleSheetSave_${Date.now()}_${Math.random().toString(36).slice(2)}`;iframe.name=frameName;iframe.style.display="none";form.method="POST";form.action=GOOGLE_SHEETS_WEB_APP_URL;form.target=frameName;form.style.display="none";payload.type="hidden";payload.name="payload";payload.value=JSON.stringify({action:"save",data:state});form.appendChild(payload);document.body.append(iframe,form);form.submit();await new Promise(resolve=>setTimeout(resolve,900));form.remove();setTimeout(()=>iframe.remove(),3000)}
     async function loadFromGoogleSheets(){const res=await googleSheetsJsonp("load");if(!res||res.ok===false)throw new Error(res?.error||"Google Sheets load failed");return res.data||null}
     async function saveToSupabase(){const body=JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()});let r=await fetch(SUPABASE_STATE_URL,{method:"PATCH",headers:supabaseHeaders({Prefer:"return=minimal"}),body});if(r.status===404||r.status===406){r=await fetch(`${SUPABASE_URL}/rest/v1/app_state`,{method:"POST",headers:supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"}),body})}if(!r.ok)throw new Error(`Supabase save failed: ${r.status}`)}
-    function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;n.innerHTML=`<strong>${kind==="ok"?`${googleSheetsName()} 저장 연결됨`:kind==="saving"?`${googleSheetsName()} 저장 중`:`${googleSheetsName()} 저장 확인 필요`}</strong><p class="meta">${esc(msg)}</p>`}
+    function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;const action=googleSheetsEnabled()?`<div class="toolbar" style="margin-top:10px"><button class="btn primary" id="forceSheetUploadBtn" type="button">구글 시트로 지금 저장</button><button class="btn" id="checkSheetLoadBtn" type="button">저장 확인</button></div>`:"";n.innerHTML=`<strong>${kind==="ok"?`${googleSheetsName()} 저장 연결됨`:kind==="saving"?`${googleSheetsName()} 저장 중`:`${googleSheetsName()} 저장 확인 필요`}</strong><p class="meta">${esc(msg)}</p>${action}`}
     async function pushSharedState(){try{setSyncNotice("saving",`${googleSheetsName()} 저장소에 최신 내용을 올리는 중입니다.`);if(googleSheetsEnabled())await saveToGoogleSheets();else await saveToSupabase();delete state.__pendingCloudSync;localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("ok",googleSheetsEnabled()?"구글 시트를 통해 크롬, 엣지, 스마트폰, 다른 컴퓨터가 같은 최신 데이터를 사용합니다.":"크롬, 엣지, 스마트폰, 다른 컴퓨터가 같은 최신 데이터를 사용합니다.");return true}catch(err){state.__pendingCloudSync=true;localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("warn","공유 저장소 연결이 실패했습니다. 이 상태에서는 브라우저마다 데이터가 다르게 보일 수 있습니다. 인터넷 연결 후 새로고침하거나 다시 저장해주세요.");return false}}
     function persistState(){state.__updatedAt=Date.now();state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;pushSharedState()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
@@ -2715,6 +2715,8 @@
     },true);
     document.addEventListener("click",async e=>{
       const t=e.target.closest("button")||e.target;
+      if(t.id==="forceSheetUploadBtn"){e.preventDefault();state.__updatedAt=Date.now();pushSharedState();toast("구글 시트로 저장을 다시 보냈습니다.");return}
+      if(t.id==="checkSheetLoadBtn"){e.preventDefault();loadSharedState(false);toast("구글 시트 저장 상태를 확인합니다.");return}
       if(t.id==="staffLoginBtn"){e.preventDefault();staffLogin();return}
       if(t.id==="googleLogoutBtn"){e.preventDefault();clearStaffSession();await signOutAuth("다른 직원으로 다시 로그인해주세요.");fillStaffLoginNames();return}
       if(t.id==="reloadLatestBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion||Date.now();location.href=`${location.origin}${location.pathname}?v=${encodeURIComponent(version)}`;return}
@@ -2762,6 +2764,7 @@
   </script>
 </body>
 </html>
+
 
 
 
