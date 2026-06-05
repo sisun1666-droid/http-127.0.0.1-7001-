@@ -420,7 +420,7 @@
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="직원 이름과 개인 PIN을 입력해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    function showApp(){document.body.classList.remove("auth-pending");authReady=true;render();loadSharedState()}
+    function showApp(){document.body.classList.remove("auth-pending");authReady=true;loadSharedState().finally(()=>render())}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
     const fallbackStaff=[
       {name:"이재강",role:"과장",pin:"0217"},
@@ -444,7 +444,10 @@
           if(!staffPin(p)){p.pin=base.pin;changed=true}
         }
       });
-      if(changed)persistState();
+      if(changed){
+        localStorage.setItem(storageKey,JSON.stringify(state));
+        if(sharedLoaded)persistState();
+      }
     }
     function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;const current=s.value||"";s.innerHTML=`<option value="">직원 선택</option>`+(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");s.value=[...s.options].some(o=>o.value===current)?current:""}
     function staffSession(){try{return JSON.parse(localStorage.getItem(staffSessionKey)||sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
@@ -489,8 +492,38 @@
     async function saveToSupabase(){const body=JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()});let r=await fetch(SUPABASE_STATE_URL,{method:"PATCH",headers:supabaseHeaders({Prefer:"return=minimal"}),body});if(r.status===404||r.status===406){r=await fetch(`${SUPABASE_URL}/rest/v1/app_state`,{method:"POST",headers:supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"}),body})}if(!r.ok)throw new Error(`Supabase save failed: ${r.status}`)}
     function persistState(){state.__updatedAt=Date.now();localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;saveToSupabase().catch(()=>fetch("/api/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(state)}).catch(()=>{}))}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
-    function isSharedNewer(shared){return !sharedLoaded||(Number(shared?.__updatedAt)||0)>(Number(state?.__updatedAt)||0)}
-    async function loadSharedState(){try{const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(r.ok){const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;if(shared&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}return}}catch{}try{const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();if(shared&&shared.__updatedAt&&isSharedNewer(shared)){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));render()}}catch{}}
+    function hasUsefulWorkData(data){
+      return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].some(k=>Array.isArray(data?.[k])&&data[k].length>0)||Array.isArray(data?.dbRows)&&data.dbRows.length>0||Array.isArray(data?.db?.rows)&&data.db.rows.length>0;
+    }
+    function shouldUseSharedState(shared){
+      if(!shared)return false;
+      const sharedHas=hasUsefulWorkData(shared),localHas=hasUsefulWorkData(state);
+      if(sharedHas&&!localHas)return true;
+      if(!sharedHas&&localHas)return false;
+      return !sharedLoaded||(Number(shared.__updatedAt)||0)>(Number(state.__updatedAt)||0);
+    }
+    function applySharedState(shared){
+      sharedLoaded=true;
+      state={...clone(defaults),...shared};
+      localStorage.setItem(storageKey,JSON.stringify(state));
+      render();
+    }
+    async function loadSharedState(){
+      try{
+        const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});
+        if(r.ok){
+          const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;
+          if(shouldUseSharedState(shared))applySharedState(shared);
+          else sharedLoaded=true;
+          return;
+        }
+      }catch{}
+      try{
+        const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();
+        if(shouldUseSharedState(shared))applySharedState(shared);
+        else sharedLoaded=true;
+      }catch{}
+    }
     function toast(msg){els.toast.textContent=msg;els.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove("show"),1500)}
     function ensureUpdateNotice(){
       if($("#appUpdateNotice"))return $("#appUpdateNotice");
@@ -2719,6 +2752,10 @@
   </script>
 </body>
 </html>
+
+
+
+
 
 
 
