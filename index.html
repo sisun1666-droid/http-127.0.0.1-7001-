@@ -491,9 +491,31 @@
     const GOOGLE_SHEETS_WEB_APP_URL="https://script.google.com/macros/s/AKfycbw3B3uPa-e9Qe6Nva8mCMpdMRH0aDdpB4hoSfQWeXnmbK1mxT4LExEx2yGSZmTN7NAwig/exec"; // Apps Script 배포 후 받은 웹앱 주소를 여기에 넣으면 구글 시트 공용 저장소가 켜집니다.
     function googleSheetsEnabled(){return /^https:\/\/script\.google\.com\/macros\/s\//.test(GOOGLE_SHEETS_WEB_APP_URL)}
     function googleSheetsName(){return googleSheetsEnabled()?"구글 시트":"공유"}
+    function sheetValue(v){return Array.isArray(v)?v.join(", "):String(v??"")}
+    function buildGoogleSheetTables(data=state){
+      const meetings=(data.meetings||[]).map(m=>[m.date,m.time,m.title,m.host,(m.attendees||[]).join(", "),m.project,m.type,m.summary,(m.decisions||[]).join("\n")]);
+      const todos=(data.todos||[]).map(t=>[t.title,t.owner,(t.helpers||[]).join(", "),t.project,t.type,t.status,t.priority,t.start,t.due,[t.startTime,t.endTime].filter(Boolean).join("~"),t.location,t.detail,t.result,t.kakaoSharedAt||""]);
+      const assignments=(data.assignments||[]).map(a=>[a.title,a.owner,a.project,a.type,a.status,a.priority,a.start,a.due,[a.startTime,a.endTime].filter(Boolean).join("~"),a.location,a.detail,a.result]);
+      const construction=(data.construction||[]).map(c=>[c.company,c.structureTeam,c.site,c.kw,c.sales,c.customer,c.phase,c.owner,c.start,c.end,c.status,c.next]);
+      const people=(data.people||[]).map(p=>[p.name,p.role,p.area,p.monthlyTarget,p.yearlyTarget,p.accessRole||p.authRole||p.permissionRole||(p.isAdmin?"admin":"member"),p.pin||p.staffPin||p.personalPin||"",p.color||""]);
+      const fieldwork=(data.fieldworkLogs||[]).map(f=>[f.date,f.time,f.person,f.status,f.site,f.region,f.memo,f.savedAt]);
+      const online=(data.onlineUsers||[]).map(u=>[u.name,u.role,u.status,u.view,u.lastSeenText||"",u.lastSeen?new Date(Number(u.lastSeen)).toLocaleString("ko-KR"):"",u.id]);
+      const projects=(data.projects||[]).map(p=>[p.name,p.phase,p.owner,p.due,p.status,p.next]);
+      return {
+        "설정":[["항목","값","설명","앱 전체 상태 JSON","최종 저장 시간"],["사이트명",data.title||"","홈페이지 상단 제목",JSON.stringify(data),new Date().toLocaleString("ko-KR")],["저장방식","Google Sheets","모든 브라우저/컴퓨터 공용 저장소","",""],["최종수정",today,"표 분리 저장 포함","",""]],
+        "회의록":[["회의일","시간","회의 제목","주관자","참석자","현장/프로젝트","구분","회의 요약","결정사항"],...meetings],
+        "할일관리":[["업무명","담당","공동담당","현장/프로젝트","구분","상태","우선순위","시작일","마감일","시간","위치","상세내용","처리결과","공유일시"],...todos],
+        "일정관리":[["업무명","담당","현장/프로젝트","구분","상태","우선순위","시작일","마감일","시간","위치","상세내용","처리결과"],...assignments],
+        "시공일정":[["시공사","구조물팀","발전소/현장","용량(kW)","영업","고객","단계","담당","시작일","완료일","상태","다음 조치"],...construction],
+        "직원":[["이름","직책","담당업무","월 목표","연 목표","권한","PIN","색상"],...people],
+        "외근현황":[["일자","시간","직원","상태","현장","지역","메모","저장시간"],...fieldwork],
+        "접속로그":[["직원","직책","상태","현재 화면","마지막 신호","마지막 신호 원본","기기 ID"],...online],
+        "프로젝트":[["현장/프로젝트","단계","담당","마감","상태","다음 조치"],...projects]
+      };
+    }
     function supabaseHeaders(extra={}){return{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,"Content-Type":"application/json",...extra}}
     function googleSheetsJsonp(action){return new Promise((resolve,reject)=>{if(!googleSheetsEnabled()){reject(new Error("Google Sheets web app URL is empty"));return}const cb=`__googleSheetState_${Date.now()}_${Math.random().toString(36).slice(2)}`,script=document.createElement("script"),timer=setTimeout(()=>{cleanup();reject(new Error("Google Sheets load timeout"))},12000);function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}window[cb]=data=>{cleanup();resolve(data)};script.onerror=()=>{cleanup();reject(new Error("Google Sheets load failed"))};const url=new URL(GOOGLE_SHEETS_WEB_APP_URL);url.searchParams.set("action",action);url.searchParams.set("callback",cb);url.searchParams.set("t",Date.now());script.src=url.toString();document.head.appendChild(script)})}
-    async function saveToGoogleSheets(){if(!googleSheetsEnabled())throw new Error("Google Sheets web app URL is empty");const payloadText=JSON.stringify({action:"save",data:state});let sent=false;try{const formBody=new URLSearchParams();formBody.set("payload",payloadText);await fetch(GOOGLE_SHEETS_WEB_APP_URL,{method:"POST",mode:"no-cors",body:formBody,keepalive:true});sent=true}catch{}
+    async function saveToGoogleSheets(){if(!googleSheetsEnabled())throw new Error("Google Sheets web app URL is empty");const payloadText=JSON.stringify({action:"save",data:state,tables:buildGoogleSheetTables(state)});let sent=false;try{const formBody=new URLSearchParams();formBody.set("payload",payloadText);await fetch(GOOGLE_SHEETS_WEB_APP_URL,{method:"POST",mode:"no-cors",body:formBody,keepalive:true});sent=true}catch{}
       if(!sent){const iframe=document.createElement("iframe"),form=document.createElement("form"),payload=document.createElement("input");const frameName=`googleSheetSave_${Date.now()}_${Math.random().toString(36).slice(2)}`;iframe.name=frameName;iframe.style.display="none";form.method="POST";form.action=GOOGLE_SHEETS_WEB_APP_URL;form.target=frameName;form.style.display="none";payload.type="hidden";payload.name="payload";payload.value=payloadText;form.appendChild(payload);document.body.append(iframe,form);form.submit();form.remove();setTimeout(()=>iframe.remove(),3000)}
       await new Promise(resolve=>setTimeout(resolve,1300))}
     async function loadFromGoogleSheets(){const res=await googleSheetsJsonp("load");if(!res||res.ok===false)throw new Error(res?.error||"Google Sheets load failed");return res.data||null}
