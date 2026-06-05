@@ -394,7 +394,7 @@
         <div class="panel"><div class="panel-title"><h2 id="tableTitle">현장·공무 진행표</h2><div class="row-actions"><button class="btn hidden" id="dbPasteBtn">DB 붙여넣기</button><button class="btn danger hidden" id="undoDbImportBtn">가져오기 취소</button><button class="btn primary" id="addContentBtn">현장 추가</button></div></div><div class="filters" id="tableFilters"><input class="search" id="search" placeholder="전체 검색"><select id="phaseFilter"></select></div><div class="table-wrap" id="tableWrap"><table><thead id="tableHead"></thead><tbody id="rows"></tbody></table></div><div id="assignmentCalendarPanel" class="hidden"><div class="schedule-toolbar"><div class="schedule-left"><button class="btn icon" id="assignmentPrevMonth">‹</button><button class="btn" id="assignmentTodayBtn">오늘</button><button class="btn icon" id="assignmentNextMonth">›</button><div class="schedule-month"><select id="assignmentCalendarYear"></select><select id="assignmentCalendarMonth"></select></div></div><div class="schedule-right"><div class="schedule-view"><button class="active" data-schedule-view="month">월</button><button data-schedule-view="week">주</button><button data-schedule-view="day">일</button></div><button class="btn primary" id="assignmentCalendarAddBtn">일정 등록</button></div></div><div class="schedule-people" id="assignmentPeopleChips"></div><div class="calendar-grid" id="assignmentCalendarGrid"></div></div><div id="todoBoardPanel" class="hidden"></div></div>
         <div class="stack"><div class="tabs hidden" id="employeeTabs"><button class="tab-btn active" data-employee-tab="assignments">업무지시</button><button class="tab-btn" data-employee-tab="workload">직원별 업무량</button><button class="tab-btn" data-employee-tab="kpi">직원 KPI</button></div><div class="panel" id="peoplePanel"><div class="panel-title"><h2>직원별 업무량</h2><button class="btn" id="addPersonBtn">직원 추가</button></div><div id="people"></div></div><div class="panel" id="employeeKpiPanel"><div class="panel-title"><h2>직원 KPI</h2><button class="btn" id="exportKpiBtn">KPI 내보내기</button></div><div class="filters"><select id="kpiYear"></select><select id="kpiMonth"><option value="all">연간</option><option value="01">1월</option><option value="02">2월</option><option value="03">3월</option><option value="04">4월</option><option value="05">5월</option><option value="06">6월</option><option value="07">7월</option><option value="08">8월</option><option value="09">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div><div class="stack" id="employeeKpis"></div></div><div class="panel" id="assignmentsPanel"><div class="panel-title"><h2>직원 업무지시</h2><button class="btn primary" id="addAssignmentBtn">업무 지시</button></div><div class="stack" id="assignments"></div></div><div class="panel" id="todosPanel"><div class="panel-title"><h2>오늘 확인할 항목</h2><button class="btn" id="addTodoBtn">항목 추가</button></div><div class="stack" id="todos"></div></div><div class="panel hidden" id="currentPlantsPanel"><div class="panel-title"><h2>현재 시공중인 발전소</h2></div><div class="stack" id="currentPlants"></div></div><div class="panel hidden" id="upcomingPlantsPanel"><div class="panel-title"><h2>시공 예정 발전소</h2></div><div class="stack" id="upcomingPlants"></div></div><div class="panel hidden" id="constructionReportPanel"><div class="panel-title"><h2>월간 시공 보고서</h2></div><div class="filters"><select id="constructionReportYear"></select><select id="constructionReportMonth"></select><button class="btn primary" id="openConstructionReportBtn">보고서 보기</button></div></div></div>
       </section>
-      <section class="panel" id="sharedNotice" style="margin-top:14px"><strong>공유 저장 사용 중</strong><p class="meta">PC, 스마트폰, 외부 접속 주소가 같은 서버 데이터를 사용합니다. 다른 기기는 새로고침하면 최신 내용이 보입니다.</p></section>
+      <section class="panel" id="sharedNotice" style="margin-top:14px"><strong>브라우저 저장 사용 중</strong><p class="meta">현재 브라우저에 저장된 데이터를 표시합니다.</p></section>
     </main>
   </div>
   <div class="overlay" id="projectModal"><div class="modal"><div class="modal-head"><h2>현장 수정</h2><button class="btn icon" data-close="projectModal">×</button></div><div class="form-grid"><div class="form-row"><label>고객/현장</label><input class="field" id="projectName"></div><div class="form-row"><label>업무단계</label><select id="projectPhase"></select></div><div class="form-row"><label>담당</label><input class="field" id="projectOwner"></div><div class="form-row"><label>마감일</label><input class="field" type="date" id="projectDue"></div><div class="form-row"><label>상태</label><select id="projectStatus"></select></div><div class="form-row full"><label>다음 액션</label><textarea class="field" id="projectNext"></textarea></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveProjectBtn">저장</button><button class="btn danger hidden" id="deleteProjectInModalBtn">삭제</button></div></div></div>
@@ -420,7 +420,7 @@
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="직원 이름과 개인 PIN을 입력해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    function showApp(){authReady=true;loadSharedState().finally(()=>{render();document.body.classList.remove("auth-pending")})}
+    function showApp(){authReady=true;loadSharedState(true).finally(()=>{render();document.body.classList.remove("auth-pending")})}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
     const fallbackStaff=[
       {name:"이재강",role:"과장",pin:"0217"},
@@ -475,7 +475,7 @@
       fillStaffLoginNames();
       if(acceptStaffSession())return;
       showAuthGate("직원 이름과 개인 PIN을 입력해주세요.");
-      loadSharedState().then(()=>{
+      loadSharedState(true).then(()=>{
         ensureDefaultStaffPins();
         fillStaffLoginNames();
         if(authReady)render();
@@ -497,14 +497,14 @@
     function hasUsefulWorkData(data){return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].some(k=>Array.isArray(data?.[k])&&data[k].length>0)||Array.isArray(data?.dbRows)&&data.dbRows.length>0||Array.isArray(data?.db?.rows)&&data.db.rows.length>0}
     function shouldUseSharedState(shared){if(!shared)return false;const sharedHas=hasUsefulWorkData(shared),localHas=hasUsefulWorkData(state);if(sharedHas&&!localHas)return true;if(!sharedHas&&localHas)return false;return !sharedLoaded||(Number(shared.__updatedAt)||0)>(Number(state.__updatedAt)||0)}
     function applySharedState(shared){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("ok","공유 저장소의 최신 데이터를 불러왔습니다.");render()}
-    async function loadSharedState(){
-      setSyncNotice("saving","공유 저장소에서 최신 데이터를 확인하는 중입니다.");
+    async function loadSharedState(silent=false){
+      if(!silent)setSyncNotice("saving","공유 저장소에서 최신 데이터를 확인하는 중입니다.");
       try{
         const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});
         if(r.ok){
           const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;
           if(shouldUseSharedState(shared))applySharedState(shared);
-          else {sharedLoaded=true;setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 정상 데이터를 기준으로 사용합니다.":"공유 저장소에 아직 업무 데이터가 없습니다.");if(hasUsefulWorkData(state)&&!hasUsefulWorkData(shared))await pushSharedState()}
+          else {sharedLoaded=true;if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");}
           return;
         }
         throw new Error(`Supabase load failed: ${r.status}`);
@@ -512,10 +512,10 @@
         try{
           const r=await fetch("/api/state",{cache:"no-store"}),shared=await r.json();
           if(shouldUseSharedState(shared))applySharedState(shared);
-          else {sharedLoaded=true;setSyncNotice(hasUsefulWorkData(state)?"warn":"warn","공유 저장소 연결이 실패했습니다. 현재 브라우저에 저장된 데이터만 표시 중입니다.")}
+          else {sharedLoaded=true;if(!silent)setSyncNotice("warn","현재 브라우저에 저장된 데이터만 표시 중입니다.")}
         }catch{
           sharedLoaded=true;
-          setSyncNotice(hasUsefulWorkData(state)?"warn":"warn","공유 저장소 연결이 실패했습니다. 현재 브라우저에 저장된 데이터만 표시 중입니다.");
+          if(!silent)setSyncNotice("warn","현재 브라우저에 저장된 데이터만 표시 중입니다.");
         }
       }
     }
@@ -2738,8 +2738,8 @@
       applyPreferredNavOrder();
     })();
     document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay").forEach(m=>m.classList.remove("open"))});
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady){loadSharedState();checkAppVersion()}});
-    setInterval(()=>{if(!document.hidden&&authReady)loadSharedState()},5000);
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authReady){loadSharedState(true);checkAppVersion()}});
+    setInterval(()=>{if(!document.hidden&&authReady)loadSharedState(true)},30000);
     setInterval(()=>{if(!document.hidden)checkAppVersion()},180000);
     setInterval(updateClock,30000);
     initAuthGate();
@@ -2747,6 +2747,7 @@
   </script>
 </body>
 </html>
+
 
 
 
