@@ -3322,6 +3322,10 @@
       }
 
       function renderEpcView() {
+        const activeSearch = document.activeElement?.id === "epcSearch" ? document.activeElement : null;
+        const activeSearchValue = activeSearch ? activeSearch.value : null;
+        const activeSearchStart = activeSearch ? activeSearch.selectionStart : null;
+        const activeSearchEnd = activeSearch ? activeSearch.selectionEnd : null;
         const usingSharedDb = epcApplySharedDb();
         let view = $("#epcView");
         if (!view) {
@@ -3370,6 +3374,17 @@
             </div>
             <aside class="panel epc-detail-panel"><div class="panel-title"><h2>발전소 상세</h2></div>${epcDetail(selected)}</aside>
           </section>`;
+        if (activeSearch) {
+          const nextSearch = $("#epcSearch");
+          if (nextSearch) {
+            nextSearch.value = activeSearchValue ?? epcState.query;
+            nextSearch.focus();
+            try {
+              const pos = Math.min(nextSearch.value.length, activeSearchEnd ?? nextSearch.value.length);
+              nextSearch.setSelectionRange(Math.min(nextSearch.value.length, activeSearchStart ?? pos), pos);
+            } catch {}
+          }
+        }
       }
 
       const epcBaseRenderView = renderView;
@@ -3423,9 +3438,12 @@
       document.addEventListener("compositionend", e => {
         if (e.target?.id === "epcSearch") {
           epcState.composing = false;
-          epcState.query = e.target.value;
+          const input = e.target;
           clearTimeout(epcSearchTimer);
-          epcSearchTimer = setTimeout(renderEpcView, 120);
+          epcSearchTimer = setTimeout(() => {
+            epcState.query = input.value;
+            renderEpcView();
+          }, 360);
         }
       });
 
@@ -3434,7 +3452,7 @@
           epcState.query = e.target.value;
           if (epcState.composing || e.isComposing) return;
           clearTimeout(epcSearchTimer);
-          epcSearchTimer = setTimeout(renderEpcView, 180);
+          epcSearchTimer = setTimeout(renderEpcView, 420);
         }
       });
 
