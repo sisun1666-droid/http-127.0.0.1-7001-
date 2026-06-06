@@ -879,7 +879,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-07-0205-auto-version-refresh",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-07-0315-category-sync-fix",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -944,10 +944,21 @@
       ensureDefaultStaffPins();
       fillStaffLoginNames();
       if(acceptStaffSession())return;
+      const sess=staffSession();
+      if(sess?.name){
+        showAuthGate("저장된 로그인으로 최신 업무 데이터를 불러오는 중입니다.");
+        try{
+          await loadSharedState(true);
+          ensureDefaultStaffPins();
+          fillStaffLoginNames();
+          if(acceptStaffSession())return;
+        }catch{}
+      }
       showAuthGate("직원 이름과 개인 PIN을 입력해주세요.");
       loadSharedState(true).then(()=>{
         ensureDefaultStaffPins();
         fillStaffLoginNames();
+        if(!authReady&&staffSession()?.name)acceptStaffSession();
         if(authReady)render();
       }).catch(()=>{
         ensureDefaultStaffPins();
@@ -4253,6 +4264,113 @@
         if(t.dataset.deleteMessage!==undefined){const i=Number(t.dataset.deleteMessage);if(confirm("이 메세지 이력을 삭제할까요?")){state.messages.splice(i,1);saveState("메세지를 삭제했습니다.");renderMessageView()}return}
       },true);
       ensureMessageNav();
+    })();
+
+
+    /* 최종 카테고리 화면/저장 안정화 레이어 */
+    ;(() => {
+      const finalSpecialViews=["drive","reports","db","fieldwork","meetings","epc","messages"];
+      const finalMainViews=["projects","construction","assignments","todos"];
+      function finalCustomViews(){
+        return [
+          ["drive","driveView"],["reports","reportView"],["db","dbView"],["fieldwork","fieldworkView"],
+          ["meetings","meetingView"],["epc","epcView"],["messages","messageView"]
+        ].map(([view,id])=>({view,el:document.getElementById(id)})).filter(x=>x.el);
+      }
+      function finalApplyCategoryShell(){
+        const isSpecial=finalSpecialViews.includes(currentView),isMain=finalMainViews.includes(currentView);
+        const showKpis=currentView==="dashboard"||currentView==="construction";
+        $("#kpis")?.classList.toggle("hidden",!showKpis);
+        els.dashboardView?.classList.toggle("hidden",currentView!=="dashboard");
+        els.adminView?.classList.toggle("hidden",currentView!=="admin");
+        els.mainGrid?.classList.toggle("hidden",!isMain);
+        finalCustomViews().forEach(({view,el})=>el.classList.toggle("hidden",currentView!==view));
+        $("#sharedNotice")?.classList.toggle("hidden",isSpecial);
+        document.body.classList.toggle("schedule-page",currentView==="assignments");
+        document.body.classList.toggle("todo-page",currentView==="todos");
+        document.body.classList.toggle("view-meetings",currentView==="meetings");
+        document.body.classList.toggle("message-page",currentView==="messages");
+        if(currentView==="construction"){
+          els.mainGrid?.classList.remove("schedule-mode","todo-mode");
+          els.tableFilters?.classList.remove("hidden");
+          els.tableWrap?.classList.remove("hidden");
+          els.assignmentCalendarPanel?.classList.add("hidden");
+          $("#todoBoardPanel")?.classList.add("hidden");
+          els.currentPlantsPanel?.classList.remove("hidden");
+          els.upcomingPlantsPanel?.classList.remove("hidden");
+          els.constructionReportPanel?.classList.remove("hidden");
+        }
+      }
+      const baseFinalRenderView=renderView;
+      renderView=function(){baseFinalRenderView();finalApplyCategoryShell()};
+      const baseFinalRender=render;
+      render=function(){baseFinalRender();finalApplyCategoryShell()};
+      const baseFinalGoToView=goToView;
+      goToView=function(view,label=""){baseFinalGoToView(view,label);finalApplyCategoryShell()};
+
+      function readConstructionFormFinal(){
+        const status=$("#constructionStatus")?.value||"예정";
+        return {
+          id:editingConstructionIndex!==null?state.construction?.[editingConstructionIndex]?.id||uid("construction"):uid("construction"),
+          company:$("#constructionCompany")?.value||state.constructionTeams?.[0]||"",
+          structureTeam:$("#constructionStructureTeam")?.value||state.structureTeams?.[0]||"",
+          site:$("#constructionSite")?.value.trim()||"이름 없는 발전소",
+          kw:Number($("#constructionKw")?.value)||0,
+          sales:$("#constructionSales")?.value||"",
+          customer:$("#constructionCustomer")?.value||"",
+          phase:$("#constructionPhase")?.value||state.constructionPhases?.[0]||"",
+          owner:$("#constructionOwner")?.value||"",
+          start:$("#constructionStart")?.value||today,
+          end:$("#constructionEnd")?.value||"",
+          status,
+          next:withConstructionStatusLine($("#constructionNext")?.value||"",status)
+        };
+      }
+      const saveConstructionBtn=$("#saveConstructionBtn");
+      if(saveConstructionBtn){
+        saveConstructionBtn.onclick=e=>{
+          e?.preventDefault?.();
+          e?.stopImmediatePropagation?.();
+          state.construction=Array.isArray(state.construction)?state.construction:[];
+          const item=readConstructionFormFinal();
+          if(editingConstructionIndex!==null&&state.construction[editingConstructionIndex])state.construction[editingConstructionIndex]=item;
+          else state.construction.unshift(item);
+          currentView="construction";
+          localStorage.setItem(viewStorageKey,currentView);
+          $("#constructionModal")?.classList.remove("open");
+          render();
+          saveStateAfterPaint("시공일정을 저장했습니다.");
+          setTimeout(()=>{renderView();renderCurrentContent();finalApplyCategoryShell()},30);
+        };
+      }
+      const deleteConstructionBtn=$("#deleteConstructionInModalBtn");
+      if(deleteConstructionBtn){
+        deleteConstructionBtn.onclick=e=>{
+          e?.preventDefault?.();
+          e?.stopImmediatePropagation?.();
+          if(editingConstructionIndex===null||!confirm("이 시공일정을 삭제할까요?"))return;
+          state.construction.splice(editingConstructionIndex,1);
+          editingConstructionIndex=null;
+          currentView="construction";
+          localStorage.setItem(viewStorageKey,currentView);
+          $("#constructionModal")?.classList.remove("open");
+          render();
+          saveStateAfterPaint("시공일정을 삭제했습니다.");
+        };
+      }
+      const baseFinalSetSyncNotice=setSyncNotice;
+      setSyncNotice=function(kind,msg){
+        baseFinalSetSyncNotice(kind,msg);
+        const n=$("#sharedNotice");
+        if(n){
+          const hint=kind==="saving"?"자동 저장 중":kind==="ok"?"자동 저장 완료":"저장 확인 필요";
+          n.querySelector("strong")&&(n.querySelector("strong").textContent=hint);
+        }
+      };
+      const float=$("#sheetSyncFloatBtn");
+      if(float)float.title="자동 저장이 기본입니다. 급할 때만 누르세요.";
+      window.kiwoomDebugState=()=>({view:currentView,build:appBuildVersion,todos:state.todos?.length||0,assignments:state.assignments?.length||0,construction:state.construction?.length||0,meetings:state.meetings?.length||0,pending:!!state.__pendingCloudSync});
+      setTimeout(finalApplyCategoryShell,0);
     })();
 
   </script>
