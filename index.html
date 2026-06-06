@@ -735,6 +735,97 @@
       }
     </style>
 
+
+    <style id="fullTextMaskingStyle">
+      body.masking-mode main,
+      body.masking-mode aside,
+      body.masking-mode .toast{
+        --mask-text-shadow:0 0 7px rgba(23,37,43,.42);
+      }
+      body.masking-mode main *:not(svg):not(path):not(canvas):not(img):not(#maskToggleBtn),
+      body.masking-mode aside *:not(svg):not(path):not(canvas):not(img),
+      body.masking-mode .toast{
+        color:transparent!important;
+        text-shadow:var(--mask-text-shadow)!important;
+        -webkit-text-fill-color:transparent!important;
+        filter:none!important;
+        user-select:none!important;
+      }
+      body.masking-mode input,
+      body.masking-mode textarea,
+      body.masking-mode select,
+      body.masking-mode option{
+        color:transparent!important;
+        text-shadow:0 0 6px rgba(23,37,43,.34)!important;
+        -webkit-text-fill-color:transparent!important;
+      }
+      body.masking-mode input::placeholder,
+      body.masking-mode textarea::placeholder{
+        color:transparent!important;
+        text-shadow:0 0 6px rgba(23,37,43,.25)!important;
+        -webkit-text-fill-color:transparent!important;
+      }
+      body.masking-mode #maskToggleBtn,
+      body.masking-mode #maskToggleBtn *{
+        color:#fff!important;
+        -webkit-text-fill-color:#fff!important;
+        text-shadow:none!important;
+        filter:none!important;
+      }
+      body.masking-mode .nav-btn.active,
+      body.masking-mode .btn.primary,
+      body.masking-mode .tab-btn.active,
+      body.masking-mode .todo-chip.active{
+        color:transparent!important;
+        text-shadow:0 0 7px rgba(255,255,255,.72)!important;
+        -webkit-text-fill-color:transparent!important;
+      }
+      body.masking-mode .badge,
+      body.masking-mode .todo-chip,
+      body.masking-mode .btn:not(#maskToggleBtn),
+      body.masking-mode .tab-btn{
+        color:transparent!important;
+        text-shadow:0 0 6px rgba(23,37,43,.36)!important;
+        -webkit-text-fill-color:transparent!important;
+      }
+      body.masking-mode .todo-card-title,
+      body.masking-mode .todo-card-meta,
+      body.masking-mode .project-name,
+      body.masking-mode .project-meta,
+      body.masking-mode .meeting-card strong,
+      body.masking-mode .meeting-card span,
+      body.masking-mode .message-output,
+      body.masking-mode td,
+      body.masking-mode th{
+        filter:none!important;
+        opacity:1!important;
+      }
+      body.masking-mode .kiwoom-wordmark,
+      body.masking-mode .kiwoom-wordmark *{
+        color:transparent!important;
+        -webkit-text-fill-color:transparent!important;
+        text-shadow:0 0 7px rgba(23,37,43,.36)!important;
+      }
+      body.masking-mode main:before{
+        content:"전체 텍스트 마스킹 ON";
+        position:fixed;
+        right:18px;
+        bottom:18px;
+        z-index:9997;
+        border:1px solid #9fd3dc;
+        background:#f1fbfc;
+        color:#087d8f!important;
+        -webkit-text-fill-color:#087d8f!important;
+        text-shadow:none!important;
+        border-radius:999px;
+        padding:7px 12px;
+        font-size:12px;
+        font-weight:900;
+        box-shadow:0 8px 22px rgba(8,125,143,.15);
+        pointer-events:none;
+      }
+    </style>
+
 </head>
 <body class="auth-pending">
   <div class="auth-gate" id="authGate">
