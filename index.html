@@ -879,7 +879,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-07-0345-meeting-delete-fix",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-07-0415-category-registry-tests",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -4269,38 +4269,51 @@
 
     /* 최종 카테고리 화면/저장 안정화 레이어 */
     ;(() => {
-      const finalSpecialViews=["drive","reports","db","fieldwork","meetings","epc","messages"];
-      const finalMainViews=["projects","construction","assignments","todos"];
-      function finalCustomViews(){
-        return [
-          ["drive","driveView"],["reports","reportView"],["db","dbView"],["fieldwork","fieldworkView"],
-          ["meetings","meetingView"],["epc","epcView"],["messages","messageView"]
-        ].map(([view,id])=>({view,el:document.getElementById(id)})).filter(x=>x.el);
+      const categoryRegistry={
+        dashboard:{kind:"native",showKpis:true,showDashboard:true,body:["dashboard-page"]},
+        admin:{kind:"native",showAdmin:true,body:["admin-page"]},
+        projects:{kind:"main",showMain:true,showTable:true,body:["projects-page"]},
+        construction:{kind:"main",showMain:true,showTable:true,showKpis:true,showConstructionSide:true,body:["construction-page"]},
+        assignments:{kind:"main",showMain:true,body:["schedule-page"]},
+        todos:{kind:"main",showMain:true,body:["todo-page"]},
+        drive:{kind:"custom",elementId:"driveView",body:["drive-page"]},
+        reports:{kind:"custom",elementId:"reportView",body:["report-page"]},
+        db:{kind:"custom",elementId:"dbView",body:["db-page"]},
+        fieldwork:{kind:"custom",elementId:"fieldworkView",body:["fieldwork-page"]},
+        meetings:{kind:"custom",elementId:"meetingView",body:["view-meetings"]},
+        epc:{kind:"custom",elementId:"epcView",body:["epc-page"]},
+        messages:{kind:"custom",elementId:"messageView",body:["message-page"]}
+      };
+      const categoryBodyClasses=[...new Set(Object.values(categoryRegistry).flatMap(x=>x.body||[]))];
+      function categoryConfig(view=currentView){return categoryRegistry[view]||categoryRegistry.projects}
+      function categoryCustomViews(){
+        return Object.entries(categoryRegistry).filter(([,cfg])=>cfg.elementId).map(([view,cfg])=>({view,el:document.getElementById(cfg.elementId)})).filter(x=>x.el);
       }
       function finalApplyCategoryShell(){
-        const isSpecial=finalSpecialViews.includes(currentView),isMain=finalMainViews.includes(currentView);
-        const showKpis=currentView==="dashboard"||currentView==="construction";
-        $("#kpis")?.classList.toggle("hidden",!showKpis);
-        els.dashboardView?.classList.toggle("hidden",currentView!=="dashboard");
-        els.adminView?.classList.toggle("hidden",currentView!=="admin");
-        els.mainGrid?.classList.toggle("hidden",!isMain);
-        finalCustomViews().forEach(({view,el})=>el.classList.toggle("hidden",currentView!==view));
-        $("#sharedNotice")?.classList.toggle("hidden",isSpecial);
-        document.body.classList.toggle("schedule-page",currentView==="assignments");
-        document.body.classList.toggle("todo-page",currentView==="todos");
-        document.body.classList.toggle("view-meetings",currentView==="meetings");
-        document.body.classList.toggle("message-page",currentView==="messages");
-        if(currentView==="construction"){
-          els.mainGrid?.classList.remove("schedule-mode","todo-mode");
+        const cfg=categoryConfig(),isCustom=cfg.kind==="custom";
+        $("#kpis")?.classList.toggle("hidden",!cfg.showKpis);
+        els.dashboardView?.classList.toggle("hidden",!cfg.showDashboard);
+        els.adminView?.classList.toggle("hidden",!cfg.showAdmin);
+        els.mainGrid?.classList.toggle("hidden",!cfg.showMain);
+        categoryCustomViews().forEach(({view,el})=>el.classList.toggle("hidden",currentView!==view));
+        $("#sharedNotice")?.classList.toggle("hidden",isCustom);
+        categoryBodyClasses.forEach(cls=>document.body.classList.toggle(cls,(cfg.body||[]).includes(cls)));
+        if(cfg.showMain){
+          els.mainGrid?.classList.toggle("schedule-mode",currentView==="assignments");
+          els.mainGrid?.classList.toggle("todo-mode",currentView==="todos");
+        }
+        if(cfg.showTable){
           els.tableFilters?.classList.remove("hidden");
           els.tableWrap?.classList.remove("hidden");
           els.assignmentCalendarPanel?.classList.add("hidden");
           $("#todoBoardPanel")?.classList.add("hidden");
-          els.currentPlantsPanel?.classList.remove("hidden");
-          els.upcomingPlantsPanel?.classList.remove("hidden");
-          els.constructionReportPanel?.classList.remove("hidden");
         }
+        const showConstruction=!!cfg.showConstructionSide;
+        els.currentPlantsPanel?.classList.toggle("hidden",!showConstruction);
+        els.upcomingPlantsPanel?.classList.toggle("hidden",!showConstruction);
+        els.constructionReportPanel?.classList.toggle("hidden",!showConstruction);
       }
+      window.kiwoomCategoryRegistry=categoryRegistry;
       const baseFinalRenderView=renderView;
       renderView=function(){baseFinalRenderView();finalApplyCategoryShell()};
       const baseFinalRender=render;
@@ -4382,12 +4395,12 @@
         const target=state.meetings.find(m=>String(m.id)===String(id));
         if(!target)return false;
         if(ask&&!confirm(`'${target.title||"회의록"}' 회의록을 삭제할까요?`))return false;
-        disableMeetingSamples?.();
+        if(typeof disableMeetingSamples==="function")disableMeetingSamples();
         state.meetings=state.meetings.filter(m=>String(m.id)!==String(id));
         selectedMeetingId=state.meetings[0]?.id||"";
         $("#meetingModal")?.classList.remove("open");
         if(currentView!=="meetings"){currentView="meetings";localStorage.setItem(viewStorageKey,currentView)}
-        renderMeetingView?.();
+        render?.();
         renderNav?.();
         updateTopButtons?.();
         saveStateAfterPaint("회의록을 삭제했습니다.");
@@ -4407,6 +4420,49 @@
         e.stopImmediatePropagation();
       },true);
       window.kiwoomDeleteMeetingForTest=removeMeetingFinal;
+    })();
+
+
+    /* 카테고리별 자체 점검: 운영 저장소를 건드리지 않는 화면/동작 검증 */
+    ;(() => {
+      function visible(el){return !!el&&!el.classList.contains("hidden")&&getComputedStyle(el).display!=="none"}
+      function expect(name,ok,details=""){return {name,ok:!!ok,details}}
+      async function runCategorySelfTest(){
+        const original={view:currentView,state:clone(state),selectedMeetingId:typeof selectedMeetingId!=="undefined"?selectedMeetingId:""};
+        const results=[];
+        try{
+          state.people=state.people?.length?state.people:[{name:"이재강",role:"과장",pin:"0217",accessRole:"admin"}];
+          state.todos=[{id:"selftest-todo",title:"자체점검 할일",owner:state.people[0].name,status:"할 일",priority:"보통",due:today,detail:"자동 점검"}];
+          state.assignments=[];
+          state.construction=[];
+          state.meetings=[{id:"selftest-meeting",date:today,time:"09:00",title:"자체점검 회의록",host:state.people[0].name,attendees:[state.people[0].name],project:"일반업무",type:"회의",summary:"자동 점검",decisions:[]}];
+
+          currentView="meetings";render();await new Promise(r=>setTimeout(r,30));
+          results.push(expect("회의록: 전용 화면 표시",visible($("#meetingView"))&&!visible(els.mainGrid),`view=${currentView}`));
+          results.push(expect("회의록: 시공 KPI 미표시",!document.body.innerText.includes("시공 진행률")&&!document.body.innerText.includes("상태별 발전소")));
+          window.kiwoomDeleteMeetingForTest?.("selftest-meeting",false);await new Promise(r=>setTimeout(r,80));
+          results.push(expect("회의록: 삭제 동작",!(state.meetings||[]).some(m=>m.id==="selftest-meeting")));
+
+          currentView="construction";render();openConstructionModal();$("#constructionSite").value="자체점검 발전소";$("#constructionKw").value="50";$("#constructionStatus").value="시공중";$("#saveConstructionBtn").click();await new Promise(r=>setTimeout(r,120));
+          results.push(expect("시공일정: 저장 후 목록 표시",(state.construction||[]).some(c=>c.site==="자체점검 발전소")&&document.body.innerText.includes("자체점검 발전소")));
+
+          currentView="todos";render();await new Promise(r=>setTimeout(r,30));
+          results.push(expect("할일관리: 보드 표시",visible($("#todoBoardPanel"))&&!$("#kpis")?.classList.contains("hidden")===false));
+          results.push(expect("할일관리: KPI 숨김",$("#kpis")?.classList.contains("hidden")));
+        }catch(err){
+          results.push(expect("자체점검 실행 오류",false,err?.message||String(err)));
+        }finally{
+          state=original.state;
+          currentView=original.view;
+          if(typeof selectedMeetingId!=="undefined")selectedMeetingId=original.selectedMeetingId;
+          localStorage.setItem(viewStorageKey,currentView);
+          render();
+        }
+        const ok=results.every(r=>r.ok);
+        console.table?.(results);
+        return {ok,build:appBuildVersion,results};
+      }
+      window.kiwoomRunCategorySelfTest=runCategorySelfTest;
     })();
 
   </script>
