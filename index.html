@@ -1814,7 +1814,16 @@
           사용전검사일:get(["사용전검사_검사일"]),
           설비완료일자:get(["설비_완료일자"]),
           PPA선로확보여부:get(["PPA_선로확보여부"]),
-          검사합격여부:get(["검사_합격여부"])
+          검사합격여부:get(["검사_합격여부"]),
+          발전완료:get(["발전_완료"]),
+          개발완료:get(["개발_완료"]),
+          PPA완료:get(["PPA_완료"]),
+          구조물완료:get(["구조물_완료"]),
+          구조물입고완료:get(["구조물입고_완료"]),
+          행정사업개시완료:get(["행정_사업개시완료"]),
+          행정준공완료:get(["행정_준공완료"]),
+          설비등록완료:get(["설비등록_완료"]),
+          수급계약완료:get(["수급계약_완료"])
         };
       }
       async function parseDbFile(file){
@@ -3133,10 +3142,23 @@
         if (!unpaid && revenue) unpaid = Math.max(revenue - payments, 0);
         const status = String(epcFirst(row, ["진행상태"]) || "상태 미입력");
         const stageMap = [
-          ["발전허가","발전허가일"],["개발행위","개발허가일"],["PPA","PPA접수증수령일"],["구조물","구조물생산완료일"],
-          ["공사계획","공사계획허가일"],["사용전검사","사용전검사일"],["상업운전","상업운전개시일"],["설비등록","설비완료일자"]
+          ["발전허가","발전허가일",["발전완료"]],
+          ["개발행위","개발허가일",["개발완료"]],
+          ["PPA","PPA접수증수령일",["PPA완료"]],
+          ["구조물","구조물생산완료일",["구조물완료","구조물입고완료"]],
+          ["공사계획","공사계획허가일",["행정사업개시완료"]],
+          ["사용전검사","사용전검사일",["행정준공완료"]],
+          ["상업운전","상업운전개시일",["수급계약완료"]],
+          ["설비등록","설비완료일자",["설비등록완료"]]
         ];
-        const missingStages = stageMap.filter(([,key])=>!String(row[key]||"").trim()).map(([label])=>label);
+        const isDoneText = value => {
+          const text = String(value || "").trim();
+          return !!text && !["미완료","대기","대기중","진행중","보류","취소"].includes(text);
+        };
+        const projectCompleted = status.includes("공사완료") || status === "완료";
+        const missingStages = projectCompleted ? [] : stageMap
+          .filter(([,key,alts]) => !isDoneText(row[key]) && !(alts || []).some(alt => isDoneText(row[alt])))
+          .map(([label]) => label);
         const risk = [];
         if (status === "공사완료" && unpaid > 0) risk.push("완료 후 미수");
         if (revenue === 0 && cost > 0) risk.push("원가 선투입");
