@@ -3110,17 +3110,25 @@
         return Number.isFinite(n) ? n : 0;
       }
 
+      function epcKeySlug(value) {
+        return String(value || "").replace(/[\s_\/\-.()]/g, "").toLowerCase();
+      }
+
       function epcFirst(row, keys) {
+        const entries = Object.entries(row || {});
         for (const key of keys) {
-          const value = row?.[key];
-          if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+          const direct = row?.[key];
+          if (direct !== undefined && direct !== null && String(direct).trim() !== "") return direct;
+          const slug = epcKeySlug(key);
+          const found = entries.find(([rowKey, value]) => epcKeySlug(rowKey) === slug && value !== undefined && value !== null && String(value).trim() !== "");
+          if (found) return found[1];
         }
         return "";
       }
 
       function epcFirstNum(row, keys) {
         for (const key of keys) {
-          const n = epcNum(row?.[key]);
+          const n = epcNum(epcFirst(row, [key]));
           if (n) return n;
         }
         return 0;
@@ -3140,7 +3148,7 @@
         const profit = revenue - cost;
         let unpaid = epcNum(row.재무미수잔액);
         if (!unpaid && revenue) unpaid = Math.max(revenue - payments, 0);
-        const status = String(epcFirst(row, ["진행상태"]) || "상태 미입력");
+        const status = String(epcFirst(row, ["진행상태","진행중"]) || "상태 미입력");
         const stageMap = [
           ["발전허가","발전허가일",["발전완료"]],
           ["개발행위","개발허가일",["개발완료"]],
@@ -3164,7 +3172,7 @@
           return [];
         })();
         const missingStages = projectCompleted ? [] : stageMap
-          .filter(([label,key,alts]) => !impliedDoneStages.includes(label) && !isDoneText(row[key]) && !(alts || []).some(alt => isDoneText(row[alt])))
+          .filter(([label,key,alts]) => !impliedDoneStages.includes(label) && !isDoneText(epcFirst(row, [key])) && !(alts || []).some(alt => isDoneText(epcFirst(row, [alt]))))
           .map(([label]) => label);
         const risk = [];
         if (status === "공사완료" && unpaid > 0) risk.push("완료 후 미수");
@@ -3177,11 +3185,11 @@
           plant: String(epcFirst(row, ["발전소명"]) || `발전소 ${index + 1}`),
           corp: String(epcFirst(row, ["계약법인"]) || "미입력"),
           type: String(epcFirst(row, ["건립종류"]) || "미입력"),
-          manager: String(epcFirst(row, ["영업담당자"]) || "미입력"),
-          region: epcRegion(row.현장주소),
+          manager: String(epcFirst(row, ["영업담당자","영업 담당자"]) || "미입력"),
+          region: epcRegion(epcFirst(row, ["현장주소","현장 주소"])),
           status,
           contractDate: String(row.계약일 || "").slice(0, 10),
-          capacity: epcFirstNum(row, ["공사용량","발전허가용량"]),
+          capacity: epcFirstNum(row, ["공사용량","공사_용량","발전허가용량","발전_허가용량","공사계획허가용량","공사계획_허가용량"]),
           revenue: Math.round(revenue),
           payments: Math.round(payments),
           unpaid: Math.round(unpaid),
