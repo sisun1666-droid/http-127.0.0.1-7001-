@@ -3678,11 +3678,24 @@
         const incoming=$("#messageIncoming")?.value.trim();
         const tone=$("#messageTone")?.value||"기본";
         const a=analyzeMessage(incoming);
-        const prefix=tone==="간단"?"안녕하세요.":`안녕하세요, ${sender}님.`;
-        const siteLine=site?`문의 현장: ${site}\n`:"";
-        const actionLine=`\n\n우선 처리 방향\n- ${a.actions.join("\n- ")}`;
-        const close=tone==="강한사과"?"\n\n불편을 드린 점 다시 한번 죄송합니다. 내부 확인 후 처리 방향을 최대한 빠르게 안내드리겠습니다.":"\n\n확인 후 가능한 처리 방향을 안내드리겠습니다.";
-        return `${prefix}\n${siteLine}${a.reply}${actionLine}${close}`;
+        const hello=tone==="간단"?"안녕하세요.":`안녕하세요, ${sender}님.`;
+        const lines=[hello];
+        if(site)lines.push(`현장: ${site}`);
+        lines.push("");
+        lines.push(`[${a.type} 접수 안내]`);
+        lines.push(a.reply);
+        lines.push("");
+        lines.push("확인 요청 사항");
+        a.actions.forEach((x,i)=>lines.push(`${i+1}. ${x}`));
+        lines.push("");
+        lines.push("안내");
+        if(tone==="강한사과"){
+          lines.push("불편을 드린 점 다시 한번 죄송합니다.");
+          lines.push("내부 확인 후 처리 방향을 최대한 빠르게 안내드리겠습니다.");
+        }else{
+          lines.push("확인 후 가능한 처리 방향을 안내드리겠습니다.");
+        }
+        return lines.join("\n");
       }
       function currentMessageAnalysis(){
         return analyzeMessage($("#messageIncoming")?.value||"");
