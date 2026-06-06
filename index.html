@@ -3181,7 +3181,7 @@
           corpCounts[p.corp] = (corpCounts[p.corp] || 0) + 1;
         });
         epcData.generatedAt = new Date().toISOString().slice(0, 10);
-        epcData.source = loadDb?.().fileName || "공유 DB";
+        epcData.source = state.businessDb?.fileName || "공유 DB";
         epcData.statusCounts = statusCounts;
         epcData.corpCounts = corpCounts;
         epcData.projects = projects;
@@ -3470,6 +3470,7 @@
   </script>
 </body>
 </html>
+
 
 
 
