@@ -2078,6 +2078,7 @@
           .construction-db-search .field{width:100%;height:36px}
           .construction-db-results{position:absolute;top:40px;left:0;right:0;z-index:30;display:grid;gap:6px;max-height:260px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:8px}
           .construction-db-result{border:1px solid var(--line);background:#fbfdfe;border-radius:8px;padding:8px;text-align:left;font-size:12px;line-height:1.45}
+          .construction-db-result small{display:block;margin-top:3px;color:var(--muted);font-weight:700}
           .construction-db-empty{font-size:12px;color:var(--muted);padding:8px}
           @media(max-width:720px){#constructionModal .modal-head{display:grid;grid-template-columns:1fr auto}.construction-db-search{grid-column:1/-1;width:100%;margin-left:0;order:3}}
         #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
@@ -2093,15 +2094,33 @@
       function renderConstructionDbResults(){
         const box=$("#constructionDbResults"),q=$("#constructionDbSearch")?.value||"";
         if(!box||!window.solarDb)return;
-        const rows=window.solarDb.search(q,8);
+        const rows=window.solarDb.search(q,50),groups=groupDbRowsForConstruction(rows).slice(0,8);
+        window.__constructionDbGroups=groups;
         box.classList.toggle("hidden",!q.trim());
-        box.innerHTML=rows.length?rows.map(x=>`<button class="construction-db-result" type="button" data-construction-db-row="${x.i}"><strong>${esc(window.solarDb.summary(x.row)||"DB 항목")}</strong></button>`).join(""):`<div class="construction-db-empty">검색 결과가 없습니다.</div>`;
+        box.innerHTML=groups.length?groups.map((g,i)=>{const first=g.items[0]||{},sites=g.items.map(x=>x.site).filter(Boolean),address=first.address||"",customer=first.customer||"";return `<button class="construction-db-result" type="button" data-construction-db-group="${i}"><strong>${esc(g.label)} · ${esc(g.kw||0)}kW${g.items.length>1?` · ${g.items.length}개 호기`:""}</strong><small>${esc([customer,address].filter(Boolean).join(" · "))}</small>${g.items.length>1?`<small>포함: ${esc(sites.join(", "))}</small>`:""}</button>`}).join(""):`<div class="construction-db-empty">검색 결과가 없습니다.</div>`;
       }
       function setSelectIfExists(id,value){
         const el=$("#"+id);if(!el||!value)return false;
         const opt=[...el.options].find(o=>o.value===value||o.textContent===value);
         if(opt){el.value=opt.value;return true}
         return false;
+      }
+      function normalizedDbText(v){return String(v||"").replace(/\s+/g,"").toLowerCase()}
+      function dbRowInfo(row,i){
+        const c=window.solarDb?.cell;
+        const site=c(row,["발전소명","현장명","사업장명","발전소"])||"DB 항목";
+        const kw=Number(String(c(row,["공사용량","발전허가용량","공사_용량","발전_허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,""))||0;
+        const customer=c(row,["사업주","사업주명","대표자","고객명","성명"]);
+        const address=c(row,["현장주소","현장 주소","주소","설치주소","소재지"]);
+        return {row,i,site,kw,customer,address,sales:c(row,["영업담당자","영업 담당자","영업자","담당자"]),status:c(row,["진행상태","진행중","상태","공사진행"]),request:c(row,["고객요청사항","요청사항","비고"]),company:c(row,["시공업체","시공_전기시공업체","전기시공업체","시공사"]),structureTeam:c(row,["구조물시공팀","시공_구조물시공팀","구조물팀"])};
+      }
+      function basePlantName(name){return String(name||"").replace(/\s*\d+\s*호?\s*$/,"").trim()||String(name||"").trim()}
+      function groupLabel(items){const first=items[0]||{},base=basePlantName(first.site);return items.length>1?`${base} ${items.length}기`:first.site}
+      function groupDbRowsForConstruction(matches){
+        const all=window.solarDb.rows().map((row,i)=>dbRowInfo(row,i)),keys=new Set(matches.map(x=>{const info=dbRowInfo(x.row,x.i);return info.customer&&info.address?`${normalizedDbText(info.customer)}|${normalizedDbText(info.address)}`:`row-${x.i}`})),map=new Map(),groups=[];
+        all.forEach(info=>{const key=info.customer&&info.address?`${normalizedDbText(info.customer)}|${normalizedDbText(info.address)}`:`row-${info.i}`;if(!keys.has(key))return;if(!map.has(key))map.set(key,[]);map.get(key).push(info)});
+        map.forEach(items=>groups.push({items,label:groupLabel(items),kw:Math.round(items.reduce((s,x)=>s+x.kw,0)*100)/100}));
+        return groups.sort((a,b)=>b.items.length-a.items.length||a.label.localeCompare(b.label,"ko",{numeric:true}));
       }
       function applyDbRowToConstruction(row){
         const c=window.solarDb?.cell;if(!c)return;
@@ -2127,8 +2146,24 @@
         updateConstructionDuration();
         toast("DB 정보로 시공일정을 자동 입력했습니다.");
       }
+      function applyDbGroupToConstruction(group){
+        const items=group?.items||[];if(!items.length)return;
+        const first=items[0],sites=[...new Set(items.map(x=>x.site).filter(Boolean))],requests=[...new Set(items.map(x=>x.request).filter(Boolean))],statuses=[...new Set(items.map(x=>x.status).filter(Boolean))];
+        $("#constructionSite").value=groupLabel(items);
+        $("#constructionKw").value=String(group.kw||"");
+        if(first.sales)$("#constructionSales").value=first.sales;
+        if(first.customer)$("#constructionCustomer").value=first.customer;
+        if(first.company)setSelectIfExists("constructionCompany",first.company);
+        if(first.structureTeam)setSelectIfExists("constructionStructureTeam",first.structureTeam);
+        const next=[first.address&&`주소: ${first.address}`,sites.length>1&&`포함 호기: ${sites.join(", ")}`,statuses.length&&`진행상태: ${statuses.join(", ")}`,requests.length&&`요청사항: ${requests.join(" / ")}`].filter(Boolean).join("\n");
+        if(next)$("#constructionNext").value=next;
+        $("#constructionDbResults")?.classList.add("hidden");
+        $(".construction-db-search #constructionDbSearch").value=groupLabel(items);
+        updateConstructionDuration();
+        toast(items.length>1?`${items.length}개 호기를 한 시공일정으로 자동 입력했습니다.`:"DB 정보로 시공일정을 자동 입력했습니다.");
+      }
       document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch")renderConstructionDbResults()},true);
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.constructionDbRow!==undefined){const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.constructionDbGroup!==undefined){applyDbGroupToConstruction(window.__constructionDbGroups?.[Number(t.dataset.constructionDbGroup)]);return}if(t.dataset.constructionDbRow!==undefined){const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
     })();
     (function setupFieldworkView(){
       function ensureFieldworkChrome(){
