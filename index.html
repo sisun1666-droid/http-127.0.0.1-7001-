@@ -879,7 +879,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-05-1548",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-06-2358",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -992,7 +992,9 @@
     async function verifyGoogleSheetsSave(expectedAt){if(!googleSheetsEnabled())return true;try{await new Promise(resolve=>setTimeout(resolve,1600));const shared=await loadFromGoogleSheets();return String(shared?.__lastSavedAt||"")===String(expectedAt||"")}catch{return false}}
     async function loadFromGoogleSheets(){const res=await googleSheetsJsonp("load");if(!res||res.ok===false)throw new Error(res?.error||"Google Sheets load failed");return res.data||null}
     function supabaseErrorMessage(status){if(status===503)return"Supabase 서버가 일시적으로 응답하지 않습니다. 잠시 뒤 다시 저장해주세요.";if(status===401||status===403)return"Supabase 권한 설정을 확인해야 합니다.";if(status===404)return"Supabase app_state 테이블을 찾지 못했습니다.";return`Supabase save failed: ${status}`}
-    async function saveToSupabase(options={}){const body=JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()}),keepalive=!!options.keepalive;let lastStatus=0,lastError=null;for(let attempt=0;attempt<(keepalive?1:4);attempt++){try{const r=await fetch(`${SUPABASE_URL}/rest/v1/app_state`,{method:"POST",headers:supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"}),body,keepalive});if(r.ok)return true;lastStatus=r.status;if(![429,500,502,503,504].includes(r.status))break}catch(err){lastError=err}if(!keepalive)await new Promise(resolve=>setTimeout(resolve,800*Math.pow(2,attempt)))}throw new Error(lastStatus?supabaseErrorMessage(lastStatus):(lastError?.message||"Supabase network failed"))}
+    async function saveDataToSupabase(data=state,options={}){const body=JSON.stringify({id:"main",data,updated_at:new Date().toISOString()}),keepalive=!!options.keepalive;let lastStatus=0,lastError=null;for(let attempt=0;attempt<(keepalive?1:4);attempt++){try{const r=await fetch(`${SUPABASE_URL}/rest/v1/app_state`,{method:"POST",headers:supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"}),body,keepalive});if(r.ok)return true;lastStatus=r.status;if(![429,500,502,503,504].includes(r.status))break}catch(err){lastError=err}if(!keepalive)await new Promise(resolve=>setTimeout(resolve,800*Math.pow(2,attempt)))}throw new Error(lastStatus?supabaseErrorMessage(lastStatus):(lastError?.message||"Supabase network failed"))}
+    async function saveToSupabase(options={}){return saveDataToSupabase(state,options)}
+    async function loadSupabaseData(){const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(!r.ok)throw new Error(`Supabase load failed: ${r.status}`);const rows=await r.json();return rows&&rows[0]&&rows[0].data||null}
     function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;const action=`<div class="toolbar" style="margin-top:10px"><button class="btn primary" id="forceSheetUploadBtn" type="button">지금 동기화</button><button class="btn" id="checkSheetLoadBtn" type="button">최신 불러오기</button></div>`;n.innerHTML=`<strong>${kind==="ok"?"자동 동기화 연결됨":kind==="saving"?"자동 저장 중":"자동 동기화 확인 필요"}</strong><p class="meta">${esc(msg)}</p>${action}`}
     function ensureSheetSyncButton(){if($("#sheetSyncFloatBtn"))return;document.body.insertAdjacentHTML("beforeend",`<button class="btn primary" id="sheetSyncFloatBtn" type="button" title="수동으로 즉시 동기화" style="position:fixed;right:18px;bottom:76px;z-index:9998;box-shadow:0 10px 26px rgba(8,125,143,.28)">지금 동기화</button>`)}
     async function verifySupabaseSave(expectedAt){try{await new Promise(resolve=>setTimeout(resolve,600));const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});if(!r.ok)return false;const rows=await r.json(),shared=rows&&rows[0]&&rows[0].data;return String(shared?.__lastSavedAt||"")===String(expectedAt||"")}catch{return false}}
@@ -1000,27 +1002,27 @@
     async function pushSharedState(){if(syncSaveBusy){syncSaveQueued=true;return false}syncSaveBusy=true;try{const expectedAt=new Date().toISOString();state.__lastSavedAt=expectedAt;state.__lastSavedAtText=new Date().toLocaleString("ko-KR");setSyncNotice("saving","수정 내용을 자동으로 Supabase에 저장하는 중입니다.");await saveToSupabase();delete state.__pendingCloudSync;delete state.__pendingCloudSyncAt;localStorage.setItem(storageKey,JSON.stringify(state));const verified=await verifySupabaseSave(expectedAt);setSyncNotice(verified?"ok":"warn",verified?"자동 저장이 완료되었습니다. 다른 컴퓨터에서도 최신 내용을 불러옵니다.":"저장 요청은 보냈지만 Supabase에서 같은 저장시각을 다시 확인하지 못했습니다. 네트워크 또는 권한을 확인해주세요.");return verified}catch(err){state.__pendingCloudSync=true;state.__pendingCloudSyncAt=new Date().toLocaleString("ko-KR");localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("warn",`자동 저장 실패: ${err?.message||"확인 필요"} 현재 데이터는 이 브라우저에 대기 저장되었습니다.`);return false}finally{syncSaveBusy=false;if(syncSaveQueued){syncSaveQueued=false;scheduleSharedSave(250)}}}
     function scheduleSharedSave(delay=900){clearTimeout(syncSaveTimer);setSyncNotice("saving","수정 내용이 자동 저장 대기 중입니다.");syncSaveTimer=setTimeout(()=>pushSharedState(),delay)}
     async function refreshFromGoogleSheetsBeforeManualSave(){return}
-    function persistState(){state.__updatedAt=Date.now();state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave()}
+    function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
-    function hasUsefulWorkData(data){return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].some(k=>Array.isArray(data?.[k])&&data[k].length>0)||Array.isArray(data?.dbRows)&&data.dbRows.length>0||Array.isArray(data?.db?.rows)&&data.db.rows.length>0}
-    function workDataCount(data){return ["todos","assignments","construction","projects","fieldworkLogs","meetings"].reduce((sum,k)=>sum+(Array.isArray(data?.[k])?data[k].length:0),0)}
-    function shouldUseSharedState(shared){if(!shared)return false;const sharedHas=hasUsefulWorkData(shared),localHas=hasUsefulWorkData(state);if(sharedHas&&!localHas)return true;if(!sharedHas&&localHas)return false;if(sharedHas&&!state.__pendingCloudSync){return !sharedLoaded||workDataCount(shared)!==workDataCount(state)||(Number(shared.__updatedAt)||0)>=(Number(state.__updatedAt)||0)}return !sharedLoaded||(Number(shared.__updatedAt)||0)>(Number(state.__updatedAt)||0)}
+    const syncWorkKeys=["todos","assignments","construction","projects","fieldworkLogs","meetings","messages","messageInbox","genericReports","asReports"];
+    function arrayCount(v){return Array.isArray(v)?v.length:0}
+    function dbWorkCount(data){return arrayCount(data?.dbRows)+arrayCount(data?.db?.rows)+arrayCount(data?.businessDb?.rows)+arrayCount(data?.epcData?.plants)}
+    function hasUsefulWorkData(data){return workDataCount(data)>0}
+    function workDataCount(data){return syncWorkKeys.reduce((sum,k)=>sum+arrayCount(data?.[k]),0)+dbWorkCount(data)}
+    function syncStamp(data){return Math.max(Number(data?.__updatedAt)||0,Date.parse(data?.__lastSavedAt||"")||0,Date.parse(data?.updated_at||"")||0)}
+    function shouldUseSharedState(shared,forceRemote=false){if(!shared)return false;if(forceRemote)return true;const sharedCount=workDataCount(shared),localCount=workDataCount(state),sharedHas=sharedCount>0,localHas=localCount>0;if(sharedHas&&!localHas)return true;if(!sharedHas&&localHas)return false;if(state.__pendingCloudSync&&localCount>=sharedCount)return false;if(!sharedLoaded)return true;const sharedStamp=syncStamp(shared),localStamp=syncStamp(state);if(sharedStamp>localStamp)return true;if(sharedStamp===localStamp&&sharedCount>localCount)return true;return false}
     function applySharedState(shared){sharedLoaded=true;state={...clone(defaults),...shared};localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("ok","Supabase의 최신 데이터를 불러왔습니다.");render()}
-    async function loadSharedState(silent=false){
+    async function loadSharedState(silent=false,forceRemote=false){
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
       try{
-        let shared=null;
-        const r=await fetch(`${SUPABASE_STATE_URL}&select=data`,{cache:"no-store",headers:supabaseHeaders()});
-        if(!r.ok)throw new Error(`Supabase load failed: ${r.status}`);
-        const rows=await r.json();
-        shared=rows&&rows[0]&&rows[0].data;
+        let shared=await loadSupabaseData();
         if(shared&&Number(shared.__presenceUpdatedAt||0)>Number(state.__presenceUpdatedAt||0)){
           state.onlineUsers=Array.isArray(shared.onlineUsers)?shared.onlineUsers:[];
           state.__presenceUpdatedAt=shared.__presenceUpdatedAt;
           localStorage.setItem(storageKey,JSON.stringify(state));
           window.renderPresenceUi?.();
         }
-        if(shouldUseSharedState(shared))applySharedState(shared);
+        if(shouldUseSharedState(shared,forceRemote))applySharedState(shared);
         else {sharedLoaded=true;if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");}
         return;
       }catch(err){
@@ -3434,7 +3436,7 @@
     document.addEventListener("click",async e=>{
       const t=e.target.closest("button")||e.target;
       if(t.id==="forceSheetUploadBtn"||t.id==="sheetSyncFloatBtn"){e.preventDefault();clearTimeout(syncSaveTimer);state.__updatedAt=Date.now();pushSharedState();toast("최신 내용을 즉시 동기화합니다.");return}
-      if(t.id==="checkSheetLoadBtn"){e.preventDefault();loadSharedState(false);toast("Supabase에서 최신 내용을 불러옵니다.");return}
+      if(t.id==="checkSheetLoadBtn"){e.preventDefault();loadSharedState(false,true);toast("Supabase에서 최신 내용을 강제로 불러옵니다.");return}
       if(t.id==="staffLoginBtn"){e.preventDefault();staffLogin();return}
       if(t.id==="googleLogoutBtn"){e.preventDefault();clearStaffSession();await signOutAuth("다른 직원으로 다시 로그인해주세요.");fillStaffLoginNames();return}
       if(t.id==="reloadLatestBtn"){e.preventDefault();const version=$("#appUpdateNotice")?.dataset.latestVersion||Date.now();location.href=`${location.origin}${location.pathname}?v=${encodeURIComponent(version)}`;return}
@@ -3525,8 +3527,15 @@
             }
             await saveToGoogleSheets();
           }else{
-            localStorage.setItem(storageKey,JSON.stringify(state));
-            await saveToSupabase();
+            const shared=await loadSupabaseData().catch(()=>null);
+            const localPresence=Array.isArray(state.onlineUsers)?state.onlineUsers:[];
+            if(shared&&hasUsefulWorkData(shared)){
+              const presenceState={...clone(defaults),...shared,onlineUsers:localPresence,__presenceUpdatedAt:state.__presenceUpdatedAt};
+              await saveDataToSupabase(presenceState);
+            }else{
+              localStorage.setItem(storageKey,JSON.stringify(state));
+              await saveToSupabase();
+            }
           }
         }catch{}
         presenceSaving=false;
@@ -3547,7 +3556,7 @@
         if(!loginName())return;
         upsertPresence("offline",false);
         try{
-          if(!googleSheetsEnabled())fetch(SUPABASE_STATE_URL,{method:"PATCH",headers:supabaseHeaders({Prefer:"return=minimal"}),body:JSON.stringify({id:"main",data:state,updated_at:new Date().toISOString()}),keepalive:true});
+          if(!googleSheetsEnabled()&&state.__pendingCloudSync)saveToSupabase({keepalive:true}).catch(()=>{});
         }catch{}
       }
       function schedulePresenceTouch(delay=700){
