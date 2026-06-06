@@ -879,7 +879,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-07-0500-hardening-suite",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -1806,7 +1806,7 @@
       baseRenderAssignmentCalendarForDefaultDate();
     }
     const baseGoToViewForCalendar=goToView;
-    goToView=function(view,label=""){const previousView=currentView,addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}if(view==="todos"&&previousView!=="todos")setTimeout(()=>showMyWorkPopup(true),0);applyMasking()}
+    goToView=function(view,label=""){const previousView=currentView,addBtn=$("#addProjectBtn");if(addBtn&&addBtn.id!=="addProjectBtn"){addBtn.id="addProjectBtn";delete addBtn.dataset.maskToggle}if(view==="dashboard")resetDashboardToToday();if(view==="assignments")resetAssignmentCalendarToToday();baseGoToViewForCalendar(view,label);syncViewChrome();if(view==="dashboard"){resetDashboardToToday();renderDashboard()}if(view==="assignments"){resetAssignmentCalendarToToday();renderAssignmentCalendar()}if(view==="todos"&&previousView!=="todos")setTimeout(()=>showMyWorkPopup(false),0);applyMasking()}
     function addressMeta(item){return item?.location?`<div class="todo-card-meta">주소: ${esc(item.location)}</div>`:""}
     function compactAddress(item){return item?.location?` · 주소: ${esc(item.location)}`:""}
     document.addEventListener("click",e=>{
@@ -3219,10 +3219,10 @@
         if(!person)return;
         popupShown=true;
         ensurePopupUi();
-        const rows=openTasksFor(person.name),late=rows.filter(({t})=>t.due&&t.due<today).length,todayRows=rows.filter(({t})=>t.due===today).length;
+        const rows=openTasksFor(person.name);if(!rows.length)return;const late=rows.filter(({t})=>t.due&&t.due<today).length,todayRows=rows.filter(({t})=>t.due===today).length;
         $("#myWorkTitle").textContent=`${person.name}님, 진행 중인 업무`;
         $("#myWorkBody").innerHTML=`<div class="my-work-summary"><div class="my-work-stat"><div class="label">진행 업무</div><div class="value">${rows.length}</div></div><div class="my-work-stat"><div class="label">오늘 마감</div><div class="value">${todayRows}</div></div><div class="my-work-stat"><div class="label">기한 지남</div><div class="value">${late}</div></div></div>${rows.length?`<div class="my-work-list">${rows.slice(0,6).map(({t,i})=>`<button class="my-work-item" data-my-work-todo="${i}"><strong>${esc(t.title)}</strong><span class="meta">${esc(t.status)} · ${esc(t.priority||KR.normal)} · 마감 ${esc(t.due||"-")}</span></button>`).join("")}</div>`:`<div class="meta">현재 진행 중인 업무가 없습니다.</div>`}`;
-        $("#myWorkPopup").classList.add("open");
+        $("#myWorkPopup").classList.add("open");popupShown=true;
       };
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
@@ -4555,6 +4555,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
