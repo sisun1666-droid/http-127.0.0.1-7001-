@@ -2791,7 +2791,7 @@
       }
       function meetingFormPeopleOptions(){return (state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("")||`<option>이재강</option>`}
       function renderMeetingAttendeeChecks(selected=[]){const names=(state.people||[]).map(p=>p.name);const picked=new Set((selected||[]).filter(Boolean));if(!picked.size){const fallback=loginName()||names[0]||"이재강";picked.add(fallback)}$("#meetingAttendees").innerHTML=(names.length?names:["이재강"]).map(name=>`<label><input type="checkbox" value="${esc(name)}" ${picked.has(name)?"checked":""}>${esc(name)}</label>`).join("")}
-      function readMeetingAttendeeChecks(){const checked=$$("#meetingAttendees input:checked").map(x=>x.value);return checked.length?checked:[$("#meetingHost")?.value||loginName()||"이재강"]}
+      function readMeetingAttendeeChecks(){const checked=Array.from($$("#meetingAttendees input:checked")).map(x=>x.value);return checked.length?checked:[$("#meetingHost")?.value||loginName()||"이재강"]}
       function meetingAiLabels(){return ["회의 제목","제목","회의일","날짜","일자","시간","회의 시간","주관자","주관","참석자","참석","현장/프로젝트","현장","프로젝트","구분","회의 구분","회의 요약","요약","결정사항","결정 사항"]}
       function meetingAiSection(text,label){
         const labels=meetingAiLabels().map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|");
@@ -3156,8 +3156,15 @@
           return !!text && !["미완료","대기","대기중","진행중","보류","취소"].includes(text);
         };
         const projectCompleted = status.includes("공사완료") || status === "완료";
+        const impliedDoneStages = (() => {
+          if (projectCompleted) return stageMap.map(([label]) => label);
+          if (status.includes("공사중")) return ["발전허가","개발행위","PPA","공사계획"];
+          if (status.includes("공사준비")) return ["발전허가","개발행위","PPA","공사계획"];
+          if (status.includes("선로대기")) return ["발전허가","개발행위"];
+          return [];
+        })();
         const missingStages = projectCompleted ? [] : stageMap
-          .filter(([,key,alts]) => !isDoneText(row[key]) && !(alts || []).some(alt => isDoneText(row[alt])))
+          .filter(([label,key,alts]) => !impliedDoneStages.includes(label) && !isDoneText(row[key]) && !(alts || []).some(alt => isDoneText(row[alt])))
           .map(([label]) => label);
         const risk = [];
         if (status === "공사완료" && unpaid > 0) risk.push("완료 후 미수");
@@ -3554,6 +3561,7 @@
   </script>
 </body>
 </html>
+
 
 
 
