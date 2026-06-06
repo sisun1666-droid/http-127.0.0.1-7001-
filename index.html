@@ -356,6 +356,42 @@
       aside nav{width:100%}
     }
   #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>
+
+    <style id="todoPageScrollFix">
+      body.todo-page{overflow-y:auto}
+      body.todo-page main{overflow:visible}
+      body.todo-page #mainGrid,
+      body.todo-page #mainGrid.todo-mode,
+      body.todo-page #mainGrid>.panel,
+      body.todo-page #todoBoardPanel{
+        height:auto!important;
+        min-height:0!important;
+        max-height:none!important;
+        overflow:visible!important;
+      }
+      body.todo-page #mainGrid>.panel{
+        display:block!important;
+      }
+      body.todo-page #todoBoardPanel .todo-board{
+        overflow:visible!important;
+        align-items:start;
+      }
+      body.todo-page #todoBoardPanel .todo-column{
+        height:auto!important;
+        max-height:none!important;
+        overflow:visible!important;
+        align-self:start;
+      }
+      body.todo-page #sharedNotice{
+        margin-top:18px;
+      }
+      @media(min-width:981px){
+        body.todo-page #todoBoardPanel .todo-board{
+          grid-template-columns:repeat(5,minmax(180px,1fr));
+        }
+      }
+    </style>
+
 </head>
 <body class="auth-pending">
   <div class="auth-gate" id="authGate">
