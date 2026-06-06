@@ -3323,6 +3323,7 @@
           main.insertAdjacentHTML("beforeend", `<section class="panel hidden" id="epcView"></section>`);
           view = $("#epcView");
         }
+        view.classList.toggle("hidden", currentView !== "epc");
         const statuses = Object.entries(epcData.statusCounts || {}).sort((a,b) => b[1] - a[1]);
         const rows = epcFiltered();
         if (!epcState.selectedId || !rows.some(p => p.id === epcState.selectedId)) {
@@ -3477,6 +3478,7 @@
   </script>
 </body>
 </html>
+
 
 
 
