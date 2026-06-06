@@ -879,7 +879,7 @@
   <div class="toast" id="toast"></div>
   <script>
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-06-2359-todo-complete",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-07-0018-todo-reopen",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
@@ -1445,6 +1445,7 @@
       const todo=state.todos[i];
       if(!todo||!nextStatus||todo.status===nextStatus)return;
       todo.status=nextStatus;
+      applyTodoStatusRules(todo);
       syncTodoToAssignment(i);
       saveState(`할일을 '${nextStatus}' 상태로 이동했습니다.`);
       renderTodoBoard();
@@ -1830,21 +1831,26 @@
       }
       return false;
     }
+    function resetOpenTodoSteps(steps,baseDate=today){
+      const openSteps=(Array.isArray(steps)?steps:[]).filter(s=>s.title!=="완료").map(s=>({...s,done:false}));
+      return openSteps.length?openSteps:defaultTodoSteps(baseDate);
+    }
+    function stepsForTodoStatus(status,steps,baseDate=today){
+      if(status!=="완료")return resetOpenTodoSteps(steps,baseDate);
+      const completedAt=localDateString(new Date()),next=Array.isArray(steps)?steps.slice():[];
+      let target=next.find(s=>s.title==="완료")||next.find(s=>!s.title);
+      if(!target){target={title:"",due:"",done:false};next.push(target)}
+      target.title="완료";target.due=completedAt;target.done=true;
+      return next;
+    }
+    function applyTodoStatusRules(todo){
+      if(!todo)return todo;
+      todo.steps=stepsForTodoStatus(todo.status,todo.steps,todo.start||todo.due||today);
+      return todo;
+    }
     function syncTodoStatusStep(){
       const status=$("#todoStatus")?.value;
-      if(status!=="완료"){
-        const steps=readTodoSteps().filter(s=>s.title!=="완료");
-        renderTodoSteps(steps.length?steps:defaultTodoSteps());
-        return;
-      }
-      const completedAt=localDateString(new Date());
-      const steps=readTodoSteps();
-      let target=steps.find(s=>s.title==="완료")||steps.find(s=>!s.title);
-      if(!target){target={title:"",due:"",done:false};steps.push(target)}
-      target.title="완료";
-      target.due=completedAt;
-      target.done=true;
-      renderTodoSteps(steps);
+      renderTodoSteps(stepsForTodoStatus(status,readTodoSteps(),$("#todoStart")?.value||$("#todoDue")?.value||today));
     }
     function cardProgressHtml(t){
       const p=todoProgress(t);
@@ -1856,7 +1862,7 @@
     openAssignmentModal=function(...args){openAssignmentModalScrollTop(...args);resetTaskModalScroll("assignmentModal")}
     const normalizeTodoWithSteps=normalizeTodo;
     normalizeTodo=function(t){t=normalizeTodoWithSteps(t);t.steps=normalizeTodoSteps(t.steps,t.start||t.due||today);return t}
-    $("#saveTodoBtn").onclick=()=>{autoCompleteTodoFromSteps();syncTodoStatusStep();const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,steps:readTodoSteps(),kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy});if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 진행 단계를 저장했습니다.");render()}
+    $("#saveTodoBtn").onclick=()=>{syncTodoStatusStep();const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=applyTodoStatusRules(normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,steps:readTodoSteps(),kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy}));if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 진행 단계를 저장했습니다.");render()}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="addTodoStepBtn"){const steps=readTodoSteps();steps.push({title:"",due:$("#todoDue")?.value||today,done:false});renderTodoSteps(steps)}if(t.id==="resetTodoStepsBtn"){renderTodoSteps(defaultTodoSteps($("#todoStart")?.value||today))}if(t.dataset.removeTodoStep){const steps=readTodoSteps();steps.splice(Number(t.dataset.removeTodoStep),1);renderTodoSteps(steps.length?steps:defaultTodoSteps($("#todoStart")?.value||today))}},true);
     document.addEventListener("change",e=>{if(e.target?.dataset.todoStepDone!==undefined){if(!autoCompleteTodoFromSteps())renderTodoSteps(readTodoSteps())}},true);
     document.addEventListener("change",e=>{if(e.target?.id==="todoStatus")syncTodoStatusStep()},true);
