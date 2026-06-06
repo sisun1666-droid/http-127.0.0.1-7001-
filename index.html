@@ -3090,7 +3090,8 @@
 
       const epcSeedData = window.SOLAR_EPC_DATA;
       const epcData = JSON.parse(JSON.stringify(epcSeedData));
-      const epcState = { query: "", status: "", risk: "", sort: "risk", selectedId: null };
+      const epcState = { query: "", status: "", risk: "", sort: "risk", selectedId: null, composing: false };
+      let epcSearchTimer = null;
 
       function epcNum(value) {
         if (value == null) return 0;
@@ -3170,9 +3171,13 @@
       function epcApplySharedDb() {
         const rows = window.solarDb?.rows?.() || [];
         if (!rows.length) {
-          Object.assign(epcData, JSON.parse(JSON.stringify(epcSeedData)));
+          if (epcData.__sharedSignature) Object.assign(epcData, JSON.parse(JSON.stringify(epcSeedData)));
+          epcData.__sharedSignature = "";
           return false;
         }
+        const dbInfo = state.businessDb || {};
+        const signature = `${rows.length}|${dbInfo.cloudSavedAt || dbInfo.updatedAt || ""}|${dbInfo.fileName || ""}`;
+        if (epcData.__sharedSignature === signature) return true;
         const projects = rows.map(epcProjectFromDbRow);
         const statusCounts = {};
         const corpCounts = {};
@@ -3185,6 +3190,7 @@
         epcData.statusCounts = statusCounts;
         epcData.corpCounts = corpCounts;
         epcData.projects = projects;
+        epcData.__sharedSignature = signature;
         epcData.summary = {
           projectCount: projects.length,
           totalCapacity: projects.reduce((s,p)=>s+p.capacity,0),
@@ -3410,10 +3416,25 @@
         }
       };
 
+      document.addEventListener("compositionstart", e => {
+        if (e.target?.id === "epcSearch") epcState.composing = true;
+      });
+
+      document.addEventListener("compositionend", e => {
+        if (e.target?.id === "epcSearch") {
+          epcState.composing = false;
+          epcState.query = e.target.value;
+          clearTimeout(epcSearchTimer);
+          epcSearchTimer = setTimeout(renderEpcView, 120);
+        }
+      });
+
       document.addEventListener("input", e => {
         if (e.target?.id === "epcSearch") {
           epcState.query = e.target.value;
-          renderEpcView();
+          if (epcState.composing || e.isComposing) return;
+          clearTimeout(epcSearchTimer);
+          epcSearchTimer = setTimeout(renderEpcView, 180);
         }
       });
 
@@ -3493,6 +3514,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
