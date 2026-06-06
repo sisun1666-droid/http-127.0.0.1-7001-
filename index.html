@@ -392,6 +392,82 @@
       }
     </style>
 
+
+    <style id="lectureMaskingStyle">
+      body.masking-mode main h1,
+      body.masking-mode main h2,
+      body.masking-mode main h3,
+      body.masking-mode main p,
+      body.masking-mode main span,
+      body.masking-mode main strong,
+      body.masking-mode main small,
+      body.masking-mode main label,
+      body.masking-mode main th,
+      body.masking-mode main button,
+      body.masking-mode aside .brand span,
+      body.masking-mode aside nav .nav-btn span{
+        filter:none!important;
+        user-select:auto!important;
+      }
+      body.masking-mode .login-info,
+      body.masking-mode main input,
+      body.masking-mode main textarea,
+      body.masking-mode main select,
+      body.masking-mode main option,
+      body.masking-mode main tbody td,
+      body.masking-mode .project-name,
+      body.masking-mode .project-meta,
+      body.masking-mode .todo-card-title,
+      body.masking-mode .todo-card-meta,
+      body.masking-mode .linked-item,
+      body.masking-mode .today-item,
+      body.masking-mode .memo-item,
+      body.masking-mode .detail-cell strong,
+      body.masking-mode .meeting-card strong,
+      body.masking-mode .meeting-card span,
+      body.masking-mode .message-row strong,
+      body.masking-mode .message-row p,
+      body.masking-mode .epc-detail-head h2,
+      body.masking-mode .epc-metrics strong,
+      body.masking-mode .value{
+        filter:blur(2.2px)!important;
+        opacity:.72;
+        user-select:none!important;
+      }
+      body.masking-mode main input::placeholder,
+      body.masking-mode main textarea::placeholder{
+        color:#8b98a0!important;
+      }
+      body.masking-mode .badge,
+      body.masking-mode .todo-chip,
+      body.masking-mode .tab-btn,
+      body.masking-mode .btn,
+      body.masking-mode .label,
+      body.masking-mode table thead th,
+      body.masking-mode .panel-title,
+      body.masking-mode .todo-column-head,
+      body.masking-mode .calendar-grid .day-name{
+        filter:none!important;
+        opacity:1!important;
+      }
+      body.masking-mode main:before{
+        content:"강의용 마스킹 적용 중";
+        position:fixed;
+        right:18px;
+        bottom:18px;
+        z-index:9997;
+        border:1px solid #9fd3dc;
+        background:#f1fbfc;
+        color:#087d8f;
+        border-radius:999px;
+        padding:7px 12px;
+        font-size:12px;
+        font-weight:900;
+        box-shadow:0 8px 22px rgba(8,125,143,.15);
+        pointer-events:none;
+      }
+    </style>
+
 </head>
 <body class="auth-pending">
   <div class="auth-gate" id="authGate">
