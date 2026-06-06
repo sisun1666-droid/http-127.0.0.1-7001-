@@ -3201,10 +3201,17 @@
 
       function epcEnsureNav() {
         state.nav = Array.isArray(state.nav) ? state.nav : [];
-        if (!state.nav.some(n => String(n.label || "").includes("EPC 손익"))) {
+        const existing = state.nav.find(n => String(n.label || "").includes("EPC 손익") || String(n.label || "") === "MW");
+        if (existing) {
+          existing.icon = "MW";
+          existing.label = "MW";
+          existing.access = "admin";
+          existing.accessRole = "admin";
+          existing.adminOnly = true;
+        } else {
           const adminIndex = state.nav.findIndex(n => String(n.label || "").includes("관리자"));
           const insertAt = adminIndex >= 0 ? adminIndex : state.nav.length;
-          state.nav.splice(insertAt, 0, { icon: "₩", label: "EPC 손익" });
+          state.nav.splice(insertAt, 0, { icon: "MW", label: "MW", access: "admin", accessRole: "admin", adminOnly: true });
         }
       }
 
@@ -3216,12 +3223,12 @@
 
       const epcBaseViewForLabel = viewForLabel;
       viewForLabel = function(label) {
-        return String(label || "").includes("EPC 손익") ? "epc" : epcBaseViewForLabel(label);
+        const text = String(label || ""); return (text.includes("EPC 손익") || text === "MW") ? "epc" : epcBaseViewForLabel(label);
       };
 
       const epcBaseIsActive = isActive;
       isActive = function(label) {
-        return currentView === "epc" ? String(label || "").includes("EPC 손익") : epcBaseIsActive(label);
+        const text = String(label || ""); return currentView === "epc" ? (text.includes("EPC 손익") || text === "MW") : epcBaseIsActive(label);
       };
 
       function epcWon(value) {
@@ -3392,7 +3399,7 @@
       syncViewChrome = function() {
         epcBaseSync();
         if (currentView === "epc") {
-          els.pageTitle.textContent = "EPC 손익 대시보드";
+          els.pageTitle.textContent = "MW";
           els.pageSub.textContent = "전체 발전소 DB에서 미수, 원가, 손익, 공정 위험을 한 번에 확인합니다.";
           const action = $("#addProjectBtn");
           if (action) {
@@ -3470,6 +3477,7 @@
   </script>
 </body>
 </html>
+
 
 
 
