@@ -2938,8 +2938,9 @@
       staffLogin();
     },true);
     (function lockPreferredNavOrder(){
-      const preferredNavOrder=["할일관리","외근현황","보고서","회의록","시공일정","DB","프로젝트 파일","관리자"];
+      const preferredNavOrder=["대시보드","할일관리","외근현황","보고서","회의록","시공일정","DB","프로젝트 파일","MW","관리자"];
       const preferredNavDefaults={
+        "대시보드":{icon:"⌂",label:"대시보드",access:"member"},
         "할일관리":{icon:"☑",label:"할일관리",access:"member"},
         "외근현황":{icon:"⌖",label:"외근현황",access:"member"},
         "보고서":{icon:"▣",label:"보고서",access:"member"},
@@ -2960,7 +2961,7 @@
         const current=state.nav.map(n=>({...n,label:preferredNavLabel(n.label)}));
         state.nav=preferredNavOrder.map(label=>current.find(n=>n.label===label)||{...preferredNavDefaults[label]});
         normalizePermissionState?.();
-        if(currentView==="dashboard"||currentView==="projects"||currentView==="assignments"){
+        if(currentView==="projects"||currentView==="assignments"){
           currentView="todos";
           localStorage.setItem(viewStorageKey,currentView);
         }
