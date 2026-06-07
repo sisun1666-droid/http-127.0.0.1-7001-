@@ -2891,15 +2891,14 @@
         if(presenceSaving){presencePending=true;return}
         presenceSaving=true;
         try{
-          /* Google Sheets 비활성화 → Supabase 전용 */
-          const shared=await loadSupabaseData().catch(()=>null);
-          const localPresence=Array.isArray(state.onlineUsers)?state.onlineUsers:[];
-          if(shared&&hasUsefulWorkData(shared)){
-            const presenceState={...clone(defaults),...shared,onlineUsers:localPresence,__presenceUpdatedAt:state.__presenceUpdatedAt};
-            await saveDataToSupabase(presenceState);
-          }else{
-            localStorage.setItem(storageKey,JSON.stringify(state));
-            await saveToSupabase();
+          /* app_config만 업데이트 (개별 테이블 건드리지 않음) → 삭제된 항목 재삽입 방지 */
+          const h=supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"});
+          const cfgRes=await fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.main&select=data`,{cache:"no-store",headers:supabaseHeaders()}).catch(()=>null);
+          if(cfgRes?.ok){
+            const cfgRows=await cfgRes.json().catch(()=>[]);
+            const existingCfg=cfgRows[0]?.data||{};
+            const mergedCfg={...existingCfg,onlineUsers:Array.isArray(state.onlineUsers)?state.onlineUsers:[],__presenceUpdatedAt:state.__presenceUpdatedAt};
+            await fetch(`${SUPABASE_URL}/rest/v1/app_config`,{method:"POST",headers:h,body:JSON.stringify({id:"main",data:mergedCfg,updated_at:new Date().toISOString()})});
           }
         }catch{}
         presenceSaving=false;
