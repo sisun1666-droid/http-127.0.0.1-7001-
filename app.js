@@ -170,6 +170,7 @@
       const cfgBody=JSON.stringify({id:"main",data:cfgData,updated_at:now});
       /* 2. 각 테이블에 항목 upsert + 삭제된 항목 DELETE */
       const ops=[fetch(`${SUPABASE_URL}/rest/v1/app_config`,{method:"POST",headers:h,body:cfgBody,keepalive:!!options.keepalive})];
+      const _pendingIds={};
       for(const table of TABLE_KEYS){
         const items=(data[table]||[]).filter(x=>x&&x.id);
         const currentIds=new Set(items.map(x=>x.id));
@@ -187,11 +188,13 @@
             method:"DELETE",headers:supabaseHeaders(),keepalive:!!options.keepalive
           }));
         }
-        _svrIds[table]=currentIds;
+        _pendingIds[table]=currentIds;
       }
       const results=await Promise.all(ops);
       const failed=results.filter(r=>!r.ok);
       if(failed.length){const s=await Promise.all(failed.map(r=>r.status));throw new Error(`저장 실패(${s.join(",")})`);}
+      /* 저장 성공 후에만 _svrIds 업데이트 (실패 시 다음 저장에서 다시 DELETE 재시도 가능) */
+      Object.assign(_svrIds,_pendingIds);
       return true;
     }
 
@@ -706,7 +709,7 @@
       panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
       bindTodoSearchInput();
     }
-    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.toggleTodoShare!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=Number(t.dataset.toggleTodoShare);markTodoKakaoShared(i,!state.todos[i]?.kakaoSharedAt,true);return}if(t.dataset.deleteTodo!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=Number(t.dataset.deleteTodo);const todo=state.todos[i];if(!todo)return;if(!confirm(`'${todo.title||"할일"}' 항목을 삭제할까요?`))return;const card=t.closest(".todo-card,.todo-list-row");if(card){card.style.transition="opacity .12s ease,transform .12s ease";card.style.opacity=".35";card.style.transform="scale(.98)";setTimeout(()=>card.remove(),130)}deleteTodoAt(i);toast("삭제했습니다. 목록을 정리하는 중입니다.");setTimeout(()=>{renderTodoBoard();saveStateAfterPaint("할일과 연결된 일정을 함께 삭제했습니다.")},20);return}if(t.dataset.showCompletedList!==undefined){todoStatusFilter=KR.done;todoViewMode="list";renderTodoBoard()}if(t.dataset.todoSort){todoListSort.dir=todoListSort.key===t.dataset.todoSort&&todoListSort.dir==="asc"?"desc":"asc";todoListSort.key=t.dataset.todoSort;renderTodoBoard()}},true);
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.toggleTodoShare!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=Number(t.dataset.toggleTodoShare);markTodoKakaoShared(i,!state.todos[i]?.kakaoSharedAt,true);return}if(t.dataset.deleteTodo!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=Number(t.dataset.deleteTodo);const todo=state.todos[i];if(!todo)return;if(!confirm(`'${todo.title||"할일"}' 항목을 삭제할까요?`))return;const card=t.closest(".todo-card,.todo-list-row");if(card){card.style.transition="opacity .12s ease,transform .12s ease";card.style.opacity=".35";card.style.transform="scale(.98)";setTimeout(()=>card.remove(),130)}const _delTodoId=todo.id,_delAsgId=todo.linkedAssignmentId;deleteTodoAt(i);if(_delTodoId){fetch(`${SUPABASE_URL}/rest/v1/todos?id=in.("${_delTodoId}")`,{method:"DELETE",headers:supabaseHeaders()}).catch(()=>{});}if(_delAsgId){fetch(`${SUPABASE_URL}/rest/v1/assignments?id=in.("${_delAsgId}")`,{method:"DELETE",headers:supabaseHeaders()}).catch(()=>{});}setTimeout(()=>{renderTodoBoard();deleteAndSync("할일과 연결된 일정을 함께 삭제했습니다.")},20);return}if(t.dataset.showCompletedList!==undefined){todoStatusFilter=KR.done;todoViewMode="list";renderTodoBoard()}if(t.dataset.todoSort){todoListSort.dir=todoListSort.key===t.dataset.todoSort&&todoListSort.dir==="asc"?"desc":"asc";todoListSort.key=t.dataset.todoSort;renderTodoBoard()}},true);
     document.addEventListener("compositionstart",e=>{const t=e.target;if(t.dataset.todoListFilter)todoListFilterComposing=t.dataset.todoListFilter},true);
     document.addEventListener("compositionend",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilterComposing=null;todoListFilters[t.dataset.todoListFilter]=t.value;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.todoListFilter){todoListFilters[t.dataset.todoListFilter]=t.value;if(todoListFilterComposing===t.dataset.todoListFilter)return;renderTodoBoard();const next=document.querySelector(`[data-todo-list-filter="${t.dataset.todoListFilter}"]`);if(next){next.focus();next.setSelectionRange(t.value.length,t.value.length)}}},true);
