@@ -118,6 +118,10 @@
     const TABLE_NAME={todos:"todos",assignments:"assignments",construction:"construction",projects:"projects",meetings:"meetings",fieldworkLogs:"fieldwork_logs"};
     /* 서버에 존재하는 ID 목록 (삭제 감지용) */
     let _svrIds={todos:new Set(),assignments:new Set(),construction:new Set(),projects:new Set(),meetings:new Set(),fieldworkLogs:new Set()};
+    /* 최근 삭제된 항목 보호 (60초간): 다른 브라우저의 덮어쓰기로 인한 부활 방지 */
+    const _deletedTombstones={};TABLE_KEYS.forEach(t=>_deletedTombstones[t]=new Map());
+    function markDeleted(table,id){if(id&&_deletedTombstones[table])_deletedTombstones[table].set(id,Date.now())}
+    function wasRecentlyDeleted(table,id){const ts=_deletedTombstones[table]?.get(id);return !!ts&&Date.now()-ts<60000}
 
     /* 개별 테이블에서 데이터 로드 */
     async function loadSupabaseData(){
@@ -272,6 +276,8 @@
           }
         }
       }
+      /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
+      TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
       state=merged;
       /* _svrIds 업데이트 (서버 기준 ID 동기화) */
       if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});
@@ -359,8 +365,8 @@
 }
     function syncAssignmentToTodo(i){const a=normalizeAssignment(state.assignments[i]);let ti=state.todos.findIndex(t=>t.id===a.linkedTodoId||t.linkedAssignmentId===a.id);if(ti<0){const t=assignmentToTodo(a);a.linkedTodoId=t.id;state.todos.unshift(t)}else{const t=assignmentToTodo(a,state.todos[ti]);a.linkedTodoId=t.id;state.todos[ti]=t}}
     function syncTodoToAssignment(i){const t=normalizeTodo(state.todos[i]);let ai=state.assignments.findIndex(a=>a.id===t.linkedAssignmentId||a.linkedTodoId===t.id);if(ai<0){const a=todoToAssignment(t);t.linkedAssignmentId=a.id;state.assignments.unshift(a)}else{const a=todoToAssignment(t,state.assignments[ai]);t.linkedAssignmentId=a.id;state.assignments[ai]=a}}
-    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
-    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
+    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;markDeleted("assignments",a.id);if(a.linkedTodoId)markDeleted("todos",a.linkedTodoId);state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
+    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;markDeleted("todos",t.id);if(t.linkedAssignmentId)markDeleted("assignments",t.linkedAssignmentId);state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
     function syncAllTaskLinks(){state.assignments.forEach((_,i)=>syncAssignmentToTodo(i));state.todos.forEach((_,i)=>syncTodoToAssignment(i))}
     function hiddenNavLabels(){state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?[...new Set(state.hiddenNavLabels.filter(Boolean))]:[];return state.hiddenNavLabels}
     function isNavHidden(label){return hiddenNavLabels().includes(label)}
