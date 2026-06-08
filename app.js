@@ -1,4 +1,4 @@
-﻿
+﻿(function(){const v="fix-20260609";if(localStorage.getItem("_appCleanup")!==v){const keep=["solar-device-id","solar-presence-device-id-v1"];const keys=Object.keys(localStorage);keys.forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});localStorage.setItem("_appCleanup",v)}})();
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
