@@ -245,34 +245,13 @@
       /* 서버가 내 마지막 저장보다 더 최신 = 다른 팀원이 저장했음 */
       return sharedStamp>localStamp;
     }
-    /* ── 병합: 서버에 없는 로컬 신규 항목만 추가 (소프트 딜리트로 부활 방지됨) ── */
-    function mergeLocalItems(sharedArr,localArr){
-      if(!Array.isArray(localArr)||!localArr.length)return sharedArr||[];
-      if(!Array.isArray(sharedArr)||!sharedArr.length)return localArr;
-      const sharedIds=new Set(sharedArr.map(x=>x.id).filter(Boolean));
-      /* 서버에 없는 로컬 항목 = 오프라인 중 새로 추가한 것 (삭제된 것은 deleted_at으로 이미 처리됨) */
-      const allDeletedIds=new Set(Object.values(_pendingDeletes).flat().map(x=>x.id));
-      const localOnly=localArr.filter(x=>x.id&&!sharedIds.has(x.id)&&!allDeletedIds.has(x.id));
-      return localOnly.length?[...localOnly,...sharedArr]:sharedArr;
-    }
-    function applySharedState(shared,forceReplace=false){
+    function applySharedState(shared){
+      /* 서버 데이터가 항상 정답 — 로컬 병합 없음 (좀비 부활 원천 차단) */
       sharedLoaded=true;
-      const merged={...clone(defaults),...shared};
-      let hadLocalOnly=false;
-      if(!forceReplace){
-        for(const key of TABLE_KEYS){
-          if(Array.isArray(state[key])&&Array.isArray(merged[key])){
-            const before=merged[key].length;
-            merged[key]=mergeLocalItems(merged[key],state[key]);
-            if(merged[key].length>before)hadLocalOnly=true;
-          }
-        }
-      }
-      state=merged;
+      state={...clone(defaults),...shared};
       localStorage.setItem(storageKey,JSON.stringify(state));
-      setSyncNotice("ok",hadLocalOnly?"내 변경사항과 팀원 데이터를 병합했습니다.":"✅ 팀원의 최신 데이터를 불러왔습니다.");
+      setSyncNotice("ok","✅ 팀원의 최신 데이터를 불러왔습니다.");
       render();
-      if(hadLocalOnly)scheduleSharedSave(500);
     }
     async function loadSharedState(silent=false,forceRemote=false){
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
