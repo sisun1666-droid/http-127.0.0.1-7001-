@@ -2265,7 +2265,7 @@
         const label=items.length>1?groupLabel(items):items[0].site,kw=Math.round(items.reduce((s,x)=>s+x.kw,0)*100)/100;
         applyDbGroupToConstruction({items,label,kw});
       }
-      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch")renderConstructionDbResults()},true);
+      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch"){if(!kiwoomLoaded){loadKiwoomStations().then(renderConstructionDbResults);}else{renderConstructionDbResults();}}},true);
       document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="applySelectedConstructionDbRows"){e.preventDefault();e.stopImmediatePropagation();applySelectedDbRowsToConstruction();return}if(t.dataset.constructionDbRow!==undefined){e.preventDefault();e.stopImmediatePropagation();const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
     })();
     (function setupFieldworkView(){
