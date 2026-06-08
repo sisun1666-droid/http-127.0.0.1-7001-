@@ -2189,11 +2189,14 @@
         close?.insertAdjacentHTML("beforebegin",`<div class="construction-db-search"><input class="field" id="constructionDbSearch" placeholder="DB 검색"><div class="construction-db-results hidden" id="constructionDbResults"></div></div>`);
       }
       const baseOpenConstructionForDb=openConstructionModal;
-      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden")};
+      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden");if(!kiwoomLoaded)loadKiwoomStations();};
       function renderConstructionDbResults(){
         const box=$("#constructionDbResults"),q=$("#constructionDbSearch")?.value||"";
-        if(!box||!window.solarDb)return;
-        const rows=window.solarDb.search(q,12);
+        if(!box)return;
+        const dbRows=(window.solarDb&&window.solarDb.search)?window.solarDb.search(q,12):[];
+        const kq=q.toLowerCase().trim();
+        const kRows=kq&&kiwoomStations.length?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(kq);}).slice(0,12).map(function(s,i){return{row:{발전소명:s["발전소명"]||s.site||"",사업주:s["영업담당자"]||s.owner||"",현장주소:s["현장주소"]||s.address||"",공사용량:s["발전_허가용량"]||s.kw||""},i:"k"+i,_kiwoom:s};}):[];
+        const rows=[...dbRows,...kRows].slice(0,12);
         window.__constructionDbMatches=rows;
         box.classList.toggle("hidden",!q.trim());
         box.innerHTML=rows.length?`<div class="construction-db-pickbar"><span>체크한 호기를 한 시공일정으로 취합</span><button class="btn primary" type="button" id="applySelectedConstructionDbRows">선택 호기 취합</button></div>`+rows.map((x,i)=>{const info=dbRowInfo(x.row,x.i),sub=[info.customer,info.address].filter(Boolean).join(" · ");return `<label class="construction-db-result"><input type="checkbox" data-construction-db-check="${i}"><span><strong>${esc(info.site)}${info.kw?` · ${esc(info.kw)}kW`:""}</strong>${sub?`<small>${esc(sub)}</small>`:""}</span><button class="btn construction-db-apply-one" type="button" data-construction-db-row="${x.i}">단일 입력</button></label>`}).join(""):`<div class="construction-db-empty">검색 결과가 없습니다.</div>`;
