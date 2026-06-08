@@ -216,7 +216,7 @@
     /* refreshFromGoogleSheetsBeforeManualSave: 제거됨 (Google Sheets 비활성화) */
     function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
-    /* 삭제 전용: 즉시 동기화 (300ms 후) → 다른 브라우저가 바로 삭제 확인 */
+    /* 삭제 전용: 즉시 동기화 → 탭 닫기 전에도 반드시 Supabase에 DELETE 전송 */
     function deleteAndSync(msg="삭제됐습니다."){
       state.__updatedAt=Date.now();
       state.__pendingCloudSync=true;
@@ -225,9 +225,9 @@
       localStorage.setItem(storageKey,JSON.stringify(state));
       sharedLoaded=true;
       toast(msg);
-      /* 지연 없이 즉시 동기화 (삭제는 빠른 전파 필요) */
+      /* 타이머 없이 즉시 실행 (300ms 지연 중 탭 닫히면 DELETE 미전송 버그 방지) */
       clearTimeout(syncSaveTimer);
-      syncSaveTimer=setTimeout(()=>pushSharedState(),300);
+      pushSharedState();
     }
     function saveStateAfterPaint(msg="저장되었습니다."){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__pendingCloudSyncAt=new Date().toLocaleString("ko-KR");state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;const run=()=>{scheduleSharedSave(80);toast(msg)};if("requestIdleCallback" in window)requestIdleCallback(run,{timeout:900});else setTimeout(run,40)}
     const syncWorkKeys=["todos","assignments","construction","projects","fieldworkLogs","meetings","messages","messageInbox","genericReports","asReports"];
@@ -296,6 +296,8 @@
       if(hadLocalOnly)scheduleSharedSave(500);
     }
     async function loadSharedState(silent=false,forceRemote=false){
+      /* 미전송 삭제가 남아있으면 폴링보다 먼저 재시도 (탭 닫힘·네트워크 오류 복구) */
+      if(state.__pendingCloudSync&&!syncSaveBusy)pushSharedState().catch(()=>{});
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
       try{
         let shared=await loadSupabaseData();
