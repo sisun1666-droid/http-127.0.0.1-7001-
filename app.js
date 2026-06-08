@@ -1566,11 +1566,59 @@
       syncViewChrome=function(){baseSyncViewChromeForDb();if(currentView==="db"){els.pageTitle.textContent="DB";els.pageSub.textContent="엑셀 DB 파일을 공유 저장하고 보고서/시공일정 자동입력에 사용합니다.";$("#addProjectBtn").textContent="DB 업로드"}};
       const baseGoToViewForDb=goToView;
       goToView=function(view,label=""){baseGoToViewForDb(view,label);if(view==="db"){syncViewChrome();renderDbView();applyMasking()}};
-      function renderDbView(){
-        injectDbChrome();
-        const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
-        const hasQuery=!!dbQuery.trim(),previewRows=hasQuery?results.map(x=>x.row):rows.slice(0,200),showing=hasQuery?results.length:Math.min(rows.length,200);
-        els.dbView.innerHTML=`<div class="db-shell">
+      let kiwoomDbTab="db",kiwoomStations=[],kiwoomQuery="",kiwoomLoaded=false;
+        async function loadKiwoomStations(){
+          if(kiwoomLoaded)return;
+          try{
+            const r=await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_sync",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});
+            const j=await r.json();
+            kiwoomStations=(j[0]&&j[0].data)||[];
+            kiwoomLoaded=true;
+          }catch(e){}
+        }
+        function renderKiwoomTab(){
+          const q=kiwoomQuery.toLowerCase().trim();
+          const filtered=q?kiwoomStations.filter(function(s){return [s.site,s.company,s.address,s.owner,s.contact].join(" ").toLowerCase().includes(q);}):kiwoomStations;
+          const cols=["영업순번","계약법인","발전소명","용량(kW)","담당자","연락처","주소","진행상태","건립종류","비고"];
+          const keys=["sales_seq","company","site","kw","owner","contact","address","status","type","note"];
+          let rows="";
+          const shown=filtered.slice(0,300);
+          for(let i=0;i<shown.length;i++){
+            const s=shown[i];
+            rows+="<tr>";
+            for(let k=0;k<keys.length;k++){
+              const v=s[keys[k]]!=null?String(s[keys[k]]):"";
+              rows+='<td style="padding:7px 8px;border:1px solid #e2e8f0;'+(k===6||k===9?"max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap":"white-space:nowrap")+'">'+(v.replace(/&/g,"&amp;").replace(/</g,"&lt;"))+"</td>";
+            }
+            rows+="</tr>";
+          }
+          let ths="";
+          for(let i=0;i<cols.length;i++) ths+='<th style="padding:8px;border:1px solid #e2e8f0;background:#f1f5f9;white-space:nowrap">'+cols[i]+"</th>";
+          return '<div style="padding:16px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+            +'<input class="search" id="kiwoomSearchInput" placeholder="발전소명, 회사, 주소, 담당자 검색" value="'+esc(kiwoomQuery)+'" style="flex:1">'
+            +'<button class="btn primary" id="kiwoomResyncBtn">&#128260; 재동기화</button>'
+            +'<span class="badge green">'+kiwoomStations.length+'개 발전소</span></div>'
+            +'<div class="meta" style="margin-bottom:10px">검색결과 '+filtered.length+'건'+( filtered.length>300?" (300건 표시)":"")+'</div>'
+            +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+            +'<thead><tr>'+ths+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+        }
+        function renderDbView(){
+          injectDbChrome();
+          const tabHtml='<div style="display:flex;gap:8px;margin-bottom:12px">'
+            +'<button class="btn '+(kiwoomDbTab==="db"?"primary":"")+'" id="dbTabBtn">&#128193; DB 파일</button>'
+            +'<button class="btn '+(kiwoomDbTab==="kiwoom"?"primary":"")+'" id="kiwoomTabBtn">&#9728; 키움PMS 발전소'+(kiwoomStations.length?" ("+kiwoomStations.length+")":"")+'</button>'
+            +'</div>';
+          if(kiwoomDbTab==="kiwoom"){
+            els.dbView.innerHTML="<div>"+tabHtml+renderKiwoomTab()+"</div>";
+            const si=$("#kiwoomSearchInput");
+            si&&si.addEventListener("input",function(e){kiwoomQuery=e.target.value;renderDbView();});
+            $("#kiwoomResyncBtn")&&$("#kiwoomResyncBtn").addEventListener("click",function(){kiwoomLoaded=false;loadKiwoomStations().then(function(){renderDbView();});});
+            $("#dbTabBtn")&&$("#dbTabBtn").addEventListener("click",function(){kiwoomDbTab="db";renderDbView();});
+            return;
+          }
+          const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
+          const hasQuery=!!dbQuery.trim(),previewRows=hasQuery?results.map(function(x){return x.row;}):rows.slice(0,200),showing=hasQuery?results.length:Math.min(rows.length,200);
+          els.dbView.innerHTML=tabHtml+`<div class="db-shell">
           <aside class="db-card">
             <div class="panel-title"><h2>DB 파일</h2><span class="badge ${rows.length?"green":"amber"}">${rows.length?`${rows.length}건`:"비어 있음"}</span></div>
             <label class="db-drop" id="dbDropZone">엑셀(.xlsx) 또는 CSV 파일을<br>여기에 드래그하거나 클릭해서 업로드하세요.<input id="dbFileInput" type="file" accept=".xlsx,.xls,.csv" hidden></label>
@@ -1585,7 +1633,8 @@
             <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
           </section>
         </div>`;
-        const dbInput=$("#dbSearchInput");
+          $("#kiwoomTabBtn")&&$("#kiwoomTabBtn").addEventListener("click",function(){kiwoomDbTab="kiwoom";loadKiwoomStations().then(function(){renderDbView();});});
+          const dbInput=$("#dbSearchInput");
         function refreshDbSearchInput(){
           renderDbView();
           const next=$("#dbSearchInput");
