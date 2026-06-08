@@ -1611,7 +1611,12 @@
           if(kiwoomDbTab==="kiwoom"){
             els.dbView.innerHTML="<div>"+tabHtml+renderKiwoomTab()+"</div>";
             const si=$("#kiwoomSearchInput");
-            si&&si.addEventListener("input",function(e){kiwoomQuery=e.target.value;renderDbView();});
+            if(si){
+              let _composing=false;
+              si.addEventListener("compositionstart",function(){_composing=true;});
+              si.addEventListener("compositionend",function(e){_composing=false;kiwoomQuery=e.target.value;renderDbView();});
+              si.addEventListener("input",function(e){if(!_composing){kiwoomQuery=e.target.value;renderDbView();}});
+            }
             $("#kiwoomResyncBtn")&&$("#kiwoomResyncBtn").addEventListener("click",function(){kiwoomLoaded=false;loadKiwoomStations().then(function(){renderDbView();});});
             $("#dbTabBtn")&&$("#dbTabBtn").addEventListener("click",function(){kiwoomDbTab="db";renderDbView();});
             return;
