@@ -357,7 +357,7 @@
     function renderAssignmentRows(){els.dbPasteBtn.classList.add("hidden");els.undoDbImportBtn.classList.add("hidden");$("#exportConstructionBtn")?.classList.add("hidden");els.rows.closest("table").style.minWidth="980px";els.tableTitle.textContent="직원 업무지시 목록";$("#addContentBtn").textContent="업무지시 추가";renderAssignmentHead();const q=els.search.value.trim();const rows=sortRows("assignments",state.assignments.map((a,i)=>({a,i})).filter(({a})=>Object.values(a).join(" ").includes(q)&&matchesColumnFilters("assignments",assignmentFilter(a))),assignmentFilter,"a");els.rows.innerHTML=rows.map(({a,i})=>`<tr><td>${esc(a.owner)}</td><td>${esc(a.type)}</td><td title="${esc(a.detail)}">${esc(a.title)}</td><td><select class="inline-select" data-assignment-priority="${i}">${assignmentPriorityOptions(a.priority)}</select></td><td>${esc(a.start)}</td><td>${esc(a.due)}</td><td><select class="inline-select" data-assignment-status="${i}">${assignmentStatusOptions(a.status)}</select></td><td><button class="btn icon" data-edit-assignment="${i}">✎</button></td></tr>`).join("")}
     function selectedRange(){return{year:els.kpiYear.value||today.slice(0,4),month:els.kpiMonth.value||"all"}}function inRange(a,r){return a.due&&a.due.startsWith(r.year)&&(r.month==="all"||a.due.slice(5,7)===r.month)}function employeeStats(name){const r=selectedRange(),rel=state.assignments.filter(a=>a.owner===name&&inRange(a,r));return{assigned:rel.length,completed:rel.filter(a=>a.status==="완료").length,open:rel.filter(a=>a.status!=="완료"&&a.status!=="보류").length,overdue:rel.filter(a=>a.status!=="완료"&&a.due&&a.due<today).length}}function renderPeople(){els.people.innerHTML=state.people.length?state.people.map((p,i)=>{const s=employeeStats(p.name),load=Math.min(100,Math.round(s.open/Math.max(Number(p.monthlyTarget)||1,1)*100));return`<div class="card"><div class="card-top"><span class="name">${esc(p.name)}</span><span class="badge ${load>90?"red":load>70?"amber":"green"}">${load}%</span></div><div class="meta">${esc(p.role)} · ${esc(p.area)}</div><div class="meta">진행 ${s.open}건 · 완료 ${s.completed}건 · 지연 ${s.overdue}건</div><div class="bar"><span style="width:${load}%"></span></div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-person="${i}">✎</button><button class="btn icon danger" data-delete-person="${i}">×</button></div></div>`}).join(""):`<div class="meta">등록된 직원이 없습니다.</div>`}function renderEmployeeKpis(){const r=selectedRange();els.employeeKpis.innerHTML=state.people.map(p=>{const s=employeeStats(p.name),target=r.month==="all"?(Number(p.yearlyTarget)||1):(Number(p.monthlyTarget)||1),rate=s.assigned?Math.round(s.completed/s.assigned*100):0,score=Math.max(0,Math.min(120,Math.round(s.completed/target*100))-s.overdue*5);return`<div class="card"><div class="card-top"><span class="name">${esc(p.name)}</span><span class="badge ${score>=90?"green":score>=70?"amber":"red"}">${score}점</span></div><div class="meta">${r.month==="all"?"연간":Number(r.month)+"월"} 목표 ${target}건 기준</div><div class="mini-grid"><div class="mini-stat">배정<strong>${s.assigned}</strong></div><div class="mini-stat">완료<strong>${s.completed}</strong></div><div class="mini-stat">완료율<strong>${rate}%</strong></div><div class="mini-stat">지연<strong>${s.overdue}</strong></div></div></div>`}).join("")}
     function renderAssignments(){els.assignments.innerHTML=state.assignments.length?state.assignments.slice(0,20).map((a,i)=>`<div class="card"><div class="card-top"><span class="name">${esc(a.title)}</span><span class="badge ${priorityClass(a.priority)}">${esc(a.priority)}</span></div><div class="meta">${esc(a.owner)} · ${esc(a.project)} · 시작 ${esc(a.start)} · 마감 ${esc(a.due)}</div><div class="meta">${esc(a.detail)}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-assignment="${i}">✎</button></div></div>`).join(""):`<div class="meta">등록된 업무지시가 없습니다.</div>`}function renderTodos(){els.todos.innerHTML=state.todos.length?state.todos.map((t,i)=>`<div class="card"><div class="card-top"><span class="name">${esc(t.title)}</span><span class="badge blue">${esc(t.status||t.badge||"확인")}</span></div><div class="meta">${esc(t.detail||"")}</div><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div>`).join(""):`<div class="meta">확인할 항목이 없습니다.</div>`}function todoStatusClass(s){return s==="백로그"?"todo-backlog":s==="할 일"?"todo-ready":s==="진행중"?"todo-doing":s==="완료"?"todo-done":"todo-cancel"}function todoMatches(t,q){return [t.title,t.detail,t.owner,t.status,t.priority].join(" ").toLowerCase().includes(q.toLowerCase())}function renderTodoBoard(){const panel=$("#todoBoardPanel"),statuses=["백로그","할 일","진행중","완료","취소"],q=$("#todoSearch")?.value||"",owners=["전체",...state.people.map(p=>p.name)],filtered=state.todos.map((t,i)=>({t,i})).filter(({t})=>(todoStatusFilter==="전체"||t.status===todoStatusFilter)&&(todoOwnerFilter==="전체"||t.owner===todoOwnerFilter)&&todoMatches(t,q));panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="active">보드</button><button>목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}"><div class="todo-chips"><button class="todo-chip ${todoStatusFilter==="전체"?"active":""}" data-todo-status-filter="전체">전체 <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>t.status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${esc(o)} <strong>${o==="전체"?state.todos.length:state.todos.filter(t=>t.owner===o).length}</strong></button>`).join("")}</div></div><div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta">${esc(t.owner||"담당 미정")} · ${esc(t.priority||"보통")} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button></div>`}).join("")}</div>`;$("#todoSearch")?.addEventListener("input",renderTodoBoard)}
-    function renderConstructionPanels(){const current=state.construction.filter(c=>c.status==="시공중"),upcoming=state.construction.filter(c=>c.status==="예정");els.currentPlants.innerHTML=current.length?current.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">현재 시공중인 발전소가 없습니다.</div>`;els.upcomingPlants.innerHTML=upcoming.length?upcoming.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">시공 예정 발전소가 없습니다.</div>`}function plantCard(c,i){const original=state.construction.indexOf(c);return`<div class="card"><div class="card-top"><span class="name">${esc(c.site)}</span><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></div><div class="meta">${esc(c.company)} · ${esc(c.kw)}kW · ${esc(c.customer||"고객")}</div><div class="meta">${esc(c.phase)} · ${esc(c.owner||"담당 미입력")} · ${esc(c.start)} ~ ${esc(c.end||"")}</div><div class="meta">완료월 ${esc(completionMonth(c.end)||"-")} · 소요일 ${durationDays(c.start,c.end)}일</div><button class="btn icon" data-edit-construction="${original}">✎</button></div>`}
+    function exportConstructionExcel(){const csvQ=v=>'"'+String(v??"").replaceAll('"','""')+'"';const headers=["시공사","구조물팀","현장","kW","영업자","고객","업무단계","담당","시작일","완료일","소요일","완료월","상태","구조물예상(일)","구조물실제(일)","전기예상(일)","전기실제(일)","다음액션","지연사유","조기완료사유","시공중문제점"];const rows=[headers.map(csvQ).join(",")];state.construction.forEach(c=>{const sa=durationDays(c.structureStart,c.structureEnd),ea=durationDays(c.electricStart,c.electricEnd);rows.push([c.company,c.structureTeam||"",c.site,c.kw,c.sales,c.customer,c.phase,c.owner,c.start,c.end||"",durationDays(c.start,c.end),completionMonth(c.end),c.status,c.structurePlannedDays||"",sa||"",c.electricPlannedDays||"",ea||"",c.next||"",c.delayReason||"",c.earlyReason||"",c.issues||""].map(v=>csvQ(String(v))).join(","))});const blob=new Blob(["﻿"+rows.join("\n")],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`시공일정_${today}.csv`;a.click();URL.revokeObjectURL(url);toast("시공일정을 내보냈습니다.")}function renderConstructionPanels(){const current=state.construction.filter(c=>c.status==="시공중"),upcoming=state.construction.filter(c=>c.status==="예정");els.currentPlants.innerHTML=current.length?current.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">현재 시공중인 발전소가 없습니다.</div>`;els.upcomingPlants.innerHTML=upcoming.length?upcoming.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">시공 예정 발전소가 없습니다.</div>`}function plantCard(c,i){const original=state.construction.indexOf(c);return`<div class="card"><div class="card-top"><span class="name">${esc(c.site)}</span><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></div><div class="meta">${esc(c.company)} · ${esc(c.kw)}kW · ${esc(c.customer||"고객")}</div><div class="meta">${esc(c.phase)} · ${esc(c.owner||"담당 미입력")} · ${esc(c.start)} ~ ${esc(c.end||"")}</div><div class="meta">완료월 ${esc(completionMonth(c.end)||"-")} · 소요일 ${durationDays(c.start,c.end)}일</div><button class="btn icon" data-edit-construction="${original}">✎</button></div>`}
     function renderKpis(){const con=state.construction,total=con.length,done=con.filter(c=>c.status==="완료").length,rate=total?Math.round(done/total*100):0,byStatus=["시공중","예정","지연"],byPhase=state.constructionPhases,byTeam=state.constructionTeams,kw=con.reduce((s,c)=>s+(Number(c.kw)||0),0),avg=done?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/done):0;els.kpis.innerHTML=`<div class="kpi"><div class="label">시공 진행률</div><div class="donut" style="--p:${rate}%"><span>${rate}%</span></div><div class="delta">완료 ${done} / 전체 ${total}</div></div><div class="kpi"><div class="label">상태별 발전소</div>${byStatus.map(x=>barRow(x,con.filter(c=>c.status===x).length,total)).join("")}</div><div class="kpi"><div class="label">업무단계 분포</div>${byPhase.map(x=>barRow(x,con.filter(c=>c.phase===x).length,total)).join("")}</div><div class="kpi"><div class="label">시공 물량</div><div class="value">${kw}kW</div><div class="delta">평균 소요일 ${avg}일</div>${byTeam.map(x=>barRow(x,con.filter(c=>c.company===x).length,total)).join("")}</div>`}function barRow(label,value,total){const pct=total?Math.round(value/total*100):0;return`<div class="chart-row"><span>${esc(label)}</span><div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div><strong>${value}</strong></div>`}
     function renderCalendarFilters(){ensureMonthOptions(els.calendarYear,els.calendarMonth)}function renderAssignmentCalendarFilters(){ensureMonthOptions(els.assignmentCalendarYear,els.assignmentCalendarMonth)}function renderAssignmentCalendar(){const y=Number(els.assignmentCalendarYear.value),m=Number(els.assignmentCalendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"];let html=names.map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>a.start===iso||a.due===iso);html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(t=>`<div class="calendar-task">${esc(t.owner)} · ${esc(t.title)}<br>${esc(t.status)} · ${esc(t.priority)}</div>`).join("")}</div>`}els.assignmentCalendarGrid.innerHTML=html}function renderCalendar(){const y=Number(els.calendarYear.value),m=Number(els.calendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"];let html=names.map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>a.due===iso);html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(t=>`<div class="calendar-task">${esc(t.owner)} · ${esc(t.title)}</div>`).join("")}</div>`}els.calendarGrid.innerHTML=html}
     function renderKpiFilters(){const y=Number(today.slice(0,4));els.kpiYear.innerHTML=[y-1,y,y+1].map(v=>`<option ${v===y?"selected":""}>${v}년</option>`).join("")}function renderConstructionReportFilters(){const y=Number(today.slice(0,4));els.constructionReportYear.innerHTML=[y-1,y,y+1].map(v=>`<option value="${v}" ${v===y?"selected":""}>${v}</option>`).join("");els.constructionReportMonth.innerHTML=Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${i+1===Number(today.slice(5,7))?"selected":""}>${i+1}월</option>`).join("")}
@@ -542,75 +542,133 @@
       const selected=state.construction[dashboardSelectedConstruction];
       const linked=selected?linkedByProjectName(selected.site):{todos:[],assignments:[]};
       const dateItems=dashboardDateItems(dashboardDate);
-      const progressTotal=state.construction.length;
-      const progressDone=state.construction.filter(c=>c.status==="완료"||c.phase==="완료").length;
-      const activeCount=state.construction.filter(c=>c.status==="시공중"||c.phase==="구조물시공"||c.phase==="전기시공").length;
-      const lateCount=state.construction.filter(c=>c.status==="지연").length;
+      const con=state.construction;
+      const totalKw=Math.round(con.reduce((s,c)=>s+(Number(c.kw)||0),0)*10)/10;
+      const activeCount=con.filter(c=>c.status==="시공중").length;
+      const lateCount=con.filter(c=>c.status==="지연").length;
+      const doneCount=con.filter(c=>c.status==="완료").length;
+      const thisMonth=today.slice(0,7);
+      const thisMonthExpect=con.filter(c=>c.end&&c.end.startsWith(thisMonth)&&c.status!=="완료").length;
+      const phases=["자재입고완료","구조물시공","전기시공","완료"];
+      const phaseIdx=selected?Math.max(0,phases.indexOf(selected.phase)):0;
+      let durPct=0;
+      if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
+      const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
+      const todayD=new Date();const dayNames=["일","월","화","수","목","금","토"];
+      const todayStr=`${todayD.getFullYear()}년 ${todayD.getMonth()+1}월 ${todayD.getDate()}일 (${dayNames[todayD.getDay()]})`;
       els.dashboardView.innerHTML=`
         <div class="workspace-dashboard">
+          <div class="dash-kpi-grid" style="grid-column:1/-1;margin-bottom:4px">
+            <div class="dash-section dash-kpi-card kpi-teal">
+              <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
+              <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
+            </div>
+            <div class="dash-section dash-kpi-card ${activeCount>0?"kpi-teal":""}">
+              <div class="kpi-icon">🔧</div><div class="kpi-value">${activeCount}</div>
+              <div class="kpi-label">시공중</div><div class="kpi-delta">이번달 ${thisMonthExpect}건 완료예정</div>
+            </div>
+            <div class="dash-section dash-kpi-card ${lateCount>0?"kpi-red":""}">
+              <div class="kpi-icon">⚠️</div><div class="kpi-value">${lateCount}</div>
+              <div class="kpi-label">지연</div><div class="kpi-delta">${lateCount>0?"즉시 확인 필요":"지연 없음"}</div>
+            </div>
+            <div class="dash-section dash-kpi-card kpi-blue">
+              <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
+              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">${todayStr}</div>
+            </div>
+          </div>
           <aside class="dash-column">
             <section class="dash-section">
-              <div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
-              <input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
-              <div class="dash-link-row">
-                <span class="dash-pill">전체 ${progressTotal}</span>
-                <span class="dash-pill">시공중 ${activeCount}</span>
-                <span class="dash-pill">지연 ${lateCount}</span>
+              <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
+              <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
+              <div class="dash-link-row" style="margin:8px 0 6px">
+                <span class="dash-pill">전체 ${rows.length}건</span>
+                ${activeCount>0?`<span class="dash-pill">시공중 ${activeCount}</span>`:""}
+                ${lateCount>0?`<span class="dash-pill" style="border-color:#fca5a5;background:#fff1f1;color:#b91c1c">지연 ${lateCount}</span>`:""}
               </div>
               <div class="project-list">
-                ${rows.length?rows.map(({c,i})=>`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}">
-                  <span class="project-name">${esc(c.site||"이름 없는 발전소")}</span>
-                  <span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span>
-                  <span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span>
-                </button>`).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
+                ${rows.length?rows.map(({c,i})=>{
+                  const dp=durationDays(c.start,c.end),elapsed=durationDays(c.start,today);
+                  const pct=dp>0?Math.min(100,Math.max(0,Math.round(elapsed/dp*100))):0;
+                  const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;
+                  const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#e85555">D+${-dl}</span>`):"";
+                  return `<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+                      <span class="project-name" style="font-size:13px">${esc(c.site||"이름 없는 발전소")}</span>
+                      <span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status||"예정")}</span>
+                    </div>
+                    <span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.phase||"-")}</span>
+                    ${c.start?`<div style="margin:5px 0 3px"><div class="construction-days-bar"><div class="construction-days-fill" style="width:${pct}%"></div></div></div>
+                    <span class="project-meta">${esc(c.start)} ~ ${esc(c.end||"?")} ${dlStr}</span>`:""}
+                  </button>`;
+                }).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
               </div>
             </section>
           </aside>
           <div class="dash-main">
-            <section class="dash-section">
-              <div class="dash-title"><h2>시공관리 현황</h2>${selected?`<button class="btn" data-edit-construction="${dashboardSelectedConstruction}">수정</button>`:""}</div>
-              ${selected?`
-                <div class="detail-grid">
-                  <div class="detail-cell"><span class="label">현장</span><strong>${esc(selected.site)}</strong></div>
-                  <div class="detail-cell"><span class="label">시공사</span><strong>${esc(selected.company)}</strong></div>
-                  <div class="detail-cell"><span class="label">용량</span><strong>${esc(selected.kw||0)}kW</strong></div>
-                  <div class="detail-cell"><span class="label">상태</span><strong><span class="badge ${statusClass(selected.status)}">${esc(selected.status||"예정")}</span></strong></div>
-                  <div class="detail-cell"><span class="label">업무단계</span><strong>${esc(selected.phase||"-")}</strong></div>
-                  <div class="detail-cell"><span class="label">기간</span><strong>${esc(selected.start||"-")} ~ ${esc(selected.end||"")}</strong></div>
-                  <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
+            ${selected?`
+              <section class="dash-section" style="padding:0;overflow:hidden">
+                <div class="dash-site-header">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                    <div>
+                      <div class="site-name">${esc(selected.site)}</div>
+                      <div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+                      <span class="dash-site-badge">${esc(selected.status||"예정")}</span>
+                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.35);font-size:12px">수정</button>
+                    </div>
+                  </div>
+                  <div class="site-progress-bar"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
+                  <div style="font-size:11px;opacity:.75;margin-top:6px">${esc(selected.start||"-")} ~ ${esc(selected.end||"완료일 미입력")} · 진행률 ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
                 </div>
-              `:`<div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div>`}
-            </section>
-            <section class="dash-section compact">
-              <div class="dash-title"><h2>메모</h2>${selected?`<button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button>`:""}</div>
-              <div class="memo-list">${selected&&Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta">등록된 메모가 없습니다.</div>`}</div>
-            </section>
-            <section class="dash-section compact">
-              <div class="dash-title"><h2>할일</h2>${selected?`<button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button>`:""}</div>
-              <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 할일이 없습니다.</div>`}</div>
-            </section>
-            <section class="dash-section compact">
-              <div class="dash-title"><h2>일정</h2>${selected?`<button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button>`:""}</div>
-              <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 일정이 없습니다.</div>`}</div>
-            </section>
+                <div class="site-detail-body">
+                  <div class="phase-progress">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}">${esc(p)}</div>`).join("")}</div>
+                  <div class="detail-grid">
+                    <div class="detail-cell"><span class="label">영업자</span><strong>${esc(selected.sales||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">고객</span><strong>${esc(selected.customer||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">구조물팀</span><strong>${esc(selected.structureTeam||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">완료예정월</span><strong>${esc(completionMonth(selected.end)||"-")}</strong></div>
+                    ${selected.delayReason?`<div class="detail-cell full" style="border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연 사유</span><strong style="color:#b91c1c">${esc(selected.delayReason)}</strong></div>`:""}
+                    ${selected.issues?`<div class="detail-cell full" style="border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 시공 중 문제점</span><strong>${esc(selected.issues)}</strong></div>`:""}
+                    <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
+                  </div>
+                </div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📝 메모</h2><button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button></div>
+                <div class="memo-list">${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="padding:8px 0">등록된 메모가 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>✅ 이 현장의 할일</h2><button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button></div>
+                <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 할일이 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📅 이 현장의 일정</h2><button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button></div>
+                <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 일정이 없습니다.</div>`}</div>
+              </section>
+            `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
           </div>
           <aside class="dash-side">
             <section class="dash-section">
               <div class="mini-calendar-head">
                 <button class="btn icon" data-dashboard-month="-1">‹</button>
-                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong>
+                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
                 <button class="btn icon" data-dashboard-month="1">›</button>
               </div>
               <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
             </section>
             <section class="dash-section">
-              <div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div>
+              <div class="dash-title"><h2>${esc(dashboardDate)}</h2><button class="btn" data-dashboard-today>오늘</button></div>
               <div class="today-list">
                 ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
                 ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
-                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
+                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
               </div>
             </section>
+            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #e85555">
+              <div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>
+              ${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}
+            </section>`:""}
           </aside>
         </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
@@ -2149,18 +2207,6 @@
       function fieldworkKpis(){const people=state.people||[],latest=people.map(p=>latestFieldworkByPerson(p.name)),count=s=>latest.filter(x=>x?.status===s).length;return {total:people.length,checkin:latest.filter(Boolean).length,move:count("이동중"),work:count("현장도착")+count("작업중"),off:count("퇴근")}}
       function fieldworkWhen(x){return String(x?.time||"").replace("T"," ").slice(0,16)}
       function csvCell(v){return `"${String(v??"").replaceAll('"','""')}"`}
-      function exportConstructionExcel(){
-        const headers=["시공사","구조물팀","현장","kW","영업자","고객","업무단계","담당","시작일","완료일","소요일","완료월","상태","구조물예상(일)","구조물실제(일)","전기예상(일)","전기실제(일)","다음액션","지연사유","조기완료사유","시공중문제점"];
-        const csvRows=[headers.join(",")];
-        state.construction.forEach(c=>{
-          const sa=durationDays(c.structureStart,c.structureEnd),ea=durationDays(c.electricStart,c.electricEnd);
-          csvRows.push([c.company,c.structureTeam||"",c.site,c.kw,c.sales,c.customer,c.phase,c.owner,c.start,c.end||"",durationDays(c.start,c.end),completionMonth(c.end),c.status,c.structurePlannedDays||"",sa||"",c.electricPlannedDays||"",ea||"",c.next||"",c.delayReason||"",c.earlyReason||"",c.issues||""].map(v=>csvCell(String(v))).join(","));
-        });
-        const blob=new Blob(["﻿"+csvRows.join("\n")],{type:"text/csv;charset=utf-8"});
-        const url=URL.createObjectURL(blob),a=document.createElement("a");
-        a.href=url;a.download=`시공일정_${today}.csv`;a.click();URL.revokeObjectURL(url);
-        toast("시공일정 엑셀 파일을 내보냈습니다.");
-      }
       function exportFieldworkExcel(){
         if(!adminUnlocked&&!unlockAdmin())return;
         const rows=["날짜,시간,직원,상태,발전소/현장,지역,메모"];
