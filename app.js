@@ -1566,41 +1566,66 @@
       syncViewChrome=function(){baseSyncViewChromeForDb();if(currentView==="db"){els.pageTitle.textContent="DB";els.pageSub.textContent="엑셀 DB 파일을 공유 저장하고 보고서/시공일정 자동입력에 사용합니다.";$("#addProjectBtn").textContent="DB 업로드"}};
       const baseGoToViewForDb=goToView;
       goToView=function(view,label=""){baseGoToViewForDb(view,label);if(view==="db"){syncViewChrome();renderDbView();applyMasking()}};
-      let kiwoomDbTab="db",kiwoomStations=[],kiwoomQuery="",kiwoomLoaded=false;
+      let kiwoomDbTab="db",kiwoomStations=[],kiwoomQuery="",kiwoomLoaded=false,kiwoomSelectedRow=null;
         async function loadKiwoomStations(){
           if(kiwoomLoaded)return;
           try{
-            const r=await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_sync",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});
-            const j=await r.json();
-            kiwoomStations=(j[0]&&j[0].data)||[];
+            const hdr={apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY};
+            const meta=await(await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_meta",{headers:hdr})).json();
+            if(meta[0]&&meta[0].data&&meta[0].data.chunks){
+              const n=meta[0].data.chunks;
+              const ids=[];for(let i=0;i<n;i++)ids.push("kiwoom_sync_"+i);
+              const results=await Promise.all(ids.map(function(id){return fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq."+id,{headers:hdr}).then(function(r){return r.json();});}));
+              kiwoomStations=[];
+              results.forEach(function(r){if(r[0]&&r[0].data)kiwoomStations=kiwoomStations.concat(r[0].data);});
+            } else {
+              const r=await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_sync",{headers:hdr});
+              const j=await r.json();
+              kiwoomStations=(j[0]&&j[0].data)||[];
+            }
             kiwoomLoaded=true;
           }catch(e){}
         }
+        function renderKiwoomDetail(s){
+          if(!s)return "";
+          const keys=Object.keys(s);
+          let rows="";
+          keys.forEach(function(k){
+            const v=s[k]!=null?String(s[k]):"";
+            if(v)rows+="<tr><td style='padding:5px 8px;border:1px solid #e2e8f0;background:#f8fafc;white-space:nowrap;font-weight:600;color:#475569;font-size:11px'>"+k+"</td><td style='padding:5px 8px;border:1px solid #e2e8f0;font-size:12px'>"+v.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</td></tr>";
+          });
+          return "<div style='margin-top:12px;border:2px solid #3b82f6;border-radius:8px;overflow:hidden'>"
+            +"<div style='background:#3b82f6;color:#fff;padding:8px 12px;font-weight:bold;font-size:13px'>"+esc(s["발전소명"]||s["site"]||"")+" 상세정보 ("+keys.length+"개 항목)</div>"
+            +"<div style='overflow-y:auto;max-height:400px'><table style='width:100%;border-collapse:collapse'><tbody>"+rows+"</tbody></table></div></div>";
+        }
         function renderKiwoomTab(){
           const q=kiwoomQuery.toLowerCase().trim();
-          const filtered=q?kiwoomStations.filter(function(s){return [s.site,s.company,s.address,s.owner,s.contact].join(" ").toLowerCase().includes(q);}):kiwoomStations;
-          const cols=["영업순번","계약법인","발전소명","용량(kW)","담당자","연락처","주소","진행상태","건립종류","비고"];
-          const keys=["sales_seq","company","site","kw","owner","contact","address","status","type","note"];
+          const filtered=q?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(q);}):kiwoomStations;
+          const fixedCols=["sales_seq","계약법인","발전소명","발전_허가용량","영업담당자","연락처","현장주소","진행상태","건립종류","비고"];
+          const fixedHeaders=["영업순번","계약법인","발전소명","용량(kW)","담당자","연락처","주소","진행상태","건립종류","비고"];
           let rows="";
-          const shown=filtered.slice(0,300);
+          const shown=filtered.slice(0,200);
           for(let i=0;i<shown.length;i++){
             const s=shown[i];
-            rows+="<tr>";
-            for(let k=0;k<keys.length;k++){
-              const v=s[keys[k]]!=null?String(s[keys[k]]):"";
-              rows+='<td style="padding:7px 8px;border:1px solid #e2e8f0;'+(k===6||k===9?"max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap":"white-space:nowrap")+'">'+(v.replace(/&/g,"&amp;").replace(/</g,"&lt;"))+"</td>";
+            const isSelected=kiwoomSelectedRow===i;
+            rows+='<tr style="cursor:pointer;background:'+(isSelected?"#eff6ff":"")+';" data-idx="'+i+'" class="kiwoom-row">';
+            for(let k=0;k<fixedCols.length;k++){
+              const v=s[fixedCols[k]]!=null?String(s[fixedCols[k]]):"";
+              rows+='<td style="padding:7px 8px;border:1px solid #e2e8f0;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+v.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</td>";
             }
             rows+="</tr>";
           }
           let ths="";
-          for(let i=0;i<cols.length;i++) ths+='<th style="padding:8px;border:1px solid #e2e8f0;background:#f1f5f9;white-space:nowrap">'+cols[i]+"</th>";
+          for(let i=0;i<fixedHeaders.length;i++) ths+='<th style="padding:8px;border:1px solid #e2e8f0;background:#f1f5f9;white-space:nowrap">'+fixedHeaders[i]+"</th>";
+          const detailHtml=kiwoomSelectedRow!=null?renderKiwoomDetail(filtered[kiwoomSelectedRow]):"<div style='color:#94a3b8;font-size:12px;margin-top:8px;padding:8px'>행을 클릭하면 전체 컬럼 상세정보가 표시됩니다.</div>";
           return '<div style="padding:16px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
-            +'<input class="search" id="kiwoomSearchInput" placeholder="발전소명, 회사, 주소, 담당자 검색" value="'+esc(kiwoomQuery)+'" style="flex:1">'
+            +'<input class="search" id="kiwoomSearchInput" placeholder="발전소명, 회사, 주소, 담당자 등 전체 검색" value="'+esc(kiwoomQuery)+'" style="flex:1">'
             +'<button class="btn primary" id="kiwoomResyncBtn">&#128260; 재동기화</button>'
             +'<span class="badge green">'+kiwoomStations.length+'개 발전소</span></div>'
-            +'<div class="meta" style="margin-bottom:10px">검색결과 '+filtered.length+'건'+( filtered.length>300?" (300건 표시)":"")+'</div>'
+            +'<div class="meta" style="margin-bottom:10px">검색결과 '+filtered.length+'건'+( filtered.length>200?" (200건 표시)":"")+'</div>'
             +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
-            +'<thead><tr>'+ths+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+            +'<thead><tr>'+ths+'</tr></thead><tbody id="kiwoomTbody">'+rows+'</tbody></table></div>'
+            +detailHtml+'</div>';
         }
         function renderDbView(){
           injectDbChrome();
@@ -1617,8 +1642,10 @@
               si.addEventListener("compositionend",function(e){_composing=false;kiwoomQuery=e.target.value;renderDbView();});
               si.addEventListener("input",function(e){if(!_composing){kiwoomQuery=e.target.value;renderDbView();}});
             }
-            $("#kiwoomResyncBtn")&&$("#kiwoomResyncBtn").addEventListener("click",function(){kiwoomLoaded=false;loadKiwoomStations().then(function(){renderDbView();});});
+            $("#kiwoomResyncBtn")&&$("#kiwoomResyncBtn").addEventListener("click",function(){kiwoomLoaded=false;kiwoomSelectedRow=null;loadKiwoomStations().then(function(){renderDbView();});});
             $("#dbTabBtn")&&$("#dbTabBtn").addEventListener("click",function(){kiwoomDbTab="db";renderDbView();});
+            const tbody=$("#kiwoomTbody");
+            if(tbody){tbody.addEventListener("click",function(e){const tr=e.target.closest(".kiwoom-row");if(tr){const idx=parseInt(tr.getAttribute("data-idx"));const q=kiwoomQuery.toLowerCase().trim();const filtered=q?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(q);}):kiwoomStations;kiwoomSelectedRow=(kiwoomSelectedRow===idx)?null:idx;renderDbView();}});}
             return;
           }
           const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
