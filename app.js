@@ -707,6 +707,7 @@
       const dir=todoListSort.dir==="asc"?1:-1,key=todoListSort.key;
       return rows.sort((a,b)=>String(todoField(a.t,key)||"").localeCompare(String(todoField(b.t,key)||"","ko"),"ko",{numeric:true})*dir);
     }
+    function localDateValue(s){return s?new Date(s):new Date(NaN)}
     function todoDueBadge(t){
       if(!t?.due||t.status===KR.done||t.status===KR.cancel)return "";
       const due=localDateValue(t.due),now=localDateValue(today),days=Math.ceil((due-now)/(1000*60*60*24));
