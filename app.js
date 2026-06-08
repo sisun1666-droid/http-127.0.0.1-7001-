@@ -266,6 +266,11 @@
       return localOnly.length?[...localOnly,...sharedArr]:sharedArr;
     }
     function applySharedState(shared,forceReplace=false){
+      /* 첫 로드 시 _svrIds가 비어있으면 로컬 병합을 건너뜀 (스마트폰 등 오래된 캐시 오염 방지) */
+      const isFirstLoad=!sharedLoaded;
+      const svrIdsEmpty=Object.values(_svrIds).every(s=>s.size===0);
+      const cloudNewer=syncStamp(shared)>=syncStamp(state);
+      if(isFirstLoad&&svrIdsEmpty&&cloudNewer)forceReplace=true;
       sharedLoaded=true;
       const merged={...clone(defaults),...shared};
       let hadLocalOnly=false;
