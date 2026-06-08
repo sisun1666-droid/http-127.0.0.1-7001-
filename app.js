@@ -996,14 +996,122 @@
     renderDashboard=function(){
       ensureConfigLists();ensureTaskLinks();
       syncViewChrome();
+      els.dashboardView.classList.remove("hidden");
       els.dashboardView.classList.add("dashboard-workspace");
-      const rows=constructionMonthRows(),q=($("#dashboardProjectSearch")?.value||"").toLowerCase(),shown=rows.filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
-      const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
-      els.dashboardView.innerHTML=`<div class="workspace-dashboard">
-        <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
-        <div class="dash-main"><section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${renderWeatherBox()}${renderDashboardRiskHtml()}${renderDashboardMemo()}</div>
-        <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
-      </div>`;
+      const rows=dashboardConstructionRows();
+      if(!rows.some(x=>x.i===dashboardSelectedConstruction))dashboardSelectedConstruction=rows.length?rows[0].i:-1;
+      const selected=state.construction[dashboardSelectedConstruction];
+      const linked=selected?linkedByProjectName(selected.site):{todos:[],assignments:[]};
+      const dateItems=dashboardDateItems(dashboardDate);
+      const con=state.construction;
+      const totalKw=Math.round(con.reduce((s,c)=>s+(Number(c.kw)||0),0)*10)/10;
+      const activeCount=con.filter(c=>c.status==="시공중").length;
+      const lateCount=con.filter(c=>c.status==="지연").length;
+      const doneCount=con.filter(c=>c.status==="완료").length;
+      const thisMonth=today.slice(0,7);
+      const thisMonthExpect=con.filter(c=>c.end&&c.end.startsWith(thisMonth)&&c.status!=="완료").length;
+      const phases=["자재입고완료","구조물시공","전기시공","완료"];
+      const phaseIdx=selected?Math.max(0,phases.indexOf(selected.phase)):0;
+      let durPct=0;
+      if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
+      const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
+      const todayD=new Date();const dayNames=["일","월","화","수","목","금","토"];
+      const todayStr=`${todayD.getFullYear()}년 ${todayD.getMonth()+1}월 ${todayD.getDate()}일 (${dayNames[todayD.getDay()]})`;
+      els.dashboardView.innerHTML=`
+        <div class="workspace-dashboard">
+          <div class="dash-kpi-grid" style="grid-column:1/-1;margin-bottom:4px">
+            <div class="dash-section dash-kpi-card kpi-teal">
+              <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
+              <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
+            </div>
+            <div class="dash-section dash-kpi-card ${activeCount>0?"kpi-teal":""}">
+              <div class="kpi-icon">🔧</div><div class="kpi-value">${activeCount}</div>
+              <div class="kpi-label">시공중</div><div class="kpi-delta">이번달 ${thisMonthExpect}건 완료예정</div>
+            </div>
+            <div class="dash-section dash-kpi-card ${lateCount>0?"kpi-red":""}">
+              <div class="kpi-icon">⚠️</div><div class="kpi-value">${lateCount}</div>
+              <div class="kpi-label">지연</div><div class="kpi-delta">${lateCount>0?"즉시 확인 필요":"지연 없음 ✓"}</div>
+            </div>
+            <div class="dash-section dash-kpi-card kpi-blue">
+              <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
+              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">${todayStr}</div>
+            </div>
+          </div>
+          <aside class="dash-column">
+            <section class="dash-section">
+              <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
+              <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
+              <div class="dash-link-row" style="margin:8px 0 6px">
+                <span class="dash-pill">전체 ${rows.length}건</span>
+                ${activeCount>0?`<span class="dash-pill">시공중 ${activeCount}</span>`:""}
+                ${lateCount>0?`<span class="dash-pill" style="border-color:#fca5a5;background:#fff1f1;color:#b91c1c">지연 ${lateCount}</span>`:""}
+              </div>
+              <div class="project-list">
+                ${rows.length?rows.map(({c,i})=>{const dp=durationDays(c.start,c.end),elapsed=durationDays(c.start,today);const pct=dp>0?Math.min(100,Math.max(0,Math.round(elapsed/dp*100))):0;const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#e85555">D+${-dl}</span>`):"";return`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><span class="project-name" style="font-size:13px">${esc(c.site||"이름 없는 발전소")}</span><span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status||"예정")}</span></div><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.phase||"-")}</span>${c.start?`<div style="margin:5px 0 3px"><div class="construction-days-bar"><div class="construction-days-fill" style="width:${pct}%"></div></div></div><span class="project-meta">${esc(c.start)} ~ ${esc(c.end||"?")} ${dlStr}</span>`:""}</button>`;}).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
+              </div>
+            </section>
+          </aside>
+          <div class="dash-main">
+            ${selected?`
+              <section class="dash-section" style="padding:0;overflow:hidden">
+                <div class="dash-site-header">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                    <div><div class="site-name">${esc(selected.site)}</div><div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div></div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+                      <span class="dash-site-badge">${esc(selected.status||"예정")}</span>
+                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.35);font-size:12px">수정</button>
+                    </div>
+                  </div>
+                  <div class="site-progress-bar"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
+                  <div style="font-size:11px;opacity:.75;margin-top:6px">${esc(selected.start||"-")} ~ ${esc(selected.end||"완료일 미입력")} · 진행률 ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
+                </div>
+                <div class="site-detail-body">
+                  <div class="phase-progress">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}">${esc(p)}</div>`).join("")}</div>
+                  <div class="detail-grid">
+                    <div class="detail-cell"><span class="label">영업자</span><strong>${esc(selected.sales||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">고객</span><strong>${esc(selected.customer||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">구조물팀</span><strong>${esc(selected.structureTeam||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">완료예정월</span><strong>${esc(completionMonth(selected.end)||"-")}</strong></div>
+                    ${selected.delayReason?`<div class="detail-cell full" style="border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연 사유</span><strong style="color:#b91c1c">${esc(selected.delayReason)}</strong></div>`:""}
+                    ${selected.issues?`<div class="detail-cell full" style="border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 시공 중 문제점</span><strong>${esc(selected.issues)}</strong></div>`:""}
+                    <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
+                  </div>
+                </div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📝 메모</h2><button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button></div>
+                <div class="memo-list">${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="padding:8px 0">등록된 메모가 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>✅ 이 현장의 할일</h2><button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button></div>
+                <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 할일이 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📅 이 현장의 일정</h2><button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button></div>
+                <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 일정이 없습니다.</div>`}</div>
+              </section>
+            `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
+          </div>
+          <aside class="dash-side">
+            <section class="dash-section">
+              <div class="mini-calendar-head">
+                <button class="btn icon" data-dashboard-month="-1">‹</button>
+                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
+                <button class="btn icon" data-dashboard-month="1">›</button>
+              </div>
+              <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
+            </section>
+            <section class="dash-section">
+              <div class="dash-title"><h2>${esc(dashboardDate)}</h2><button class="btn" data-dashboard-today>오늘</button></div>
+              <div class="today-list">
+                ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
+                ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
+                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
+              </div>
+            </section>
+            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #e85555"><div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}</section>`:""}
+          </aside>
+        </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
       updateClock();updateWeather();applyMasking();
     }
