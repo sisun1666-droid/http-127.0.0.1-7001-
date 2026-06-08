@@ -275,8 +275,6 @@
       if(hadLocalOnly)scheduleSharedSave(500);
     }
     async function loadSharedState(silent=false,forceRemote=false){
-      /* 미전송 삭제가 남아있으면 폴링보다 먼저 재시도 (탭 닫힘·네트워크 오류 복구) */
-      if(state.__pendingCloudSync&&!syncSaveBusy)pushSharedState().catch(()=>{});
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
       try{
         let shared=await loadSupabaseData();
@@ -288,7 +286,12 @@
         }
         /* forceRemote=수동 불러오기 버튼 → 서버 데이터로 완전 교체 / 자동=항상 병합 */
         if(shouldUseSharedState(shared,forceRemote))applySharedState(shared,!!forceRemote);
-        else {sharedLoaded=true;if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");}
+        else {
+          sharedLoaded=true;
+          /* 서버가 더 최신이 아닐 때만 pendingSync 재시도 (서버 로드 후 타임스탬프 확인 완료) */
+          if(state.__pendingCloudSync&&!syncSaveBusy)pushSharedState().catch(()=>{});
+          if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");
+        }
         return;
       }catch(err){
         try{
