@@ -915,7 +915,7 @@
           const fc=main.daily?.weathercode?.[i]||0,fp=Math.round(main.daily?.precipitation_probability_max?.[i]||0),fs=(main.daily?.precipitation_sum?.[i]||0).toFixed(1),fmax=Math.round(main.daily?.temperature_2m_max?.[i]||0),fmin=Math.round(main.daily?.temperature_2m_min?.[i]||0);
           const hot=fp>=60||Number(fs)>=5;
           const mm=d.slice(5,7),dd=d.slice(8,10);
-          return`<div class="db-forecast-cell ${hot?"rain-day":""}"><div style="font-size:10px;color:var(--muted)">${mm}/${dd}</div><div style="font-size:15px;margin:2px 0">${weatherIcon(fc)}</div><div style="font-size:10px;color:#0369a1;font-weight:700">${fp}%</div><div style="font-size:10px;color:var(--muted)">${fmin}°/${fmax}°</div></div>`;
+          return`<div class="forecast-day ${hot?"rain-day":""}"><div class="fc-date">${mm}/${dd}</div><div class="fc-icon">${weatherIcon(fc)}</div><div class="fc-rain">${fp}%</div><div class="fc-temp">${fmin}°/${fmax}°</div></div>`;
         }).join("");
       }catch{if(mainEl)mainEl.innerHTML=`<div class="weather-main-city">📍 대구</div><div style="font-size:13px;opacity:.8;margin-top:10px">날씨를 불러오지 못했습니다.</div>`}
     }
@@ -937,148 +937,112 @@
       const doneCount=con.filter(c=>c.status==="완료").length;
       const thisMonth=today.slice(0,7);
       const thisMonthExpect=con.filter(c=>c.end&&c.end.startsWith(thisMonth)&&c.status!=="완료").length;
-      const avgDays=doneCount?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/doneCount):0;
       const phases=["자재입고완료","구조물시공","전기시공","완료"];
       const phaseIdx=selected?Math.max(0,phases.indexOf(selected.phase)):0;
       let durPct=0;
-      if(selected&&selected.start&&selected.end){const tot=durationDays(selected.start,selected.end);const el2=durationDays(selected.start,today);durPct=tot>0?Math.min(100,Math.max(0,Math.round(el2/tot*100))):0;}
+      if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
       const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
-
       els.dashboardView.innerHTML=`
-      <div class="db-layout">
-
-        <!-- ① 왼쪽: 날씨+시계 사이드바 -->
-        <div class="db-weather-col">
-          <div class="db-clock-card" id="dashClockBox">
-            <div style="font-size:10px;font-weight:800;letter-spacing:1px;opacity:.55;margin-bottom:2px">KOREA TIME</div>
-            <div class="clock-time" id="dashClock" style="font-size:28px">--:--:--</div>
-            <div class="clock-date" id="dashClockDate" style="font-size:11px;opacity:.65;margin-top:2px"></div>
-          </div>
-          <div id="dashWeatherMain" class="weather-main-card" style="min-height:130px">
-            <div class="weather-main-city" style="font-size:11px">📍 날씨 불러오는 중...</div>
-          </div>
-          <div id="dashWeatherSub" class="db-weather-sub-list"></div>
-          <div class="db-forecast-wrap">
-            <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.5px;margin-bottom:5px">대구 7일 예보</div>
-            <div id="dashForecastContent" class="db-forecast-row"></div>
-          </div>
-        </div>
-
-        <!-- ② 중앙+오른쪽 영역 -->
-        <div class="db-right-area">
-
-          <!-- KPI 컴팩트 바 -->
-          <div class="db-kpi-bar">
-            <div class="db-kpi-chip db-kpi-teal">
-              <span class="db-kpi-n">${con.length}</span>
-              <span class="db-kpi-l">전체현장</span>
-              <span class="db-kpi-sub">완료 ${doneCount}건</span>
+        <div class="workspace-dashboard">
+          <!-- 날씨+시계 풀width -->
+          ${renderWeatherBox()}
+          <!-- KPI 4개 풀width -->
+          <div class="dash-kpi-grid" style="grid-column:1/-1">
+            <div class="dash-section dash-kpi-card kpi-teal">
+              <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
+              <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
             </div>
-            <div class="db-kpi-chip ${activeCount>0?"db-kpi-teal":"db-kpi-gray"}">
-              <span class="db-kpi-n">${activeCount}</span>
-              <span class="db-kpi-l">시공중</span>
-              <span class="db-kpi-sub">이번달 ${thisMonthExpect}건 완료예정</span>
+            <div class="dash-section dash-kpi-card ${activeCount>0?"kpi-teal":""}">
+              <div class="kpi-icon">🔧</div><div class="kpi-value">${activeCount}</div>
+              <div class="kpi-label">시공중</div><div class="kpi-delta">이번달 ${thisMonthExpect}건 완료예정</div>
             </div>
-            <div class="db-kpi-chip ${lateCount>0?"db-kpi-red":"db-kpi-gray"}">
-              <span class="db-kpi-n">${lateCount}</span>
-              <span class="db-kpi-l">지연</span>
-              <span class="db-kpi-sub">${lateCount>0?"즉시 확인":"지연 없음 ✓"}</span>
+            <div class="dash-section dash-kpi-card ${lateCount>0?"kpi-red":""}">
+              <div class="kpi-icon">⚠️</div><div class="kpi-value">${lateCount}</div>
+              <div class="kpi-label">지연</div><div class="kpi-delta">${lateCount>0?"즉시 확인 필요":"지연 없음 ✓"}</div>
             </div>
-            <div class="db-kpi-chip db-kpi-blue">
-              <span class="db-kpi-n">${totalKw}<small>kW</small></span>
-              <span class="db-kpi-l">총 시공 물량</span>
-              <span class="db-kpi-sub">평균 ${avgDays}일 소요</span>
+            <div class="dash-section dash-kpi-card kpi-blue">
+              <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
+              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">평균 ${doneCount?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/doneCount):0}일 소요</div>
             </div>
           </div>
-
-          <!-- 중앙+우측 2컬럼 -->
-          <div class="db-main-grid">
-
-            <!-- 중앙: 현장 목록 + 상세 -->
-            <div class="db-center-col">
-              <!-- 현장 목록 검색+리스트 -->
-              <div class="dash-section" style="padding:12px">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                  <h2 style="font-size:14px;margin:0;flex:1">시공 현장 목록</h2>
-                  <button class="btn primary" style="font-size:12px;min-height:30px;padding:0 10px" data-dashboard-add-construction>+ 추가</button>
-                </div>
-                <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}" style="margin-bottom:8px">
-                <div class="db-site-chips">
-                  ${rows.length?rows.map(({c,i})=>{const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#ef4444">+${-dl}일</span>`):"";return`<button class="db-site-chip ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}"><div style="display:flex;justify-content:space-between;align-items:center;gap:4px"><strong style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(c.site||"발전소")}</strong><span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status)}</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(c.kw||0)}kW · ${esc(c.phase||"-")} ${dlStr?`· ${dlStr}`:""}</div></button>`;}).join(""):`<div class="dash-empty" style="font-size:12px;padding:14px">등록된 시공일정이 없습니다.</div>`}
-                </div>
+          <!-- 왼쪽: 현장 목록 -->
+          <aside class="dash-column">
+            <section class="dash-section">
+              <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
+              <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
+              <div class="dash-link-row" style="margin:8px 0 6px">
+                <span class="dash-pill">전체 ${rows.length}건</span>
+                ${activeCount>0?`<span class="dash-pill">시공중 ${activeCount}</span>`:""}
+                ${lateCount>0?`<span class="dash-pill" style="border-color:#fca5a5;background:#fff1f1;color:#b91c1c">지연 ${lateCount}</span>`:""}
               </div>
-
-              <!-- 선택 현장 상세 -->
-              ${selected?`
-              <div class="dash-section" style="padding:0;overflow:hidden">
+              <div class="project-list">
+                ${rows.length?rows.map(({c,i})=>{const dp=durationDays(c.start,c.end),elapsed=durationDays(c.start,today);const pct=dp>0?Math.min(100,Math.max(0,Math.round(elapsed/dp*100))):0;const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#e85555">D+${-dl}</span>`):"";return`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><span class="project-name" style="font-size:13px">${esc(c.site||"이름 없는 발전소")}</span><span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status||"예정")}</span></div><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.phase||"-")}</span>${c.start?`<div style="margin:5px 0 3px"><div class="construction-days-bar"><div class="construction-days-fill" style="width:${pct}%"></div></div></div><span class="project-meta">${esc(c.start)} ~ ${esc(c.end||"?")} ${dlStr}</span>`:""}</button>`;}).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
+              </div>
+            </section>
+          </aside>
+          <!-- 중앙: 선택 현장 상세 -->
+          <div class="dash-main">
+            ${selected?`
+              <section class="dash-section" style="padding:0;overflow:hidden">
                 <div class="dash-site-header">
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-                    <div>
-                      <div class="site-name" style="font-size:16px">${esc(selected.site)}</div>
-                      <div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                    <div><div class="site-name">${esc(selected.site)}</div><div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div></div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
                       <span class="dash-site-badge">${esc(selected.status||"예정")}</span>
-                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3);font-size:11px;min-height:28px;padding:0 8px">수정</button>
+                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.35);font-size:12px">수정</button>
                     </div>
                   </div>
-                  <div class="site-progress-bar" style="margin-top:10px"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
-                  <div style="font-size:11px;opacity:.7;margin-top:4px">${esc(selected.start||"-")} ~ ${esc(selected.end||"미입력")} · ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
+                  <div class="site-progress-bar"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
+                  <div style="font-size:11px;opacity:.75;margin-top:6px">${esc(selected.start||"-")} ~ ${esc(selected.end||"완료일 미입력")} · 진행률 ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
                 </div>
-                <div style="padding:12px">
-                  <div class="phase-progress" style="margin-bottom:10px">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}" style="font-size:10px;padding:6px 2px">${esc(p)}</div>`).join("")}</div>
-                  <div class="detail-grid" style="grid-template-columns:repeat(4,1fr);gap:8px">
-                    <div class="detail-cell" style="min-height:auto;padding:8px"><span class="label">영업자</span><strong style="font-size:13px">${esc(selected.sales||"-")}</strong></div>
-                    <div class="detail-cell" style="min-height:auto;padding:8px"><span class="label">고객</span><strong style="font-size:13px">${esc(selected.customer||"-")}</strong></div>
-                    <div class="detail-cell" style="min-height:auto;padding:8px"><span class="label">구조물팀</span><strong style="font-size:13px">${esc(selected.structureTeam||"-")}</strong></div>
-                    <div class="detail-cell" style="min-height:auto;padding:8px"><span class="label">완료예정</span><strong style="font-size:13px">${esc(completionMonth(selected.end)||"-")}</strong></div>
-                    ${selected.delayReason?`<div class="detail-cell full" style="grid-column:1/-1;padding:8px;border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연사유</span><strong style="color:#b91c1c;font-size:12px">${esc(selected.delayReason)}</strong></div>`:""}
-                    ${selected.issues?`<div class="detail-cell full" style="grid-column:1/-1;padding:8px;border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 문제점</span><strong style="font-size:12px">${esc(selected.issues)}</strong></div>`:""}
-                    <div class="detail-cell full" style="grid-column:1/-1;padding:8px"><span class="label">다음 액션</span><strong style="font-size:12px">${esc(selected.next||"—")}</strong></div>
+                <div class="site-detail-body">
+                  <div class="phase-progress">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}">${esc(p)}</div>`).join("")}</div>
+                  <div class="detail-grid">
+                    <div class="detail-cell"><span class="label">영업자</span><strong>${esc(selected.sales||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">고객</span><strong>${esc(selected.customer||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">구조물팀</span><strong>${esc(selected.structureTeam||"-")}</strong></div>
+                    <div class="detail-cell"><span class="label">완료예정월</span><strong>${esc(completionMonth(selected.end)||"-")}</strong></div>
+                    ${selected.delayReason?`<div class="detail-cell full" style="border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연 사유</span><strong style="color:#b91c1c">${esc(selected.delayReason)}</strong></div>`:""}
+                    ${selected.issues?`<div class="detail-cell full" style="border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 시공 중 문제점</span><strong>${esc(selected.issues)}</strong></div>`:""}
+                    <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
                   </div>
                 </div>
-              </div>
-
-              <!-- 메모+할일+일정 2열 -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div class="dash-section compact">
-                  <div class="dash-title" style="margin-bottom:8px"><h2 style="font-size:13px">📝 메모</h2><button class="btn" style="font-size:11px;min-height:26px;padding:0 8px" data-dashboard-add-memo="${dashboardSelectedConstruction}">추가</button></div>
-                  <div>${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.slice(0,3).map((m,mi)=>`<div class="memo-item" style="padding:8px;margin-bottom:6px"><div style="font-size:12px">${esc(m.text||m)}</div><div class="meta" style="font-size:10px">${esc(m.date||"")}</div><button class="btn icon danger" style="margin-top:4px" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="font-size:12px;padding:6px 0">메모 없음</div>`}</div>
-                </div>
-                <div class="dash-section compact">
-                  <div class="dash-title" style="margin-bottom:8px"><h2 style="font-size:13px">✅ 할일 · 일정</h2><button class="btn primary" style="font-size:11px;min-height:26px;padding:0 8px" data-dashboard-add-todo="${dashboardSelectedConstruction}">추가</button></div>
-                  <div>${[...linked.todos.slice(0,2).map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}" style="padding:7px;margin-bottom:5px;display:block;width:100%;text-align:left"><strong style="font-size:12px">${esc(t.title)}</strong><div class="meta" style="font-size:10px">${esc(t.status)} · ${esc(t.due)}</div></button>`),...linked.assignments.slice(0,2).map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}" style="padding:7px;margin-bottom:5px;display:block;width:100%;text-align:left"><strong style="font-size:12px">${esc(a.title)}</strong><div class="meta" style="font-size:10px">${esc(a.status)} · ${esc(a.due||a.start)}</div></button>`)].join("")||`<div class="meta" style="font-size:12px;padding:6px 0">연결된 항목 없음</div>`}</div>
-                </div>
-              </div>`
-              :`<div class="dash-section"><div class="dash-empty">왼쪽에서 현장을 선택하거나 추가하세요.</div></div>`}
-            </div>
-
-            <!-- 우측: 달력 + 오늘할일 -->
-            <div class="db-right-col">
-              <div class="dash-section" style="padding:12px">
-                <div class="mini-calendar-head" style="margin-bottom:6px">
-                  <button class="btn icon" style="width:28px;min-height:28px" data-dashboard-month="-1">‹</button>
-                  <strong style="font-size:13px">${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
-                  <button class="btn icon" style="width:28px;min-height:28px" data-dashboard-month="1">›</button>
-                </div>
-                <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
-              </div>
-              <div class="dash-section compact">
-                <div class="dash-title" style="margin-bottom:8px"><h2 style="font-size:13px">${esc(dashboardDate)}</h2><button class="btn" style="font-size:11px;min-height:26px" data-dashboard-today>오늘</button></div>
-                <div>
-                  ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}" style="padding:8px;margin-bottom:6px;display:block;width:100%;text-align:left"><strong style="font-size:12px">${esc(t.title)}</strong><div class="meta" style="font-size:11px">${esc(peopleText(t))} · ${esc(t.status)}</div></button>`).join("")}
-                  ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}" style="padding:8px;margin-bottom:6px;display:block;width:100%;text-align:left"><strong style="font-size:12px">${esc(a.title)}</strong><div class="meta" style="font-size:11px">${esc(peopleText(a))} · ${esc(a.status)}</div></button>`).join("")}
-                  ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="font-size:12px;padding:6px 0">등록된 항목 없음</div>`:""}
-                </div>
-              </div>
-              ${lateCount>0?`<div class="dash-section compact" style="border-left:3px solid #ef4444">
-                <div style="font-size:12px;font-weight:800;color:#b91c1c;margin-bottom:8px">⚠️ 지연 현황</div>
-                ${con.filter(c=>c.status==="지연").map(c=>`<div style="background:#fff8f8;border:1px solid #fca5a5;border-radius:8px;padding:8px;margin-bottom:6px;font-size:12px"><strong>${esc(c.site)}</strong><div class="meta" style="font-size:11px">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}
-              </div>`:""}
-            </div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📝 메모</h2><button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button></div>
+                <div class="memo-list">${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="padding:8px 0">등록된 메모가 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>✅ 이 현장의 할일</h2><button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button></div>
+                <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 할일이 없습니다.</div>`}</div>
+              </section>
+              <section class="dash-section compact">
+                <div class="dash-title"><h2>📅 이 현장의 일정</h2><button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button></div>
+                <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 일정이 없습니다.</div>`}</div>
+              </section>
+            `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
           </div>
-        </div>
-      </div>`;
+          <!-- 우측: 달력 + 오늘 할일 -->
+          <aside class="dash-side">
+            <section class="dash-section">
+              <div class="mini-calendar-head">
+                <button class="btn icon" data-dashboard-month="-1">‹</button>
+                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
+                <button class="btn icon" data-dashboard-month="1">›</button>
+              </div>
+              <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
+            </section>
+            <section class="dash-section">
+              <div class="dash-title"><h2>${esc(dashboardDate)}</h2><button class="btn" data-dashboard-today>오늘</button></div>
+              <div class="today-list">
+                ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
+                ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
+                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
+              </div>
+            </section>
+            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #ef4444"><div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}</section>`:""}
+          </aside>
+        </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
       updateClock();updateWeather();applyMasking();
     }

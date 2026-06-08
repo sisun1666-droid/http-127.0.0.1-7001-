@@ -232,42 +232,6 @@
     @media(max-width:620px){.weather-grid,.forecast-strip{grid-template-columns:1fr}}
     .time-grid{display:grid;grid-template-columns:1fr 120px;gap:8px}.quick-durations{display:flex;gap:6px;flex-wrap:wrap}
     .google-btn{border-color:#cfe3d8;background:#f6fbf8;color:#137b46}
-    /* ── 새 대시보드 레이아웃 ── */
-    .db-layout{display:grid;grid-template-columns:230px 1fr;gap:12px;align-items:start;height:calc(100vh - 130px);overflow:hidden}
-    .db-weather-col{display:flex;flex-direction:column;gap:8px;height:100%;overflow-y:auto;overflow-x:hidden;padding-right:2px}
-    .db-weather-col::-webkit-scrollbar{width:4px}.db-weather-col::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
-    .db-clock-card{background:linear-gradient(135deg,#1e293b 0%,#334155 100%);color:#fff;border-radius:12px;padding:12px 14px;flex-shrink:0}
-    .db-weather-sub-list{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
-    .db-forecast-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;flex-shrink:0}
-    .db-forecast-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-    .db-forecast-cell{text-align:center;font-size:10px;padding:4px 2px;border-radius:8px;border:1px solid var(--line);background:#fafafa}
-    .db-forecast-cell.rain-day{border-color:#93c5fd;background:#eff6ff}
-    .db-right-area{display:flex;flex-direction:column;gap:10px;height:100%;overflow:hidden}
-    .db-kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0}
-    .db-kpi-chip{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow)}
-    .db-kpi-chip.db-kpi-teal{background:linear-gradient(145deg,#f0fdfa,#ccfbf1);border-color:#99f6e4}
-    .db-kpi-chip.db-kpi-red{background:linear-gradient(145deg,#fff1f2,#ffe4e6);border-color:#fca5a5}
-    .db-kpi-chip.db-kpi-blue{background:linear-gradient(145deg,#eff6ff,#dbeafe);border-color:#bfdbfe}
-    .db-kpi-chip.db-kpi-amber{background:linear-gradient(145deg,#fffbeb,#fef3c7);border-color:#fde68a}
-    .db-kpi-chip.db-kpi-gray{background:#f8fafc;border-color:var(--line)}
-    .db-kpi-n{font-size:22px;font-weight:900;line-height:1;color:var(--ink)}
-    .db-kpi-n small{font-size:13px;font-weight:700}
-    .db-kpi-l{font-size:11px;font-weight:800;color:var(--muted)}
-    .db-kpi-sub{font-size:10px;color:var(--muted)}
-    .db-main-grid{display:grid;grid-template-columns:1fr 240px;gap:10px;flex:1;min-height:0;overflow:hidden}
-    .db-center-col{display:flex;flex-direction:column;gap:8px;height:100%;overflow-y:auto;overflow-x:hidden;padding-right:4px}
-    .db-center-col::-webkit-scrollbar{width:4px}.db-center-col::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
-    .db-right-col{display:flex;flex-direction:column;gap:8px;height:100%;overflow-y:auto;overflow-x:hidden;padding-right:2px}
-    .db-right-col::-webkit-scrollbar{width:4px}.db-right-col::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
-    .db-site-chips{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
-    .db-site-chips::-webkit-scrollbar{width:3px}.db-site-chips::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
-    .db-site-chip{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;text-align:left;transition:all .15s;cursor:pointer;width:100%}
-    .db-site-chip:hover{border-color:var(--teal);background:#f0fdfa}
-    .db-site-chip.active{border-color:var(--teal);background:#f0fdfa;box-shadow:0 0 0 2px rgba(13,148,136,.15)}
-    .db-weather-sub-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center}
-    .db-weather-sub-card.rain-alert{border-color:#fbbf24;background:#fffbeb}
-    @media(max-width:1300px){.db-main-grid{grid-template-columns:1fr}.db-right-col{height:auto;overflow:visible}}
-    @media(max-width:1100px){.db-layout{grid-template-columns:1fr;height:auto;overflow:visible}.db-weather-col{height:auto;overflow:visible}.db-kpi-bar{grid-template-columns:repeat(2,1fr)}}
     .todo-page header #addProjectBtn{display:none}
     #assignmentModal,#todoModal{align-items:center;justify-content:center;padding:18px;background:rgba(20,28,32,.32)}
     #assignmentModal .modal,#todoModal .modal{width:min(430px,calc(100vw - 36px));max-height:88vh;height:auto;border:1px solid #dfe9e3;border-radius:8px;background:#fffdf6;box-shadow:0 18px 42px rgba(20,32,38,.22);padding:20px 20px 0}
