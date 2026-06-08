@@ -11,7 +11,7 @@
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="직원 이름과 개인 PIN을 입력해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    function showApp(){authReady=true;loadSharedState(true).finally(()=>{if(!authUser)return;render();ensureSheetSyncButton();document.body.classList.remove("auth-pending");
+    function showApp(){authReady=true;loadSharedState(true,true).finally(()=>{if(!authUser)return;render();ensureSheetSyncButton();document.body.classList.remove("auth-pending");
       /* ── 새 테이블로 마이그레이션: Supabase에서 이미 데이터를 불러왔으면 완료 처리만 ── */
       setTimeout(()=>{
         if(!authUser)return;
