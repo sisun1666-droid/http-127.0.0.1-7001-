@@ -4,7 +4,7 @@
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
     const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
-    let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
+    let state=loadState();loadPendingDeletes();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
     const staffSessionKey="solar-staff-session-v1";
     const adminUnlockKey="solar-admin-unlocked",adminOwnerKey="solar-admin-owner";
@@ -116,22 +116,20 @@
     const TABLE_KEYS=["todos","assignments","construction","projects","meetings","fieldworkLogs"];
     /* Supabase 테이블명 매핑 (JS키 → DB테이블명) */
     const TABLE_NAME={todos:"todos",assignments:"assignments",construction:"construction",projects:"projects",meetings:"meetings",fieldworkLogs:"fieldwork_logs"};
-    /* 서버에 존재하는 ID 목록 (삭제 감지용) */
-    let _svrIds={todos:new Set(),assignments:new Set(),construction:new Set(),projects:new Set(),meetings:new Set(),fieldworkLogs:new Set()};
-    const svrIdsKey="solar-svr-ids-v1";
-    function loadSvrIds(){try{const s=localStorage.getItem(svrIdsKey);if(!s)return;const p=JSON.parse(s);Object.keys(_svrIds).forEach(t=>{if(Array.isArray(p[t]))_svrIds[t]=new Set(p[t]);});}catch{}}
-    function saveSvrIds(){try{const o={};Object.keys(_svrIds).forEach(t=>{o[t]=[..._svrIds[t]];});localStorage.setItem(svrIdsKey,JSON.stringify(o));}catch{}}
-    /* 최근 삭제된 항목 보호 (60초간): 다른 브라우저의 덮어쓰기로 인한 부활 방지 */
-    const _deletedTombstones={};TABLE_KEYS.forEach(t=>_deletedTombstones[t]=new Map());
-    function markDeleted(table,id){if(id&&_deletedTombstones[table])_deletedTombstones[table].set(id,Date.now())}
-    function wasRecentlyDeleted(table,id){const ts=_deletedTombstones[table]?.get(id);return !!ts&&Date.now()-ts<60000}
+    /* 소프트 딜리트: deleted_at을 Supabase에 기록해 어떤 기기에서도 부활 불가 */
+    const pendingDeletesKey="solar-pending-deletes-v1";
+    let _pendingDeletes={};TABLE_KEYS.forEach(t=>_pendingDeletes[t]=[]);
+    function loadPendingDeletes(){try{const s=localStorage.getItem(pendingDeletesKey);if(s)_pendingDeletes=JSON.parse(s);}catch{}}
+    function savePendingDeletes(){try{localStorage.setItem(pendingDeletesKey,JSON.stringify(_pendingDeletes));}catch{}}
+    function softDelete(table,id,item){if(!id)return;if(!_pendingDeletes[table])_pendingDeletes[table]=[];_pendingDeletes[table].push({id,data:item,deleted_at:new Date().toISOString()});savePendingDeletes();}
+    function clearPendingDeletes(){TABLE_KEYS.forEach(t=>_pendingDeletes[t]=[]);savePendingDeletes();}
 
-    /* 개별 테이블에서 데이터 로드 */
+    /* 개별 테이블에서 데이터 로드 (deleted_at이 설정된 항목은 제외) */
     async function loadSupabaseData(){
       const h=supabaseHeaders();
       const [cfgRes,...tableRes]=await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.main&select=data`,{cache:"no-store",headers:h}),
-        ...TABLE_KEYS.map(t=>fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME[t]||t}?select=id,data&order=updated_at.desc`,{cache:"no-store",headers:h}))
+        ...TABLE_KEYS.map(t=>fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME[t]||t}?select=id,data&deleted_at=is.null&order=updated_at.desc`,{cache:"no-store",headers:h}))
       ]);
       /* 모든 응답 실패 = 연결 불가 */
       if(!cfgRes.ok&&tableRes.every(r=>!r.ok))throw new Error("Supabase 연결 실패");
@@ -159,12 +157,11 @@
       TABLE_KEYS.forEach((table,i)=>{
         const rows=tableData[i]||[];
         combined[table]=rows.map(r=>r.data).filter(Boolean);
-        _svrIds[table]=new Set(rows.map(r=>r.id).filter(Boolean));saveSvrIds();
       });
       return combined;
     }
 
-    /* 개별 테이블에 저장 (upsert + delete) */
+    /* 개별 테이블에 저장 (upsert + 소프트 딜리트) */
     async function saveDataToSupabase(data=state,options={}){
       const now=new Date().toISOString();
       const h=supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"});
@@ -175,37 +172,35 @@
       });
       ["__lastSavedAt","__lastSavedAtText","__deviceId","__updatedAt"].forEach(k=>{if(data[k]!==undefined)cfgData[k]=data[k]});
       const cfgBody=JSON.stringify({id:"main",data:cfgData,updated_at:now});
-      /* 2. 각 테이블에 항목 upsert + 삭제된 항목 DELETE */
+      /* 2. 각 테이블에 항목 upsert + 삭제 항목 deleted_at 기록 (소프트 딜리트) */
       const ops=[fetch(`${SUPABASE_URL}/rest/v1/app_config`,{method:"POST",headers:h,body:cfgBody,keepalive:!!options.keepalive})];
-      const _pendingIds={};
       for(const table of TABLE_KEYS){
         const items=(data[table]||[]).filter(x=>x&&x.id);
-        const currentIds=new Set(items.map(x=>x.id));
-        const prevIds=_svrIds[table]||new Set();
-        const deletedIds=[...prevIds].filter(id=>!currentIds.has(id));
         const dbTable=TABLE_NAME[table]||table;
         if(items.length){
           ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}`,{
             method:"POST",headers:h,keepalive:!!options.keepalive,
-            body:JSON.stringify(items.map(item=>({id:item.id,data:item,updated_at:now})))
+            body:JSON.stringify(items.map(item=>({id:item.id,data:item,updated_at:now,deleted_at:null})))
           }));
         }
-        if(deletedIds.length){
-          ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}?id=in.(${deletedIds.map(id=>`"${id}"`).join(",")})`,{
-            method:"DELETE",headers:supabaseHeaders(),keepalive:!!options.keepalive
+        /* 소프트 딜리트: deleted_at 타임스탬프를 기록해 모든 기기에서 영구 삭제 */
+        const toDelete=(_pendingDeletes[table]||[]).filter(x=>x&&x.id);
+        if(toDelete.length){
+          ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}`,{
+            method:"POST",headers:h,keepalive:!!options.keepalive,
+            body:JSON.stringify(toDelete.map(x=>({id:x.id,data:x.data||{},updated_at:now,deleted_at:x.deleted_at||now})))
           }));
         }
-        _pendingIds[table]=currentIds;
       }
       const results=await Promise.all(ops);
       const failed=results.filter(r=>!r.ok);
       if(failed.length){const s=await Promise.all(failed.map(r=>r.status));throw new Error(`저장 실패(${s.join(",")})`);}
-      /* 저장 성공 후에만 _svrIds 업데이트 (실패 시 다음 저장에서 다시 DELETE 재시도 가능) */
-      Object.assign(_svrIds,_pendingIds);saveSvrIds();
+      /* 저장 성공 후 pendingDeletes 초기화 */
+      clearPendingDeletes();
       return true;
     }
 
-    function cleanStateForCloud(source=state){const data=clone(source);delete data.__pendingCloudSync;delete data.__pendingCloudSyncAt;return data}
+    function cleanStateForCloud(source=state){const data=clone(source);delete data.__pendingCloudSync;delete data.__pendingCloudSyncAt;delete data.__pendingDeletes;return data}
     async function saveToSupabase(options={}){return saveDataToSupabase(cleanStateForCloud(state),options)}
     function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;n.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px"><div><strong>${kind==="ok"?"✅ 팀 동기화 연결됨":kind==="saving"?"💾 저장 중...":"⚠️ 동기화 확인 필요"}</strong><p class="meta" style="margin:2px 0 0">${esc(msg)}</p></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn primary" id="forceSheetUploadBtn" type="button">지금 동기화</button><button class="btn" id="checkSheetLoadBtn" type="button">최신 불러오기</button></div></div>`}
     function ensureSheetSyncButton(){if($("#sheetSyncFloatBtn"))return;document.body.insertAdjacentHTML("beforeend",`<button class="btn primary" id="sheetSyncFloatBtn" type="button" title="수동으로 즉시 동기화" style="position:fixed;right:18px;bottom:76px;z-index:9998;box-shadow:0 10px 26px rgba(8,125,143,.28)">지금 동기화</button>`)}
@@ -250,49 +245,33 @@
       /* 서버가 내 마지막 저장보다 더 최신 = 다른 팀원이 저장했음 */
       return sharedStamp>localStamp;
     }
-    /* ── 병합: 서버에 없는 로컬 항목 중 진짜 새 항목만 추가 (삭제된 항목 부활 방지) ── */
-    function mergeLocalItems(sharedArr,localArr,table){
+    /* ── 병합: 서버에 없는 로컬 신규 항목만 추가 (소프트 딜리트로 부활 방지됨) ── */
+    function mergeLocalItems(sharedArr,localArr){
       if(!Array.isArray(localArr)||!localArr.length)return sharedArr||[];
       if(!Array.isArray(sharedArr)||!sharedArr.length)return localArr;
       const sharedIds=new Set(sharedArr.map(x=>x.id).filter(Boolean));
-      /* 이전 서버 상태: 여기에 있었는데 지금 서버에 없으면 → 다른 기기가 삭제한 것 */
-      const prevServerIds=_svrIds[table]||new Set();
-      const localOnly=localArr.filter(x=>{
-        if(!x.id)return false;
-        if(sharedIds.has(x.id))return false; /* 서버에 있음 */
-        if(prevServerIds.has(x.id))return false; /* 이전에 서버에 있었음 → 삭제된 것 */
-        return true; /* 진짜 새로 추가된 로컬 항목만 */
-      });
+      /* 서버에 없는 로컬 항목 = 오프라인 중 새로 추가한 것 (삭제된 것은 deleted_at으로 이미 처리됨) */
+      const allDeletedIds=new Set(Object.values(_pendingDeletes).flat().map(x=>x.id));
+      const localOnly=localArr.filter(x=>x.id&&!sharedIds.has(x.id)&&!allDeletedIds.has(x.id));
       return localOnly.length?[...localOnly,...sharedArr]:sharedArr;
     }
     function applySharedState(shared,forceReplace=false){
-      /* 첫 로드 시 _svrIds가 비어있으면 타임스탬프 무관하게 로컬 병합을 건너뜀
-         (스마트폰 등 오래된 캐시가 클라우드 데이터를 오염시키는 버그 방지) */
-      const isFirstLoad=!sharedLoaded;
-      const svrIdsEmpty=Object.values(_svrIds).every(s=>s.size===0);
-      if(isFirstLoad&&svrIdsEmpty)forceReplace=true;
       sharedLoaded=true;
       const merged={...clone(defaults),...shared};
       let hadLocalOnly=false;
       if(!forceReplace){
-        /* 병합: 진짜 새 로컬 항목만 추가 (삭제된 항목은 부활 안 함) */
-        for(const key of (TABLE_KEYS||syncWorkKeys)){
+        for(const key of TABLE_KEYS){
           if(Array.isArray(state[key])&&Array.isArray(merged[key])){
             const before=merged[key].length;
-            merged[key]=mergeLocalItems(merged[key],state[key],key); /* table 정보 전달 */
+            merged[key]=mergeLocalItems(merged[key],state[key]);
             if(merged[key].length>before)hadLocalOnly=true;
           }
         }
       }
-      /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
-      TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
       state=merged;
-      /* _svrIds 업데이트 (서버 기준 ID 동기화) */
-      if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});saveSvrIds();
       localStorage.setItem(storageKey,JSON.stringify(state));
       setSyncNotice("ok",hadLocalOnly?"내 변경사항과 팀원 데이터를 병합했습니다.":"✅ 팀원의 최신 데이터를 불러왔습니다.");
       render();
-      /* 로컬 항목이 있었으면 병합 결과를 즉시 서버에 올려 다른 팀원도 볼 수 있게 함 */
       if(hadLocalOnly)scheduleSharedSave(500);
     }
     async function loadSharedState(silent=false,forceRemote=false){
@@ -375,8 +354,8 @@
 }
     function syncAssignmentToTodo(i){const a=normalizeAssignment(state.assignments[i]);let ti=state.todos.findIndex(t=>t.id===a.linkedTodoId||t.linkedAssignmentId===a.id);if(ti<0){const t=assignmentToTodo(a);a.linkedTodoId=t.id;state.todos.unshift(t)}else{const t=assignmentToTodo(a,state.todos[ti]);a.linkedTodoId=t.id;state.todos[ti]=t}}
     function syncTodoToAssignment(i){const t=normalizeTodo(state.todos[i]);let ai=state.assignments.findIndex(a=>a.id===t.linkedAssignmentId||a.linkedTodoId===t.id);if(ai<0){const a=todoToAssignment(t);t.linkedAssignmentId=a.id;state.assignments.unshift(a)}else{const a=todoToAssignment(t,state.assignments[ai]);t.linkedAssignmentId=a.id;state.assignments[ai]=a}}
-    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;markDeleted("assignments",a.id);if(a.linkedTodoId)markDeleted("todos",a.linkedTodoId);state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
-    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;markDeleted("todos",t.id);if(t.linkedAssignmentId)markDeleted("assignments",t.linkedAssignmentId);state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
+    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;softDelete("assignments",a.id,a);if(a.linkedTodoId){const t=state.todos.find(x=>x.id===a.linkedTodoId);softDelete("todos",a.linkedTodoId,t);}state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
+    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;softDelete("todos",t.id,t);if(t.linkedAssignmentId){const a=state.assignments.find(x=>x.id===t.linkedAssignmentId);softDelete("assignments",t.linkedAssignmentId,a);}state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
     function syncAllTaskLinks(){state.assignments.forEach((_,i)=>syncAssignmentToTodo(i));state.todos.forEach((_,i)=>syncTodoToAssignment(i))}
     function hiddenNavLabels(){state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?[...new Set(state.hiddenNavLabels.filter(Boolean))]:[];return state.hiddenNavLabels}
     function isNavHidden(label){return hiddenNavLabels().includes(label)}
@@ -2205,7 +2184,7 @@
         const exportBtn=adminUnlocked?`<button class="btn primary" id="fieldworkExportBtn">엑셀 내보내기</button>`:"";
         els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">하루 기록은 날짜별 데이터베이스로 계속 저장됩니다. 시간 데이터는 관리자 엑셀 내보내기에만 포함됩니다.</div><div class="row-actions">${exportBtn}</div></div><div class="fieldwork-kpis"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.checkin}</div></div><div class="fieldwork-kpi"><div class="label">이동중</div><div class="value">${k.move}</div></div><div class="fieldwork-kpi"><div class="label">현장 작업</div><div class="value">${k.work}</div></div><div class="fieldwork-kpi"><div class="label">퇴근</div><div class="value">${k.off}</div></div></div><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row head ${canSeeTime?"":"no-time"}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${timeHead}${deleteHead}</div>${logs.length?logs.map(x=>`<div class="fieldwork-row ${canSeeTime?"":"no-time"} ${adminUnlocked?"admin-delete":""}"><strong>${esc(x.person)}</strong><span><span class="badge ${fieldworkStatusClass(x.status)}">${esc(x.status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${canSeeTime?`<span>${esc(fieldworkWhen(x))}</span>`:""}${adminUnlocked?`<span><button class="btn icon danger" data-delete-fieldwork="${esc(x.id)}">삭제</button></span>`:""}</div>`).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
       }
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.deleteFieldwork){if(!adminUnlocked&&!unlockAdmin())return;const id=t.dataset.deleteFieldwork;if(confirm("이 외근 기록을 삭제할까요?")){state.fieldworkLogs=(state.fieldworkLogs||[]).filter(x=>x.id!==id);saveState("외근 기록을 삭제했습니다.");render()}return}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.deleteFieldwork){if(!adminUnlocked&&!unlockAdmin())return;const id=t.dataset.deleteFieldwork;if(confirm("이 외근 기록을 삭제할까요?")){const fw=(state.fieldworkLogs||[]).find(x=>x.id===id);softDelete("fieldworkLogs",id,fw);state.fieldworkLogs=(state.fieldworkLogs||[]).filter(x=>x.id!==id);deleteAndSync("외근 기록을 삭제했습니다.");render()}return}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
       ensureFieldworkChrome();ensureFieldworkState();
     })();
     (function improveFieldworkWorkflow(){
@@ -2717,7 +2696,7 @@
       }
       function openMeetingModal(m=null){$("#projectModal")?.classList.remove("open");fillMeetingModal(m||blankMeeting());$("#meetingModal").classList.add("open");setTimeout(()=>$("#meetingTitle")?.focus(),0)}
       function saveMeetingFromModal(){try{ensureMeetings();disableMeetingSamples();const m=readMeetingModal(),i=state.meetings.findIndex(x=>x.id===m.id);i>=0?state.meetings[i]=m:state.meetings.unshift(m);selectedMeetingId=m.id;$("#meetingModal").classList.remove("open");renderMeetingView();renderNav();updateTopButtons();saveStateAfterPaint("회의록을 저장했습니다.")}catch(err){console.error(err);toast(`회의록 저장 오류: ${err?.message||"확인 필요"}`)}}
-      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");saveState("회의록을 삭제했습니다.");render()}
+      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();const m=state.meetings.find(x=>x.id===id);softDelete("meetings",id,m);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");deleteAndSync("회의록을 삭제했습니다.");render()}
       function renderMeetingView(){
         ensureMeetings();
         let view=$("#meetingView");
@@ -2734,7 +2713,7 @@
       renderCurrentContent=function(){if(currentView==="meetings"){syncViewChrome();renderMeetingView();return}baseRenderCurrentForMeetings()}
       const baseSyncForMeetings=syncViewChrome;
       syncViewChrome=function(){baseSyncForMeetings();if(currentView==="meetings"){els.pageTitle.textContent="회의록";els.pageSub.textContent="회의 내용과 결정사항을 기록합니다.";$("#addProjectBtn").textContent="회의록 추가"}}
-      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";saveState("회의록을 삭제했습니다.");render()}
+      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();const m=state.meetings.find(x=>x.id===id);softDelete("meetings",id,m);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";deleteAndSync("회의록을 삭제했습니다.");render()}
       document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.meetingId){e.preventDefault();e.stopImmediatePropagation();selectedMeetingId=t.dataset.meetingId;renderMeetingView();return}if(t.dataset.deleteMeeting){e.preventDefault();e.stopImmediatePropagation();deleteMeetingById(t.dataset.deleteMeeting);return}if(t.id==="exportMeetingsExcelBtn"){e.preventDefault();e.stopImmediatePropagation();exportMeetingsExcel();return}if(t.id==="printMeetingA4Btn"){e.preventDefault();e.stopImmediatePropagation();printSelectedMeetingA4();return}if(t.id==="addMeetingBtn"||t.id==="addMeetingBtnSide"||currentView==="meetings"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openMeetingModal();return}if(t.dataset.editMeeting){e.preventDefault();e.stopImmediatePropagation();const m=state.meetings.find(x=>x.id===t.dataset.editMeeting);if(m)openMeetingModal(m);return}if(t.id==="toggleMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiPanel")?.classList.toggle("hidden");return}if(t.id==="applyMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();applyMeetingAiText();return}if(t.id==="clearMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiText").value="";$("#meetingAiText").focus();return}if(t.id==="saveMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();saveMeetingFromModal();return}if(t.id==="deleteMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();deleteMeetingFromModal();return}if(t.dataset.closeMeetingModal!==undefined||e.target?.id==="meetingModal"){e.preventDefault();e.stopImmediatePropagation();$("#meetingModal")?.classList.remove("open");return}},true);
     })();
     function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
@@ -3712,13 +3691,14 @@
           e?.preventDefault?.();
           e?.stopImmediatePropagation?.();
           if(editingConstructionIndex===null||!confirm("이 시공일정을 삭제할까요?"))return;
+          const c=state.construction[editingConstructionIndex];if(c)softDelete("construction",c.id,c);
           state.construction.splice(editingConstructionIndex,1);
           editingConstructionIndex=null;
           currentView="construction";
           localStorage.setItem(viewStorageKey,currentView);
           $("#constructionModal")?.classList.remove("open");
           render();
-          saveStateAfterPaint("시공일정을 삭제했습니다.");
+          deleteAndSync("시공일정을 삭제했습니다.");
         };
       }
       const baseFinalSetSyncNotice=setSyncNotice;
@@ -3746,6 +3726,7 @@
         if(!target)return false;
         if(ask&&!confirm(`'${target.title||"회의록"}' 회의록을 삭제할까요?`))return false;
         if(typeof disableMeetingSamples==="function")disableMeetingSamples();
+        softDelete("meetings",String(id),target);
         state.meetings=state.meetings.filter(m=>String(m.id)!==String(id));
         selectedMeetingId=state.meetings[0]?.id||"";
         $("#meetingModal")?.classList.remove("open");
@@ -3753,7 +3734,7 @@
         render?.();
         renderNav?.();
         updateTopButtons?.();
-        saveStateAfterPaint("회의록을 삭제했습니다.");
+        deleteAndSync("회의록을 삭제했습니다.");
         return true;
       }
       document.addEventListener("pointerdown",e=>{
