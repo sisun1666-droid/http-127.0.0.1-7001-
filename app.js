@@ -809,7 +809,8 @@
     function renderWeatherBox(){
       return `<section class="dash-section compact"><div class="dash-title"><h2>날씨 · 현재 시간</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashClock" class="value" style="font-size:22px"></div><div id="dashWeatherContent" class="meta">날씨 정보를 불러오는 중입니다.</div></section>`
     }
-    function updateClock(){const el=$("#dashClock");if(el)el.textContent=new Date().toLocaleString("ko-KR",{dateStyle:"medium",timeStyle:"short"})}
+    function updateClock(){const now=new Date();const el=$("#dashClock"),dateEl=$("#dashClockDate");const hms=now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"Asia/Seoul"});const days=["일","월","화","수","목","금","토"];const dateStr=now.toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",timeZone:"Asia/Seoul"})+" ("+days[now.getDay()]+")";if(el)el.textContent=hms;if(dateEl)dateEl.textContent=dateStr;}
+    if(!window._clockInterval)window._clockInterval=setInterval(updateClock,1000);
     async function updateWeather(){
       const box=$("#dashWeatherContent");if(!box)return;
       const render=(temp,wind,label="현재 위치")=>{box.innerHTML=`${esc(label)} 기준 · 기온 <strong>${Math.round(temp)}°C</strong> · 풍속 <strong>${Math.round(wind)}m/s</strong><div class="meta">현장 주소가 없어서 브라우저 현재 위치 또는 서울 기준으로 표시합니다.</div>`};
@@ -848,154 +849,80 @@
     const renderBaseForMask=render;
     render=function(){renderBaseForMask();applyMasking()}
     const cityWeather=[
-      {name:"서울",lat:37.5665,lon:126.9780},
-      {name:"대전",lat:36.3504,lon:127.3845},
-      {name:"대구",lat:35.8714,lon:128.6014},
-      {name:"부산",lat:35.1796,lon:129.0756},
-      {name:"광주",lat:35.1595,lon:126.8526}
+      {name:"대구",lat:35.8714,lon:128.6014,main:true},
+      {name:"김해",lat:35.2342,lon:128.8811},
+      {name:"경주",lat:35.8562,lon:129.2247},
+      {name:"청주",lat:36.6424,lon:127.4890}
     ];
+    function weatherIcon(code){if(code===0)return"☀️";if(code<=2)return"🌤️";if(code===3)return"☁️";if(code<=48)return"🌫️";if(code<=57)return"🌦️";if(code<=67)return"🌧️";if(code<=77)return"❄️";if(code<=82)return"🌧️";if(code<=86)return"❄️";if(code>=95)return"⛈️";return"🌡️"}
     function renderWeatherBox(){
-      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
-        <section class="dash-section compact"><div class="dash-title"><h2>날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
-        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
-      </div>`
-    }
-    async function updateWeather(){
-      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
-      box.innerHTML=`<div class="meta">날씨 정보를 불러오는 중입니다.</div>`;
-      try{
-        const results=await Promise.all(cityWeather.map(async c=>{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);const j=await r.json();return{...c,current:j.current,daily:j.daily}}));
-        box.innerHTML=results.map(r=>`<div class="weather-city"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${Math.round(r.current.temperature_2m)}°C</div><div class="meta">풍속 ${Math.round(r.current.wind_speed_10m)}m/s</div></div>`).join("");
-        const daegu=results.find(r=>r.name==="대구");
-        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>`<div class="forecast-day"><strong>${d.slice(5).replace("-","/")}</strong><div>${Math.round(daegu.daily.temperature_2m_min[i])}° / ${Math.round(daegu.daily.temperature_2m_max[i])}°</div></div>`).join("");
-      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
-    }
-    const dashboardWithWeather=renderDashboard;
-    renderDashboard=function(){
-      dashboardWithWeather();
-      const main=$(".dash-main");
-      const weatherHtml=renderWeatherBox();
-      const weatherNode=document.createElement("div");
-      weatherNode.innerHTML=weatherHtml;
-      const oldWeather=[...main.children].find(x=>x.textContent.includes("날씨"));
-      if(oldWeather)oldWeather.remove();
-      main.insertBefore(weatherNode.firstElementChild,main.firstElementChild);
-      updateClock();updateWeather();
-    }
-    function personCompletionRows(rows){
-      return state.people.map(p=>{const rel=rows.filter(({t})=>taskPeople(t).includes(p.name)),done=rel.filter(({t})=>t.status===KR.done).length,rate=rel.length?Math.round(done/rel.length*100):0;return{p,rel,done,rate}});
-    }
-    teamKpiHtml=function(rows){
-      const total=rows.length,done=rows.filter(({t})=>t.status===KR.done).length,late=rows.filter(({t})=>t.status!==KR.done&&t.due&&t.due<today).length,people=personCompletionRows(rows);
-      return `<div class="dash-section compact"><div class="dash-title"><h2>우리팀 KPI</h2><span class="dash-pill">전체 완료율 ${total?Math.round(done/total*100):0}%</span></div><div class="dash-kpi-grid small"><div><div class="label">전체</div><div class="value">${total}</div></div><div><div class="label">완료</div><div class="value">${done}</div></div><div><div class="label">지연</div><div class="value">${late}</div></div></div>${people.map(x=>smallBar(`${x.p.name} ${x.rate}%`,x.done,Math.max(1,x.rel.length),x.p.color||personColor(x.p.name))).join("")}</div>`
-    }
-    todoListHtml=function(rows){
-      const sorted=todoFilteredRows(rows);
-      const table=`<div class="todo-list"><div class="todo-list-row head"><span>${todoSortButton("title","제목")}</span><span>${todoSortButton("owner","담당")}</span><span>${todoSortButton("status","상태")}</span><span>${todoSortButton("priority","우선")}</span><span>${todoSortButton("due","마감")}</span><span>관리</span></div><div class="todo-list-row filter"><span>${todoListFilterInput("title","제목")}</span><span>${todoListFilterInput("owner","담당")}</span><span>${todoListFilterInput("status","상태")}</span><span>${todoListFilterInput("priority","우선")}</span><span>${todoListFilterInput("due","마감")}</span><span></span></div>${sorted.length?sorted.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||KR.normal)}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">수정</button><button class="btn icon danger" data-delete-todo="${i}">삭제</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">조건에 맞는 할일이 없습니다.</span></div>`}</div>`;
-      return teamKpiHtml(rows)+table;
-    }
-    document.addEventListener("click",e=>{
-      const t=e.target.closest("button")||e.target;
-      if(t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking();return}
-      if(t.dataset.todoView==="list"&&!adminUnlocked){if(!unlockAdmin()){todoViewMode="board";setTimeout(renderTodoBoard,0);e.preventDefault();e.stopPropagation()}}
-    },true);
-    function localDateValue(v){
-      const m=String(v||"").match(/^(\d{4})-(\d{2})-(\d{2})/);
-      return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):null;
-    }
-    function overdueDays(due){
-      const d=localDateValue(due),now=localDateValue(today);
-      return d&&now?Math.max(0,Math.floor((now-d)/86400000)):0;
-    }
-    function overdueTodoRows(){
-      return state.todos.map((t,i)=>({t:normalizeTodo(t),i}))
-        .filter(({t})=>t.due&&t.status!==KR.done&&t.due<today)
-        .sort((a,b)=>overdueDays(b.t.due)-overdueDays(a.t.due));
-    }
-    function overdueWarningHtml(){
-      const rows=overdueTodoRows();
-      return `<section class="dash-section compact" style="border:2px solid #f5b800;background:#fffdf2">
-        <div class="dash-title"><h2>마감 경과 업무 경고</h2><span class="dash-pill" style="background:#fff1cc;color:#8a4b00">지연 ${rows.length}</span></div>
-        <div class="linked-list">
-          ${rows.length?rows.slice(0,10).map(({t,i})=>{
-            const days=overdueDays(t.due);
-            return `<button class="linked-item" data-edit-todo="${i}" style="border-left:5px solid #ef4444;background:#fff7f7;text-align:left">
-              <strong>${esc(t.title||"제목 없는 할일")}</strong>
-              <div class="meta">${esc(peopleText(t))} · ${esc(t.status||"-")} · 마감 ${esc(t.due)} · <b style="color:#b91c1c">${days}일 경과</b></div>
-              <div class="meta">${esc(t.project||KR.general)} · ${esc(t.priority||KR.normal)}</div>
-            </button>`
-          }).join(""):`<div class="meta">마감 지난 업무가 없습니다.</div>`}
+      return `<div style="grid-column:1/-1;display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:stretch">
+        <div class="weather-clock-box" id="dashClockBox">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.5px;opacity:.6;margin-bottom:4px">한국 시간</div>
+          <div class="clock-time" id="dashClock">--:--:--</div>
+          <div class="clock-date" id="dashClockDate"></div>
         </div>
-      </section>`;
-    }
-    function dashboardRiskRows(){
-      const base=assignmentCalendarDefaultDate();
-      const baseDate=localDateValue(base),soonLimit=new Date(baseDate);soonLimit.setDate(soonLimit.getDate()+3);
-      const makeDate=t=>localDateValue(t.due||t.end||t.start);
-      const isExpiredToday=(item,date)=>date===base&&item.endTime&&!item.allDay&&new Date(`${date}T${item.endTime}`)<new Date();
-      return state.todos.map((t,i)=>({kind:"할일",item:normalizeTodo(t),i,edit:`data-edit-todo="${i}"`}))
-        .concat(state.assignments.map((a,i)=>({kind:"일정",item:normalizeAssignment(a),i,edit:`data-open-assignment="${i}"`})))
-        .map(row=>({...row,d:makeDate(row.item)}))
-        .filter(row=>row.d&&row.item.status!==KR.done&&localDateString(row.d).slice(0,7)===base.slice(0,7))
-        .map(row=>{
-          const date=localDateString(row.d),late=row.d<baseDate||isExpiredToday(row.item,date)||String(row.item.status||"").includes("지연");
-          const soon=!late&&row.d<=soonLimit;
-          return {...row,date,level:late?"late":soon?"soon":""};
-        })
-        .filter(row=>row.level)
-        .sort((a,b)=>a.d-b.d);
-    }
-    function renderDashboardRiskHtml(){
-      const rows=dashboardRiskRows();
-      return `<section class="dash-section compact">
-        <div class="dash-title"><h2>이번 달 지연/확인 필요</h2><span class="dash-pill">확인 ${rows.length}</span></div>
-        <div class="dashboard-risk-list">
-          ${rows.length?rows.slice(0,8).map(row=>`<button class="risk-item risk-${row.level}" ${row.edit}>
-            <strong>${row.level==="late"?"지연확정":"마감 임박"} · ${esc(row.item.title||"제목 없는 항목")}</strong>
-            <div class="meta">${esc(peopleText(row.item))} · ${esc(row.item.status||"-")} · ${esc(row.date)} · ${row.kind}</div>
-            <div class="meta">${esc(row.item.project||row.item.location||KR.general)} · ${esc(row.item.priority||KR.normal)}</div>
-          </button>`).join(""):`<div class="meta">이번 달 특이사항이 없습니다.</div>`}
+        <div>
+          <div id="dashWeatherMain" class="weather-main-card">
+            <div class="weather-main-city">🌍 날씨 불러오는 중...</div>
+            <div class="weather-main-temp">--°</div>
+          </div>
+          <div class="weather-sub-grid" id="dashWeatherSub"></div>
         </div>
-      </section>`;
-    }
-    function dashboardMemoText(){return localStorage.getItem("solar-dashboard-memo")||""}
-    function renderDashboardMemo(){
-      return `<section class="dash-section compact">
-        <div class="dash-title"><h2>메모</h2><span class="dash-pill">대시보드</span></div>
-        <textarea id="dashboardMemoText" class="dashboard-memo-box" placeholder="회의 내용, 현장 확인 사항, 전달 메모를 입력하세요.">${esc(dashboardMemoText())}</textarea>
-      </section>`;
-    }
-    function renderWeatherBox(){
-      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
-        <section class="dash-section compact"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">강수 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
-        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
+        <div style="min-width:280px">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;padding-left:2px">대구 7일 예보</div>
+          <div id="dashForecastContent" class="forecast-strip"></div>
+        </div>
       </div>`;
     }
     async function updateWeather(){
-      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
-      box.innerHTML=`<div class="meta">강수 정보를 불러오는 중입니다.</div>`;
+      const mainEl=$("#dashWeatherMain"),subEl=$("#dashWeatherSub"),forecastEl=$("#dashForecastContent");
+      if(!mainEl)return;
       try{
         const results=await Promise.all(cityWeather.map(async c=>{
-          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,showers,wind_speed_10m&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
-          const j=await r.json();
-          return{...c,current:j.current,daily:j.daily};
+          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,weathercode,wind_speed_10m&daily=weathercode,precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
+          const j=await r.json();return{...c,cur:j.current,daily:j.daily};
         }));
-        box.innerHTML=results.map(r=>{
-          const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1),temp=Math.round(r.current?.temperature_2m||0);
-          const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp);
-          const danger=prob>=60||Number(sum)>=5;
-          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}% · ${temp}℃</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">기온 ${tMin}℃~${tMax}℃ · 현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
+        const main=results[0];
+        const code=main.cur?.weathercode||0,icon=weatherIcon(code),temp=Math.round(main.cur?.temperature_2m||0);
+        const prob=Math.round(main.daily?.precipitation_probability_max?.[0]||0);
+        const rain=(main.daily?.precipitation_sum?.[0]||0).toFixed(1);
+        const tMax=Math.round(main.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(main.daily?.temperature_2m_min?.[0]||temp);
+        const wind=Math.round(main.cur?.wind_speed_10m||0);
+        if(mainEl)mainEl.innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="weather-main-city">📍 대구 (메인)</div>
+              <div style="display:flex;align-items:flex-end;gap:8px;margin:6px 0">
+                <span style="font-size:44px;line-height:1">${icon}</span>
+                <span class="weather-main-temp">${temp}°</span>
+              </div>
+              <div class="weather-main-desc">${tMin}° / ${tMax}° · 바람 ${wind}m/s</div>
+            </div>
+          </div>
+          <div class="weather-main-stats">
+            <div class="weather-stat"><div class="wlabel">강수확률</div><div class="wval">${prob}%</div></div>
+            <div class="weather-stat"><div class="wlabel">강수량</div><div class="wval">${rain}mm</div></div>
+            <div class="weather-stat"><div class="wlabel">현재강수</div><div class="wval">${(main.cur?.precipitation||0).toFixed(1)}mm</div></div>
+          </div>`;
+        if(subEl)subEl.innerHTML=results.slice(1).map(r=>{
+          const c2=r.cur?.weathercode||0,ic=weatherIcon(c2),t=Math.round(r.cur?.temperature_2m||0);
+          const p=Math.round(r.daily?.precipitation_probability_max?.[0]||0),s=(r.daily?.precipitation_sum?.[0]||0).toFixed(1);
+          const alert=p>=60||Number(s)>=5;
+          return`<div class="weather-sub-card ${alert?"rain-alert":""}"><div class="sub-city">${esc(r.name)}</div><div class="sub-icon">${ic}</div><div class="sub-temp">${t}°</div><div class="sub-stats">강수 ${p}% · ${s}mm</div></div>`;
         }).join("");
-        const daegu=results.find(r=>r.name==="대구")||results[2];
-        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
-          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0),hot=prob>=60||Number(sum)>=5;
-          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${min}℃~${max}℃</div><div>${sum}mm</div></div>`;
+        if(forecastEl)forecastEl.innerHTML=(main.daily?.time||[]).slice(0,7).map((d,i)=>{
+          const fc=main.daily?.weathercode?.[i]||0,fp=Math.round(main.daily?.precipitation_probability_max?.[i]||0),fs=(main.daily?.precipitation_sum?.[i]||0).toFixed(1),fmax=Math.round(main.daily?.temperature_2m_max?.[i]||0),fmin=Math.round(main.daily?.temperature_2m_min?.[i]||0);
+          const hot=fp>=60||Number(fs)>=5;
+          const mm=d.slice(5,7),dd=d.slice(8,10);
+          return`<div class="forecast-day ${hot?"rain-day":""}"><div class="fc-date">${mm}/${dd}</div><div class="fc-icon">${weatherIcon(fc)}</div><div class="fc-rain">${fp}%</div><div class="fc-temp">${fmin}°/${fmax}°</div></div>`;
         }).join("");
-      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
+      }catch{if(mainEl)mainEl.innerHTML=`<div class="weather-main-city">📍 대구</div><div style="font-size:13px;opacity:.8;margin-top:10px">날씨를 불러오지 못했습니다.</div>`}
     }
     renderDashboard=function(){
       ensureConfigLists();ensureTaskLinks();
       syncViewChrome();
+      $("#kpis")?.classList.add("hidden");
       els.dashboardView.classList.remove("hidden");
       els.dashboardView.classList.add("dashboard-workspace");
       const rows=dashboardConstructionRows();
@@ -1015,11 +942,12 @@
       let durPct=0;
       if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
       const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
-      const todayD=new Date();const dayNames=["일","월","화","수","목","금","토"];
-      const todayStr=`${todayD.getFullYear()}년 ${todayD.getMonth()+1}월 ${todayD.getDate()}일 (${dayNames[todayD.getDay()]})`;
       els.dashboardView.innerHTML=`
         <div class="workspace-dashboard">
-          <div class="dash-kpi-grid" style="grid-column:1/-1;margin-bottom:4px">
+          <!-- 날씨+시계 풀width -->
+          ${renderWeatherBox()}
+          <!-- KPI 4개 풀width -->
+          <div class="dash-kpi-grid" style="grid-column:1/-1">
             <div class="dash-section dash-kpi-card kpi-teal">
               <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
               <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
@@ -1034,9 +962,10 @@
             </div>
             <div class="dash-section dash-kpi-card kpi-blue">
               <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
-              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">${todayStr}</div>
+              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">평균 ${doneCount?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/doneCount):0}일 소요</div>
             </div>
           </div>
+          <!-- 왼쪽: 현장 목록 -->
           <aside class="dash-column">
             <section class="dash-section">
               <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
@@ -1051,6 +980,7 @@
               </div>
             </section>
           </aside>
+          <!-- 중앙: 선택 현장 상세 -->
           <div class="dash-main">
             ${selected?`
               <section class="dash-section" style="padding:0;overflow:hidden">
@@ -1092,6 +1022,7 @@
               </section>
             `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
           </div>
+          <!-- 우측: 달력 + 오늘 할일 -->
           <aside class="dash-side">
             <section class="dash-section">
               <div class="mini-calendar-head">
@@ -1109,7 +1040,7 @@
                 ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
               </div>
             </section>
-            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #e85555"><div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}</section>`:""}
+            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #ef4444"><div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}</section>`:""}
           </aside>
         </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
