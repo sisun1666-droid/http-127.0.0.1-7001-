@@ -4405,10 +4405,7 @@
           if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 자동 가져왔습니다.`);render();toast(`📅 구글 캘린더에서 ${added}건 자동 가져왔습니다.`)}
         }catch(e){console.warn("gcal auto-pull:",e)}
       }
-      /* 앱 로드 시 자동 pull - 20초 후 (Supabase 상태 로딩 완료 후) */
-      setTimeout(autoPullFromGcal, 20000);
-      /* 5분마다 자동 pull */
-      setInterval(autoPullFromGcal, 5*60*1000);
+      /* 자동 pull 비활성화 - 수동 가져오기 버튼 사용 */
       /* UI 버튼 상태 갱신 */
       function updateGcalBtn(){const btn=$("#gcalConnectBtn");if(!btn)return;if(!clientId()){btn.textContent="☁ 구글 캘린더 (Client ID 미설정)";btn.className="btn";return}if(isConnected()){btn.textContent="☁ 구글 연결됨 ✓";btn.className="btn primary"}else{btn.textContent="☁ 구글 캘린더 연동";btn.className="btn"}}
       /* 할일 툴바에 구글 캘린더 버튼 주입 */
