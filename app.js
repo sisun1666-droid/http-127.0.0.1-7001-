@@ -4407,7 +4407,7 @@
           let added=0;
           events.forEach(ev=>{
             if(ev.status==="cancelled")return;
-            if(syncColor()&&(ev.colorId||"")!==syncColor())return;
+            if(calendarId()==="primary"&&syncColor()&&(ev.colorId||"")!==syncColor())return;
             if(state.todos.some(t=>t.gcalEventId===ev.id))return;
             const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
             const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
@@ -4415,7 +4415,7 @@
             added++;
           });
           if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}
-          toast(added>0?`${added}건을 할일로 가져왔습니다.`:`새로운 일정이 없습니다.${syncColor()?" (색상 필터 적용중)":""}`);
+          toast(added>0?`${added}건을 할일로 가져왔습니다.`:`새로운 일정이 없습니다.${calendarId()==="primary"&&syncColor()?" (색상 필터 적용중)":""}`);
         }catch(e){toast("가져오기 실패: "+e.message)}
       }
       /* 전체 할일 → 구글 캘린더 업로드 */
@@ -4431,7 +4431,7 @@
           let added=0;
           events.forEach(ev=>{
             if(ev.status==="cancelled")return;
-            if(syncColor()&&(ev.colorId||"")!==syncColor())return; /* 색상 필터 */
+            if(calendarId()==="primary"&&syncColor()&&(ev.colorId||"")!==syncColor())return; /* 색상 필터: primary 캘린더에서만 적용 */
             if(state.todos.some(t=>t.gcalEventId===ev.id))return;
             const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
             const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
@@ -4482,13 +4482,13 @@
         if(state.gcalClientId===undefined)state.gcalClientId="";
         if(state.gcalCalendarId===undefined)state.gcalCalendarId="";
         if(state.gcalSyncColor===undefined)state.gcalSyncColor="";
-        /* 한번만 실행: 잘못 가져온 gcal 항목 자동 정리 */
-        if(!state.__gcalCleaned&&state.todos){
+        /* 한번만 실행: 잘못 가져온 gcal 항목 자동 정리 (localStorage 사용 → Supabase 재로드에도 안 날아감) */
+        if(!localStorage.getItem("gcalCleaned_v2")&&state.todos){
           const before=state.todos.length;
           state.todos=state.todos.filter(t=>!t.gcalEventId);
-          state.__gcalCleaned=true;
+          localStorage.setItem("gcalCleaned_v2","1");
           if(state.todos.length<before){
-            setTimeout(()=>{if(typeof persistState==="function"){persistState();toast("구글 캘린더 잘못 가져온 항목 "+( before-state.todos.length)+"건 자동 정리됐습니다.")}},500);
+            setTimeout(()=>{if(typeof persistState==="function"){persistState();toast("구글 캘린더 잘못 가져온 항목 "+(before-state.todos.length)+"건 자동 정리됐습니다.")}},500);
           }
         }
       };
