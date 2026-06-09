@@ -1,4 +1,4 @@
-﻿(function(){const v="fix-20260610b";if(localStorage.getItem("_appCleanup")!==v){const keep=["solar-device-id","solar-presence-device-id-v1","gcalCleaned_v2","solar-pending-deletes-v1","gcalDeletedIds"];const keys=Object.keys(localStorage);keys.forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});localStorage.setItem("_appCleanup",v)}})();
+﻿(function(){const v="fix-20260610c";if(localStorage.getItem("_appCleanup")!==v){const keep=["solar-device-id","solar-presence-device-id-v1","gcalCleaned_v2","solar-pending-deletes-v1","gcalDeletedIds"];const keys=Object.keys(localStorage);keys.forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});localStorage.setItem("_appCleanup",v)}})();
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
@@ -2680,14 +2680,23 @@
       stripScheduleCategory();
     })();
     (function keepDeletedNavHidden(){
+      /* 절대 숨겨지면 안 되는 시스템 필수 nav 항목 */
+      const PROTECTED_NAV=["구조물 검수"];
       const baseNormalizeForHiddenNav=normalizeState;
-      normalizeState=function(){baseNormalizeForHiddenNav();state.nav=(state.nav||[]).filter(n=>!isNavHidden(n.label))};
+      normalizeState=function(){
+        /* 보호 항목은 hiddenNavLabels에서 항상 제거 */
+        PROTECTED_NAV.forEach(label=>showNavLabel(label));
+        baseNormalizeForHiddenNav();
+        state.nav=(state.nav||[]).filter(n=>!isNavHidden(n.label)||PROTECTED_NAV.includes(n.label));
+      };
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
         if(t.dataset?.deleteAdminNav!==undefined){
           e.preventDefault();e.stopImmediatePropagation();
           const i=Number(t.dataset.deleteAdminNav),item=state.nav[i];
           if(!item)return;
+          /* 보호 항목은 삭제 불가 */
+          if(PROTECTED_NAV.includes(item.label)){toast("이 카테고리는 삭제할 수 없습니다.");return;}
           hideNavLabel(item.label);
           state.nav.splice(i,1);
           saveState("카테고리를 삭제했습니다.");
