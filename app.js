@@ -4421,7 +4421,20 @@
       deleteTodoAt=function(i){const t=state.todos[i];if(t?.gcalEventId)removeTodoFromGcal(t.gcalEventId);return baseDeleteTodoAtForGcal(i)};
       /* normalizeState: gcalClientId 초기값 */
       const baseNormalizeForGcal=normalizeState;
-      normalizeState=function(){baseNormalizeForGcal();if(state.gcalClientId===undefined)state.gcalClientId="";if(state.gcalCalendarId===undefined)state.gcalCalendarId=""};
+      normalizeState=function(){
+        baseNormalizeForGcal();
+        if(state.gcalClientId===undefined)state.gcalClientId="";
+        if(state.gcalCalendarId===undefined)state.gcalCalendarId="";
+        /* 한번만 실행: 잘못 가져온 gcal 항목 자동 정리 */
+        if(!state.__gcalCleaned&&state.todos){
+          const before=state.todos.length;
+          state.todos=state.todos.filter(t=>!t.gcalEventId);
+          state.__gcalCleaned=true;
+          if(state.todos.length<before){
+            setTimeout(()=>{if(typeof persistState==="function"){persistState();toast("구글 캘린더 잘못 가져온 항목 "+( before-state.todos.length)+"건 자동 정리됐습니다.")}},500);
+          }
+        }
+      };
       /* renderAdmin: Google Client ID 설정 카드 추가 */
       const baseRenderAdminForGcal=renderAdmin;
       async function loadCalendarList(){
