@@ -4424,10 +4424,9 @@
         const expiringSoon=isConnected()&&tokenExpiresAt-Date.now()<10*60*1000;
         if(expired||expiringSoon){
           const ok=await silentRefreshToken();
-          if(expired){
-            if(ok)toast("✅ 구글 캘린더 자동 재연결됐습니다.");
-            else toast("⚠️ 구글 캘린더 토큰 만료 — 할일관리에서 재연결해주세요.");
-          }
+          /* 성공 시에만 알림, 실패는 조용히 처리 (토스트 X) */
+          if(ok&&expired)toast("✅ 구글 캘린더 자동 재연결됐습니다.");
+          if(!ok&&expired){clearToken();updateGcalBtn();}  /* 만료 토큰 조용히 정리 */
         }
       },60*1000);
       /* Todo → Calendar 이벤트 변환 */
