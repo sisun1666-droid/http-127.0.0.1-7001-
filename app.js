@@ -4395,6 +4395,7 @@
           let added=0;
           events.forEach(ev=>{
             if(ev.status==="cancelled")return;
+            if(!ev.extendedProperties?.private?.kiwoomTodoId)return; /* 이 앱에서 만든 항목만 */
             if(state.todos.some(t=>t.gcalEventId===ev.id))return;
             const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
             const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
