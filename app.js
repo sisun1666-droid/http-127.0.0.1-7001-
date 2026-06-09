@@ -4383,6 +4383,29 @@
       async function pullFromGcal(){if(!await requestToken())return;toast("구글 캘린더에서 가져오는 중...");try{const now=new Date().toISOString();const data=await gcalFetch(`/calendars/primary/events?timeMin=${now}&maxResults=200&singleEvents=true&orderBy=startTime&showDeleted=false`);const events=data?.items||[];let added=0;events.forEach(ev=>{if(ev.status==="cancelled")return;if(state.todos.some(t=>t.gcalEventId===ev.id))return;const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;const newTodo=normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date});state.todos.unshift(newTodo);added++});if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}toast(added>0?`${added}건을 할일로 가져왔습니다.`:"새로운 일정이 없습니다.")}catch(e){toast("가져오기 실패: "+e.message)}}
       /* 전체 할일 → 구글 캘린더 업로드 */
       async function pushAllToGcal(){if(!await requestToken())return;const todos=state.todos.filter(t=>t.status!=="취소");toast(`${todos.length}건 구글 캘린더에 업로드 중...`);let ok=0;for(const t of todos){try{await syncTodoToGcal(t);ok++}catch(e){}}saveStateAfterPaint();toast(`${ok}건 업로드 완료`)}
+      /* 자동 pull (연결된 경우에만, 토스트 없음) */
+      async function autoPullFromGcal(){
+        if(!isConnected())return;
+        try{
+          const now=new Date().toISOString();
+          const data=await gcalFetch(`/calendars/primary/events?timeMin=${now}&maxResults=200&singleEvents=true&orderBy=startTime&showDeleted=false`);
+          const events=data?.items||[];
+          let added=0;
+          events.forEach(ev=>{
+            if(ev.status==="cancelled")return;
+            if(state.todos.some(t=>t.gcalEventId===ev.id))return;
+            const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
+            const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
+            const newTodo=normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date});
+            state.todos.unshift(newTodo);added++;
+          });
+          if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 자동 가져왔습니다.`);render();toast(`📅 구글 캘린더에서 ${added}건 자동 가져왔습니다.`)}
+        }catch(e){console.warn("gcal auto-pull:",e)}
+      }
+      /* 앱 로드 시 자동 pull */
+      setTimeout(autoPullFromGcal, 3000);
+      /* 5분마다 자동 pull */
+      setInterval(autoPullFromGcal, 5*60*1000);
       /* UI 버튼 상태 갱신 */
       function updateGcalBtn(){const btn=$("#gcalConnectBtn");if(!btn)return;if(!clientId()){btn.textContent="☁ 구글 캘린더 (Client ID 미설정)";btn.className="btn";return}if(isConnected()){btn.textContent="☁ 구글 연결됨 ✓";btn.className="btn primary"}else{btn.textContent="☁ 구글 캘린더 연동";btn.className="btn"}}
       /* 할일 툴바에 구글 캘린더 버튼 주입 */
