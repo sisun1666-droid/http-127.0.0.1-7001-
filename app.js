@@ -2,9 +2,9 @@
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
-    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
-    let state=loadState();loadPendingDeletes();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],inspections:[]};
+    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),inspectionView:$("#inspectionView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
+    let state=loadState();loadPendingDeletes();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages","inspection"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
     const staffSessionKey="solar-staff-session-v1";
     const adminUnlockKey="solar-admin-unlocked",adminOwnerKey="solar-admin-owner";
@@ -343,12 +343,13 @@
     function isNavHidden(label){return hiddenNavLabels().includes(label)}
     function hideNavLabel(label){if(label&&!isNavHidden(label))state.hiddenNavLabels.push(label)}
     function showNavLabel(label){state.hiddenNavLabels=hiddenNavLabels().filter(x=>x!==label)}
-    normalizeState=function(){state={...clone(defaults),...state};["people","projects","construction","assignments","todos"].forEach(k=>state[k]=state[k]||[]);state.nav=(state.nav||defaults.nav).map(n=>({...n,label:n.label==="\uC9C1\uC6D0\uC5C5\uBB34"?"\uC77C\uC815\uAD00\uB9AC":n.label}));if(!state.nav.some(n=>n.label==="\uD560\uC77C\uAD00\uB9AC")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"?",label:"\uD560\uC77C\uAD00\uB9AC"})}state.construction.forEach(c=>{if(!c.structureTeam)c.structureTeam=state.structureTeams[0]||""});state.assignments.forEach(a=>normalizeAssignment(a));state.todos.forEach(t=>normalizeTodo(t));ensureTaskLinks()};assignmentToTodoStatus=function(a){if(a.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(a.status==="\uBCF4\uB958")return"\uBC31\uB85C\uADF8";if(a.status==="\uC9C4\uD589"||a.status==="\uAC80\uD1A0\uC694\uCCAD")return"\uC9C4\uD589\uC911";return"\uD560 \uC77C"};todoToAssignmentStatus=function(t){if(t.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(t.status==="\uCDE8\uC18C")return"\uBCF4\uB958";if(t.status==="\uC9C4\uD589\uC911")return"\uC9C4\uD589";return"\uC9C0\uC2DC"};normalizeAssignment=function(a){if(!a.id)a.id=uid("assignment");if(!a.start)a.start=a.due||today;if(!a.due)a.due=a.start||today;if(!a.priority)a.priority="\uBCF4\uD1B5";if(!a.status)a.status="\uC9C0\uC2DC";if(!a.type)a.type="\uC77C\uBC18\uC5C5\uBB34";if(!a.project)a.project="\uC77C\uBC18\uC5C5\uBB34";if(!a.title)a.title="\uC81C\uBAA9 \uC5C6\uB294 \uC77C\uC815";return a};normalizeTodo=function(t){if(!t.id)t.id=uid("todo");if(!t.status)t.status=t.badge||"\uD560 \uC77C";if(!t.owner)t.owner=state.people[0]?.name||"";if(!t.priority)t.priority="\uBCF4\uD1B5";if(!t.due)t.due=t.date||today;if(!t.title)t.title="\uC81C\uBAA9 \uC5C6\uB294 \uD560\uC77C";return t};function unlockAdmin(){if(adminUnlocked)return true;const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem("solar-admin-unlocked","true");toast("관리자 권한이 확인되었습니다.");return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}function phaseForMenu(label){if(label.includes("고객")||label.includes("계약"))return"고객상담";if(label.includes("현장"))return"현장조사";if(label.includes("설계")||label.includes("자재"))return"자재발주";if(label.includes("시공"))return"시공중";return"전체"}function viewForLabel(label){if(label.includes("대시보드"))return"dashboard";if(label.includes("관리자"))return"admin";if(label.includes("할일관리"))return"todos";if(label.includes("직원업무")||label.includes("일정관리"))return"assignments";if(label.includes("시공일정"))return"construction";return"projects"}function statusClass(t){if((t||"").includes("지연")||(t||"").includes("보완")||(t||"").includes("긴급"))return"red";if((t||"").includes("대기")||(t||"").includes("예정"))return"amber";if((t||"").includes("진행")||(t||"").includes("시공중"))return"blue";return"green"}function priorityClass(p){return p==="긴급"?"red":p==="높음"?"amber":p==="보통"?"blue":"green"}function pulseTopButton(t,msg=""){if(!t)return;t.classList.remove("top-click-pop");void t.offsetWidth;t.classList.add("top-click-pop");setTimeout(()=>t.classList.remove("top-click-pop"),360);if(msg)toast(msg)}function updateTopButtons(){$("#adminTopBtn")?.classList.toggle("is-active",currentView==="admin");$("#maskToggleBtn")?.classList.toggle("is-active",maskingMode);$$("header .toolbar button").forEach(b=>{if(b.id==="exportBtn"||b.textContent.includes("내보내기"))b.classList.add("hidden")});const adminExport=$("#adminView #exportBtn");if(adminExport)adminExport.classList.toggle("hidden",currentView!=="admin")}
+    normalizeState=function(){state={...clone(defaults),...state};["people","projects","construction","assignments","todos","inspections"].forEach(k=>state[k]=state[k]||[]);state.nav=(state.nav||defaults.nav).map(n=>({...n,label:n.label==="\uC9C1\uC6D0\uC5C5\uBB34"?"\uC77C\uC815\uAD00\uB9AC":n.label}));if(!state.nav.some(n=>n.label==="\uD560\uC77C\uAD00\uB9AC")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"\u2611",label:"\uD560\uC77C\uAD00\uB9AC"})}
+      if(!state.nav.some(n=>n.label==="\uAD6C\uC870\uBB3C \uAC80\uC218")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"\uD83D\uDD0D",label:"\uAD6C\uC870\uBB3C \uAC80\uC218"})}state.construction.forEach(c=>{if(!c.structureTeam)c.structureTeam=state.structureTeams[0]||""});state.assignments.forEach(a=>normalizeAssignment(a));state.todos.forEach(t=>normalizeTodo(t));ensureTaskLinks()};assignmentToTodoStatus=function(a){if(a.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(a.status==="\uBCF4\uB958")return"\uBC31\uB85C\uADF8";if(a.status==="\uC9C4\uD589"||a.status==="\uAC80\uD1A0\uC694\uCCAD")return"\uC9C4\uD589\uC911";return"\uD560 \uC77C"};todoToAssignmentStatus=function(t){if(t.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(t.status==="\uCDE8\uC18C")return"\uBCF4\uB958";if(t.status==="\uC9C4\uD589\uC911")return"\uC9C4\uD589";return"\uC9C0\uC2DC"};normalizeAssignment=function(a){if(!a.id)a.id=uid("assignment");if(!a.start)a.start=a.due||today;if(!a.due)a.due=a.start||today;if(!a.priority)a.priority="\uBCF4\uD1B5";if(!a.status)a.status="\uC9C0\uC2DC";if(!a.type)a.type="\uC77C\uBC18\uC5C5\uBB34";if(!a.project)a.project="\uC77C\uBC18\uC5C5\uBB34";if(!a.title)a.title="\uC81C\uBAA9 \uC5C6\uB294 \uC77C\uC815";return a};normalizeTodo=function(t){if(!t.id)t.id=uid("todo");if(!t.status)t.status=t.badge||"\uD560 \uC77C";if(!t.owner)t.owner=state.people[0]?.name||"";if(!t.priority)t.priority="\uBCF4\uD1B5";if(!t.due)t.due=t.date||today;if(!t.title)t.title="\uC81C\uBAA9 \uC5C6\uB294 \uD560\uC77C";return t};function unlockAdmin(){if(adminUnlocked)return true;const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem("solar-admin-unlocked","true");toast("관리자 권한이 확인되었습니다.");return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}function phaseForMenu(label){if(label.includes("고객")||label.includes("계약"))return"고객상담";if(label.includes("현장"))return"현장조사";if(label.includes("설계")||label.includes("자재"))return"자재발주";if(label.includes("시공"))return"시공중";return"전체"}function viewForLabel(label){if(label.includes("대시보드"))return"dashboard";if(label.includes("관리자"))return"admin";if(label.includes("할일관리"))return"todos";if(label.includes("직원업무")||label.includes("일정관리"))return"assignments";if(label.includes("시공일정"))return"construction";if(label.includes("구조물 검수")||label.includes("검수관리"))return"inspection";return"projects"}function statusClass(t){if((t||"").includes("지연")||(t||"").includes("보완")||(t||"").includes("긴급"))return"red";if((t||"").includes("대기")||(t||"").includes("예정"))return"amber";if((t||"").includes("진행")||(t||"").includes("시공중"))return"blue";return"green"}function priorityClass(p){return p==="긴급"?"red":p==="높음"?"amber":p==="보통"?"blue":"green"}function pulseTopButton(t,msg=""){if(!t)return;t.classList.remove("top-click-pop");void t.offsetWidth;t.classList.add("top-click-pop");setTimeout(()=>t.classList.remove("top-click-pop"),360);if(msg)toast(msg)}function updateTopButtons(){$("#adminTopBtn")?.classList.toggle("is-active",currentView==="admin");$("#maskToggleBtn")?.classList.toggle("is-active",maskingMode);$$("header .toolbar button").forEach(b=>{if(b.id==="exportBtn"||b.textContent.includes("내보내기"))b.classList.add("hidden")});const adminExport=$("#adminView #exportBtn");if(adminExport)adminExport.classList.toggle("hidden",currentView!=="admin")}
     function renderLoginInfo(){const box=$("#loginInfo");if(!box)return;const name=loginName(),person=(state.people||[]).find(p=>p.name===name);box.classList.toggle("admin",adminUnlocked);box.innerHTML=name?`${esc(name)}<span class="role">${esc(person?.role||"직원")} · ${adminUnlocked?"관리자 권한":"직원 로그인"}</span>`:"로그인 확인 중"}
     const baseUpdateTopButtons=updateTopButtons;
     updateTopButtons=function(){baseUpdateTopButtons();renderLoginInfo()}
     unlockAdmin=function(){const owner=loginName();if(adminUnlocked&&sessionStorage.getItem(adminOwnerKey)===owner)return true;adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem(adminUnlockKey,"true");sessionStorage.setItem(adminOwnerKey,owner);toast("관리자 권한이 확인되었습니다.");updateTopButtons();return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}
-    function render(){normalizeState();updateTopButtons();els.brandName.textContent=state.brand;els.pageTitle.textContent=currentView==="assignments"?"일정관리":currentView==="todos"?"할일관리":state.title;els.pageSub.textContent=currentView==="assignments"?"회의는 짧게, 성과는 길게 가면 좋겠습니다.":currentView==="todos"?"작게 쪼개면 일도 덜 무서워 보입니다.":state.subtitle;$("#addProjectBtn").textContent=currentView==="assignments"?"일정 등록":currentView==="todos"?"할일 추가":"신규 현장";renderNav();renderFilters();renderKpiFilters();renderCalendarFilters();renderAssignmentCalendarFilters();renderConstructionReportFilters();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderNav(){els.nav.innerHTML=state.nav.map((n,i)=>`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`).join("")}function isActive(label){if(currentView==="dashboard")return label.includes("대시보드");if(currentView==="admin")return label.includes("관리자");if(currentView==="todos")return label.includes("할일관리");if(currentView==="assignments")return label.includes("직원업무")||label.includes("일정관리");if(currentView==="construction")return label.includes("시공일정");return phaseForMenu(label)!=="전체"&&els.phaseFilter.value===phaseForMenu(label)}function protectedView(view,label=""){return view==="construction"||view==="db"||view==="drive"||label.includes("시공일정")||label.includes("DB")||label.includes("프로젝트 파일")}function goToView(view,label=""){currentView=view;localStorage.setItem(viewStorageKey,view);renderFilters();if(label){const p=phaseForMenu(label);els.phaseFilter.value=view==="construction"?"전체":state.phases.includes(p)?p:"전체"}renderNav();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderView(){$("#kpis").classList.toggle("hidden",currentView==="assignments"||currentView==="todos");document.body.classList.toggle("schedule-page",currentView==="assignments");document.body.classList.toggle("todo-page",currentView==="todos");els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");els.adminView.classList.toggle("hidden",currentView!=="admin");els.mainGrid.classList.toggle("hidden",currentView==="dashboard"||currentView==="admin");els.mainGrid.classList.toggle("schedule-mode",currentView==="assignments");els.mainGrid.classList.toggle("todo-mode",currentView==="todos");els.mainGrid.classList.toggle("construction-mode",currentView==="construction");renderEmployeePanels()}function renderEmployeePanels(){const emp=currentView==="assignments",con=currentView==="construction",todo=currentView==="todos";els.employeeTabs.classList.toggle("hidden",!emp);els.assignmentsPanel.classList.toggle("hidden",!emp||employeeSubView!=="assignments");els.peoplePanel.classList.toggle("hidden",!emp||employeeSubView!=="workload");els.employeeKpiPanel.classList.toggle("hidden",!emp||employeeSubView!=="kpi");els.todosPanel.classList.toggle("hidden",emp||con||todo);els.constructionReportPanel.classList.toggle("hidden",!con);els.currentPlantsPanel.classList.toggle("hidden",!con);els.upcomingPlantsPanel.classList.toggle("hidden",!con);$$("[data-employee-tab]").forEach(b=>b.classList.toggle("active",b.dataset.employeeTab===employeeSubView))}
+    function render(){normalizeState();updateTopButtons();els.brandName.textContent=state.brand;els.pageTitle.textContent=currentView==="assignments"?"일정관리":currentView==="todos"?"할일관리":state.title;els.pageSub.textContent=currentView==="assignments"?"회의는 짧게, 성과는 길게 가면 좋겠습니다.":currentView==="todos"?"작게 쪼개면 일도 덜 무서워 보입니다.":state.subtitle;$("#addProjectBtn").textContent=currentView==="assignments"?"일정 등록":currentView==="todos"?"할일 추가":"신규 현장";renderNav();renderFilters();renderKpiFilters();renderCalendarFilters();renderAssignmentCalendarFilters();renderConstructionReportFilters();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderNav(){els.nav.innerHTML=state.nav.map((n,i)=>`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`).join("")}function isActive(label){if(currentView==="dashboard")return label.includes("대시보드");if(currentView==="admin")return label.includes("관리자");if(currentView==="todos")return label.includes("할일관리");if(currentView==="assignments")return label.includes("직원업무")||label.includes("일정관리");if(currentView==="construction")return label.includes("시공일정");if(currentView==="inspection")return label.includes("구조물 검수")||label.includes("검수관리");return phaseForMenu(label)!=="전체"&&els.phaseFilter.value===phaseForMenu(label)}function protectedView(view,label=""){return view==="construction"||view==="db"||view==="drive"||label.includes("시공일정")||label.includes("DB")||label.includes("프로젝트 파일")}function goToView(view,label=""){currentView=view;localStorage.setItem(viewStorageKey,view);renderFilters();if(label){const p=phaseForMenu(label);els.phaseFilter.value=view==="construction"?"전체":state.phases.includes(p)?p:"전체"}renderNav();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderView(){$("#kpis").classList.toggle("hidden",currentView==="assignments"||currentView==="todos"||currentView==="inspection");document.body.classList.toggle("schedule-page",currentView==="assignments");document.body.classList.toggle("todo-page",currentView==="todos");els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");els.adminView.classList.toggle("hidden",currentView!=="admin");els.inspectionView.classList.toggle("hidden",currentView!=="inspection");if(currentView==="inspection")renderInspectionView();els.mainGrid.classList.toggle("hidden",currentView==="dashboard"||currentView==="admin"||currentView==="inspection");els.mainGrid.classList.toggle("schedule-mode",currentView==="assignments");els.mainGrid.classList.toggle("todo-mode",currentView==="todos");els.mainGrid.classList.toggle("construction-mode",currentView==="construction");renderEmployeePanels()}function renderEmployeePanels(){const emp=currentView==="assignments",con=currentView==="construction",todo=currentView==="todos";els.employeeTabs.classList.toggle("hidden",!emp);els.assignmentsPanel.classList.toggle("hidden",!emp||employeeSubView!=="assignments");els.peoplePanel.classList.toggle("hidden",!emp||employeeSubView!=="workload");els.employeeKpiPanel.classList.toggle("hidden",!emp||employeeSubView!=="kpi");els.todosPanel.classList.toggle("hidden",emp||con||todo);els.constructionReportPanel.classList.toggle("hidden",!con);els.currentPlantsPanel.classList.toggle("hidden",!con);els.upcomingPlantsPanel.classList.toggle("hidden",!con);$$("[data-employee-tab]").forEach(b=>b.classList.toggle("active",b.dataset.employeeTab===employeeSubView))}
     function renderFilters(){const phases=currentView==="construction"?state.constructionPhases:state.phases;els.phaseFilter.innerHTML=`<option value="전체">전체 단계</option>`+phases.map(p=>`<option>${esc(p)}</option>`).join("");$("#projectPhase").innerHTML=state.phases.map(p=>`<option>${esc(p)}</option>`).join("");$("#projectStatus").innerHTML=state.statuses.map(s=>`<option>${esc(s)}</option>`).join("");$("#assignmentOwner").innerHTML=state.people.map(p=>`<option>${esc(p.name)}</option>`).join("");$("#assignmentProject").innerHTML=(state.projects.length?state.projects:[{name:"일반업무"}]).map(p=>`<option>${esc(p.name)}</option>`).join("");$("#assignmentStatus").innerHTML=state.assignmentStatuses.map(s=>`<option>${esc(s)}</option>`).join("");$("#constructionCompany").innerHTML=state.constructionTeams.map(t=>`<option>${esc(t)}</option>`).join("");$("#constructionStructureTeam").innerHTML=state.structureTeams.map(t=>`<option>${esc(t)}</option>`).join("");$("#constructionPhase").innerHTML=state.constructionPhases.map(p=>`<option>${esc(p)}</option>`).join("")}
     function durationDays(start,end){if(!start||!end)return 0;const s=new Date(start),e=new Date(end);if(Number.isNaN(s.getTime())||Number.isNaN(e.getTime())||e<s)return 0;return Math.round((e-s)/86400000)+1}function completionMonth(end){return end&&/^\d{4}-\d{2}/.test(end)?end.slice(0,7):""}function filterValue(view,key){return columnFilters[view]?.[key]||""}function sortLabel(view,key,label){const s=sortState[view],mark=s.key===key?`<span class="sort-mark">${s.dir==="asc"?"▲":"▼"}</span>`:"";return `<button class="sort-head" data-sort-view="${view}" data-sort-key="${key}">${esc(label)}${mark}</button>`}function columnFilter(view,key,label){return `<input class="column-filter" data-column-view="${view}" data-column-filter="${key}" value="${esc(filterValue(view,key))}" placeholder="${esc(label)}">`}function renderHead(view,cols){els.tableHead.innerHTML=`<tr>${cols.map(c=>`<th ${c.style?`style="${c.style}"`:""}>${c.key?sortLabel(view,c.key,c.label):esc(c.label)}</th>`).join("")}</tr><tr class="filter-row">${cols.map(c=>c.key?`<th>${columnFilter(view,c.key,c.label)}</th>`:"<th></th>").join("")}</tr>`}function matchesColumnFilters(view,row){return Object.entries(columnFilters[view]||{}).every(([k,v])=>!v||String(row[k]??"").toLowerCase().includes(v.toLowerCase()))}function sortRows(view,rows,rowFn,prop){const s=sortState[view];if(!s.key)return rows;return rows.slice().sort((a,b)=>{const av=rowFn(a[prop])[s.key],bv=rowFn(b[prop])[s.key],as=String(av??""),bs=String(bv??""),num=/^-?\d+(\.\d+)?$/.test(as)&&/^-?\d+(\.\d+)?$/.test(bs);let r=num?Number(as)-Number(bs):as.localeCompare(bs,"ko",{numeric:true});return s.dir==="asc"?r:-r})}
     function projectFilter(p){return{name:p.name,phase:p.phase,owner:p.owner,due:p.due,status:p.status,next:p.next}}function assignmentFilter(a){return{owner:a.owner,type:a.type,title:a.title,priority:a.priority,start:a.start,due:a.due,status:a.status}}function assignmentPriorityOptions(v){return["보통","높음","긴급","낮음"].map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function assignmentStatusOptions(v){return state.assignmentStatuses.map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function constructionFilter(c){return{company:c.company,structureTeam:c.structureTeam||"",site:c.site,kw:c.kw,sales:c.sales,customer:c.customer,phase:c.phase,owner:c.owner,start:c.start,end:c.end,duration:durationDays(c.start,c.end),completionMonth:completionMonth(c.end),status:c.status,next:c.next,structurePlannedDays:c.structurePlannedDays||0,structureActualDays:durationDays(c.structureStart,c.structureEnd),electricPlannedDays:c.electricPlannedDays||0,electricActualDays:durationDays(c.electricStart,c.electricEnd),delayReason:c.delayReason||"",earlyReason:c.earlyReason||"",issues:c.issues||""}}function renderProjectHead(){renderHead("projects",[{key:"name",label:"고객/현장",style:"width:18%"},{key:"phase",label:"업무단계",style:"width:13%"},{key:"owner",label:"담당",style:"width:12%"},{key:"due",label:"마감일",style:"width:13%"},{key:"status",label:"상태",style:"width:13%"},{key:"next",label:"다음 액션",style:"width:23%"},{label:"관리",style:"width:8%"}])}function renderAssignmentHead(){renderHead("assignments",[{key:"owner",label:"담당",style:"width:12%"},{key:"type",label:"구분",style:"width:11%"},{key:"title",label:"지시 제목",style:"width:22%"},{key:"priority",label:"우선",style:"width:10%"},{key:"start",label:"시작일",style:"width:12%"},{key:"due",label:"마감일",style:"width:12%"},{key:"status",label:"상태",style:"width:11%"},{label:"관리",style:"width:10%"}])}function renderConstructionHead(){renderHead("construction",[{key:"company",label:"시공사"},{key:"structureTeam",label:"구조물팀"},{key:"site",label:"현장"},{key:"kw",label:"kW"},{key:"sales",label:"영업자"},{key:"customer",label:"고객"},{key:"phase",label:"업무단계"},{key:"owner",label:"담당"},{key:"start",label:"시작일"},{key:"end",label:"완료일"},{key:"duration",label:"소요일"},{key:"completionMonth",label:"완료월"},{key:"status",label:"상태"},{key:"structurePlannedDays",label:"구조물예상"},{key:"structureActualDays",label:"구조물실제"},{key:"electricPlannedDays",label:"전기예상"},{key:"electricActualDays",label:"전기실제"},{key:"next",label:"다음 액션"},{label:"관리"}])}function renderWorkTable(){currentView==="assignments"?renderAssignmentRows():currentView==="construction"?renderConstructionRows():renderProjectRows()}
@@ -4539,5 +4540,314 @@
       document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="gcalConnectBtn"){e.preventDefault();e.stopImmediatePropagation();if(isConnected()){if(confirm("Google 캘린더 연결을 해제할까요?"))disconnect()}else{if(await requestToken())toast("Google 캘린더에 연결됐습니다.");updateGcalBtn()}return}if(t.id==="gcalPullBtn"){e.preventDefault();e.stopImmediatePropagation();pullFromGcal();return}if(t.id==="gcalPushBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm(`할일 전체(${state.todos.filter(x=>x.status!=="취소").length}건)를 구글 캘린더에 업로드할까요?`))pushAllToGcal();return}},true);
       /* 스타일 */
       document.head.insertAdjacentHTML("beforeend",`<style id="gcalStyle">#gcalBtnGroup{flex-shrink:0}@media(max-width:600px){#gcalBtnGroup{display:none!important}}</style>`);
+    })();
+
+    /* ══════════════════════════════════════════
+       구조물 검수 관리 모듈
+    ══════════════════════════════════════════ */
+    (function(){
+      const CHECKLIST_TEMPLATE=[
+        {no:1,category:"기존 지붕 사전확인",item:"지붕재 상태",detail:"기존 지붕재(샌드위치판넬/칼라강판) 파손·부식·변형 여부 확인"},
+        {no:2,category:"기존 지붕 사전확인",item:"지붕 하부구조",detail:"기존 트러스/C형강/퍼린 간격·규격 확인, 브라켓 고정점이 하부구조 위에 위치하는지 확인"},
+        {no:3,category:"기존 지붕 사전확인",item:"지붕 경사도",detail:"설계 경사도와 실측 경사도 일치 여부 (±1° 이내)"},
+        {no:4,category:"기존 지붕 사전확인",item:"누수 이력 확인",detail:"기존 누수 흔적 확인, 관통 시공 부위 사전 협의 기록 확인"},
+        {no:5,category:"알루미늄 레일 설치",item:"레일 규격 확인",detail:"가로레일/세로레일 단면 규격 설계도면 일치 확인, 자재 성적서 보유 여부"},
+        {no:6,category:"알루미늄 레일 설치",item:"레일 직선도",detail:"레일 직선도 확인 — 3m당 편차 3mm 이내"},
+        {no:7,category:"알루미늄 레일 설치",item:"레일 간격",detail:"레일 간격 설계도면 일치 (±5mm)"},
+        {no:8,category:"알루미늄 레일 설치",item:"레일 이음부(스플라이스)",detail:"이음 연결부 볼트 체결 확인, 이음부 유격 없음"},
+        {no:9,category:"베이스·고정부",item:"관통 브라켓 체결",detail:"볼트 체결 토크값 확인, 와셔·스프링와셔·너트 누락 없음"},
+        {no:10,category:"베이스·고정부",item:"베이스-퍼린 정합",detail:"브라켓이 기존 하부구조(퍼린/C형강) 위에 정확히 위치하는지 확인"},
+        {no:11,category:"베이스·고정부",item:"방수 처리 (관통부) ★",detail:"관통부위 방수실리콘 처리 확인, 실리콘 도포 균일성·빈틈 없음 ★입금보류 1순위"},
+        {no:12,category:"베이스·고정부",item:"베이스",detail:"베이스 규격·재질·두께 도면 일치, 체결 볼트 규격 확인"},
+        {no:13,category:"베이스·고정부",item:"비관통 클램프",detail:"비관통 방식 적용 구간: 클램프 물림 깊이·간격 확인"},
+        {no:14,category:"베이스·고정부",item:"지붕재 변형 확인",detail:"볼트 체결 시 지붕재 과도한 눌림·변형·찢어짐 없음"},
+        {no:15,category:"구조물 전체 형상",item:"설계도면 일치",detail:"구조물 전체 배열이 설계 배치도와 일치하는지 확인 (열 수, 행 수, 방향)"},
+        {no:16,category:"구조물 전체 형상",item:"수평·경사 정렬",detail:"레일 수평도 확인 — 전체 구간 레벨 편차 ±3mm 이내, 모듈 설치 경사각 설계값 일치(±1°)"},
+        {no:17,category:"구조물 전체 형상",item:"구조물 견고성",detail:"구조물 흔들림 테스트 — 상부에서 수평 방향 힘 가했을 때 과도한 흔들림·유격 없을 것"},
+        {no:18,category:"구조물 전체 형상",item:"처짐 확인",detail:"구조물 자중에 의한 처짐 육안 확인 (이상 처짐 없을 것)"},
+        {no:19,category:"구조물 전체 형상",item:"부재 간 간섭",detail:"구조물 부재가 기존 시설물(환풍기, 배관, 천창 등)과 간섭 없음"},
+        {no:20,category:"안전·마감·현장정리",item:"볼트 돌출 처리",detail:"돌출 볼트 보호캡 설치 또는 절단 후 면취 처리"},
+        {no:21,category:"안전·마감·현장정리",item:"절단면 버 제거",detail:"레일·브라켓 절단면의 날카로운 버(burr) 전수 제거"},
+        {no:22,category:"안전·마감·현장정리",item:"잔재물 수거",detail:"절단 칩·나사·포장재·케이블타이 잔재 전량 수거, 지붕 위 청소 완료"},
+        {no:23,category:"안전·마감·현장정리",item:"지붕재 손상 보수",detail:"시공 중 발생한 지붕재 스크래치·찍힘 터치업 페인트 보수"},
+        {no:24,category:"안전·마감·현장정리",item:"안전표지판",detail:"고압위험·감전주의·추락주의 표지판 부착 여부"},
+      ];
+
+      function newChecklist(){return CHECKLIST_TEMPLATE.map(t=>({...t,result:"",defectNote:""}))}
+      function normalizeInspection(r){
+        if(!r.id)r.id=uid("insp");
+        if(!r.site)r.site="";if(!r.address)r.address="";if(!r.roofType)r.roofType="공장 지붕";
+        if(!r.capacity)r.capacity="";if(!r.contractor)r.contractor="";if(!r.contractAmount)r.contractAmount="";
+        if(!r.date)r.date=today;if(!r.inspector)r.inspector="";
+        if(!r.checklist||!r.checklist.length)r.checklist=newChecklist();
+        // 체크리스트 항목이 24개보다 적으면 나머지 추가
+        CHECKLIST_TEMPLATE.forEach(t=>{if(!r.checklist.some(c=>c.no===t.no))r.checklist.push({...t,result:"",defectNote:""})});
+        if(!r.defects)r.defects=[];
+        if(!r.paymentApproved)r.paymentApproved="";
+        return r;
+      }
+      function calcResult(insp){
+        const cl=insp.checklist||[];
+        const answered=cl.filter(c=>c.result==="적합"||c.result==="부적합"||c.result==="해당없음");
+        const ok=cl.filter(c=>c.result==="적합"||c.result==="해당없음").length;
+        const rated=cl.filter(c=>c.result==="적합"||c.result==="부적합").length;
+        const pct=rated>0?Math.round(ok/rated*100):null;
+        const defTotal=insp.defects.length;
+        const defDone=insp.defects.filter(d=>d.status==="완료").length;
+        const defOpen=defTotal-defDone;
+        let verdict="미검수";
+        if(pct!==null){if(pct===100&&defOpen===0)verdict="적합";else if(pct>=95)verdict="조건부적합";else verdict="부적합";}
+        return{pct,defTotal,defDone,defOpen,verdict,ok,rated};
+      }
+      function resultBadge(verdict){
+        if(verdict==="적합")return`<span class="badge green">적합</span>`;
+        if(verdict==="조건부적합")return`<span class="badge amber">조건부적합</span>`;
+        if(verdict==="부적합")return`<span class="badge red">부적합</span>`;
+        return`<span class="badge" style="background:#f1f5f9;color:#64748b">미검수</span>`;
+      }
+
+      function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+      window.renderInspectionView=function(){
+        const v=els.inspectionView;
+        if(!v)return;
+        if(!state.inspections)state.inspections=[];
+        state.inspections.forEach(r=>normalizeInspection(r));
+        v.innerHTML=`
+          <div class="panel-title">
+            <h2>🔍 구조물 외주 시공 검수 관리</h2>
+            <div class="row-actions">
+              <button class="btn primary" id="addInspectionBtn">+ 새 검수 등록</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+            ${[
+              {label:"전체",color:"#3b82f6"},
+              {label:"적합",color:"#10b981"},
+              {label:"조건부적합",color:"#f59e0b"},
+              {label:"부적합",color:"#ef4444"},
+              {label:"미검수",color:"#94a3b8"},
+            ].map(({label,color})=>{
+              const cnt=label==="전체"?state.inspections.length:state.inspections.filter(r=>{normalizeInspection(r);return calcResult(r).verdict===label}).length;
+              return`<div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);min-width:90px;text-align:center"><div style="font-size:20px;font-weight:800;color:${color}">${cnt}</div><div style="font-size:11px;color:#64748b;margin-top:2px">${label}</div></div>`;
+            }).join("")}
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
+              <thead>
+                <tr style="background:#f8fafc">
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">No</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">발전소명</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">소재지</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">지붕유형</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">용량(kW)</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">외주업체</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">검수일자</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">결과</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">하자</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">보완완료</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">입금승인</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${state.inspections.length===0?`<tr><td colspan="12" style="padding:40px;text-align:center;color:#94a3b8">등록된 검수 내역이 없습니다.<br><span style="font-size:12px">+ 새 검수 등록 버튼을 눌러 추가하세요.</span></td></tr>`
+                :state.inspections.map((r,i)=>{
+                  const res=calcResult(r);
+                  const payBadge=r.paymentApproved==="승인"?`<span class="badge green">승인</span>`:r.paymentApproved==="보류"?`<span class="badge red">보류</span>`:r.paymentApproved==="대기"?`<span class="badge amber">대기</span>`:"-";
+                  return`<tr style="border-top:1px solid #f1f5f9;cursor:pointer" data-insp-row="${i}">
+                    <td style="padding:10px 12px;color:#94a3b8">${i+1}</td>
+                    <td style="padding:10px 12px;font-weight:600">${esc(r.site)}</td>
+                    <td style="padding:10px 12px;color:#64748b;font-size:12px">${esc(r.address)}</td>
+                    <td style="padding:10px 12px;color:#64748b">${esc(r.roofType)}</td>
+                    <td style="padding:10px 12px;text-align:center">${r.capacity||"-"}</td>
+                    <td style="padding:10px 12px">${esc(r.contractor)}</td>
+                    <td style="padding:10px 12px;text-align:center;color:#64748b;font-size:12px">${r.date||"-"}</td>
+                    <td style="padding:10px 12px;text-align:center">${resultBadge(res.verdict)}${res.pct!==null?`<div style="font-size:10px;color:#94a3b8;margin-top:2px">${res.pct}%</div>`:""}</td>
+                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:${res.defTotal>0?"#ef4444":"#10b981"}">${res.defTotal}</td>
+                    <td style="padding:10px 12px;text-align:center">${res.defTotal>0?`<span style="font-size:12px;color:${res.defOpen===0?"#10b981":"#f59e0b"}">${res.defDone}/${res.defTotal}</span>`:"-"}</td>
+                    <td style="padding:10px 12px;text-align:center">${payBadge}</td>
+                    <td style="padding:10px 12px;text-align:center"><button class="btn icon" data-insp-edit="${i}">✎</button></td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById("addInspectionBtn")?.addEventListener("click",()=>window.openInspectionModal(-1));
+        v.querySelectorAll("[data-insp-row]").forEach(tr=>{
+          tr.addEventListener("click",e=>{if(e.target.closest("[data-insp-edit]"))return;window.openInspectionModal(Number(tr.dataset.inspRow))});
+        });
+        v.querySelectorAll("[data-insp-edit]").forEach(btn=>{
+          btn.addEventListener("click",e=>{e.stopPropagation();window.openInspectionModal(Number(btn.dataset.inspEdit))});
+        });
+      };
+
+      let editingInspIndex=-1;
+
+      function renderChecklistInModal(r){
+        const tbody=document.getElementById("inspChecklistBody");if(!tbody)return;
+        const categories=[...new Set(r.checklist.map(c=>c.category))];
+        tbody.innerHTML=categories.map(cat=>{
+          const items=r.checklist.filter(c=>c.category===cat);
+          return items.map((c,ci)=>{
+            const isFirst=ci===0;
+            return`<tr style="border-top:1px solid #f1f5f9;${c.result==="부적합"?"background:#fff5f5":""}">
+              ${isFirst?`<td style="padding:6px 8px;white-space:nowrap;background:#f8fafc;font-size:11px;font-weight:700;color:#475569;vertical-align:top;border-right:1px solid #e8edf4" rowspan="${items.length}">${esc(cat)}</td>`:""}
+              <td style="padding:6px 8px;font-size:12px">${c.no}. ${esc(c.item)}</td>
+              <td style="padding:6px 8px;text-align:center">
+                <select data-cl-idx="${r.checklist.indexOf(c)}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:6px;background:${c.result==="적합"?"#f0fdf4":c.result==="부적합"?"#fef2f2":c.result==="해당없음"?"#f8fafc":"#fff"}">
+                  <option value="" ${!c.result?"selected":""}>-</option>
+                  <option value="적합" ${c.result==="적합"?"selected":""}>✅ 적합</option>
+                  <option value="부적합" ${c.result==="부적합"?"selected":""}>❌ 부적합</option>
+                  <option value="해당없음" ${c.result==="해당없음"?"selected":""}>➖ 해당없음</option>
+                </select>
+              </td>
+              <td style="padding:6px 8px"><input type="text" data-cl-note="${r.checklist.indexOf(c)}" value="${esc(c.defectNote||"")}" placeholder="하자내용" style="width:100%;font-size:11px;border:1px solid #e2e8f0;border-radius:6px;padding:3px 6px;${c.result==="부적합"?"border-color:#fca5a5":""}"></td>
+            </tr>`;
+          }).join("");
+        }).join("");
+
+        tbody.querySelectorAll("select[data-cl-idx]").forEach(sel=>{
+          sel.addEventListener("change",()=>{
+            const idx=Number(sel.dataset.clIdx);
+            r.checklist[idx].result=sel.value;
+            renderChecklistInModal(r);
+            renderSummaryBar(r);
+          });
+        });
+        tbody.querySelectorAll("input[data-cl-note]").forEach(inp=>{
+          inp.addEventListener("input",()=>{r.checklist[Number(inp.dataset.clNote)].defectNote=inp.value});
+        });
+      }
+
+      function renderDefectsInModal(r){
+        const tbody=document.getElementById("inspDefectsBody");if(!tbody)return;
+        tbody.innerHTML=r.defects.map((d,i)=>`
+          <tr style="border-top:1px solid #f1f5f9;${d.status==="완료"?"opacity:.6":""}">
+            <td style="padding:4px 6px;color:#94a3b8;font-size:11px">${i+1}</td>
+            <td style="padding:4px 6px"><input type="text" value="${esc(d.category||"")}" data-def-cat="${i}" placeholder="구분" style="width:80px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px"><input type="text" value="${esc(d.content||"")}" data-def-content="${i}" placeholder="하자내용" style="width:140px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px">
+              <select data-def-sev="${i}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px">
+                ${["경","중","중대"].map(s=>`<option ${d.severity===s?"selected":""}>${s}</option>`).join("")}
+              </select>
+            </td>
+            <td style="padding:4px 6px"><input type="date" value="${d.foundDate||""}" data-def-found="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px"><input type="date" value="${d.deadline||""}" data-def-deadline="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px"><input type="text" value="${esc(d.action||"")}" data-def-action="${i}" placeholder="조치내용" style="width:120px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px"><input type="date" value="${d.completedDate||""}" data-def-completed="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
+            <td style="padding:4px 6px">
+              <select data-def-status="${i}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;background:${d.status==="완료"?"#f0fdf4":d.status==="진행중"?"#eff6ff":"#fff"}">
+                ${["미조치","진행중","완료"].map(s=>`<option ${d.status===s?"selected":""}>${s}</option>`).join("")}
+              </select>
+            </td>
+            <td style="padding:4px 6px"><button type="button" data-def-del="${i}" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px">✕</button></td>
+          </tr>
+        `).join("")||`<tr><td colspan="10" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">하자 없음</td></tr>`;
+
+        // 이벤트 바인딩
+        const bind=(sel,key)=>tbody.querySelectorAll(sel).forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset[key.replace("def-","def").replace("-","").replace(/[A-Z]/g,m=>m.toLowerCase())])][key.split("-")[1]]=el.value;renderSummaryBar(r)}));
+        tbody.querySelectorAll("[data-def-cat]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defCat)].category=el.value}));
+        tbody.querySelectorAll("[data-def-content]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defContent)].content=el.value}));
+        tbody.querySelectorAll("[data-def-sev]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defSev)].severity=el.value}));
+        tbody.querySelectorAll("[data-def-found]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defFound)].foundDate=el.value}));
+        tbody.querySelectorAll("[data-def-deadline]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defDeadline)].deadline=el.value}));
+        tbody.querySelectorAll("[data-def-action]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defAction)].action=el.value}));
+        tbody.querySelectorAll("[data-def-completed]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defCompleted)].completedDate=el.value}));
+        tbody.querySelectorAll("[data-def-status]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defStatus)].status=el.value;renderDefectsInModal(r);renderSummaryBar(r)}));
+        tbody.querySelectorAll("[data-def-del]").forEach(el=>el.addEventListener("click",()=>{r.defects.splice(Number(el.dataset.defDel),1);renderDefectsInModal(r);renderSummaryBar(r)}));
+      }
+
+      function renderSummaryBar(r){
+        const bar=document.getElementById("inspSummaryBar");if(!bar)return;
+        const res=calcResult(r);
+        const pctText=res.pct!==null?`${res.pct}%`:"-";
+        const verdictColor=res.verdict==="적합"?"#10b981":res.verdict==="조건부적합"?"#f59e0b":res.verdict==="부적합"?"#ef4444":"#94a3b8";
+        bar.innerHTML=`
+          <div><span style="font-size:11px;color:#94a3b8">적합 항목</span><br><strong>${res.ok}/${res.rated}</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">적합률</span><br><strong>${pctText}</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">하자 건수</span><br><strong style="color:${res.defTotal>0?"#ef4444":"#10b981"}">${res.defTotal}건</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">보완완료</span><br><strong>${res.defDone}/${res.defTotal}</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">미조치</span><br><strong style="color:${res.defOpen>0?"#ef4444":"#10b981"}">${res.defOpen}건</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">종합판정</span><br><strong style="color:${verdictColor}">${res.verdict}</strong></div>
+          <div><span style="font-size:11px;color:#94a3b8">입금승인</span><br>
+            <select id="inspPaymentApproval" style="font-size:12px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:6px">
+              ${["","승인","대기","보류"].map(s=>`<option value="${s}" ${(r.paymentApproved||"")=== s?"selected":""}>${s||"-"}</option>`).join("")}
+            </select>
+          </div>
+        `;
+        document.getElementById("inspPaymentApproval")?.addEventListener("change",e=>{r.paymentApproved=e.target.value});
+      }
+
+      // 하자 추가 버튼
+      document.addEventListener("click",e=>{
+        if(e.target.id==="addInspDefectBtn"){
+          const idx=editingInspIndex;
+          const r=idx<0?null:state.inspections[idx];
+          // 모달 내 임시 객체에서 작업
+          const tbody=document.getElementById("inspDefectsBody");
+          if(!tbody)return;
+          // 현재 편집 중인 검수 찾기
+          const insp=idx<0?window._tempInspection:state.inspections[idx];
+          if(!insp)return;
+          insp.defects.push({category:"",content:"",severity:"경",foundDate:today,deadline:"",action:"",completedDate:"",confirmer:"",status:"미조치",note:""});
+          renderDefectsInModal(insp);
+          renderSummaryBar(insp);
+        }
+        if(e.target.id==="deleteInspectionBtn"){
+          if(!confirm("이 검수 내역을 삭제할까요?"))return;
+          const idx=editingInspIndex;
+          if(idx>=0){state.inspections.splice(idx,1);saveState("검수 내역 삭제");renderInspectionView();document.getElementById("inspectionModal").classList.remove("active");toast("삭제됐습니다.")}
+        }
+      });
+
+      // 검수 모달 열기
+      window.openInspectionModal=function(idx){
+        editingInspIndex=idx;
+        const isNew=idx<0;
+        const r=isNew?(window._tempInspection=normalizeInspection({})):state.inspections[idx];
+        document.getElementById("inspectionModalTitle").textContent=isNew?"검수 등록":r.site+" 검수";
+        document.getElementById("inspSite").value=r.site||"";
+        document.getElementById("inspAddress").value=r.address||"";
+        document.getElementById("inspRoofType").value=r.roofType||"공장 지붕";
+        document.getElementById("inspCapacity").value=r.capacity||"";
+        document.getElementById("inspContractor").value=r.contractor||"";
+        document.getElementById("inspContractAmount").value=r.contractAmount||"";
+        document.getElementById("inspDate").value=r.date||today;
+        document.getElementById("inspInspector").value=r.inspector||"";
+        renderChecklistInModal(r);
+        renderDefectsInModal(r);
+        renderSummaryBar(r);
+        document.getElementById("deleteInspectionBtn").classList.toggle("hidden",isNew);
+        document.getElementById("inspectionModal").classList.add("active");
+      };
+
+      // saveInspectionBtn에서 isNew일 때 _tempInspection 사용
+      document.addEventListener("click",e=>{
+        if(e.target.id==="saveInspectionBtn"){
+          const idx=editingInspIndex;
+          const isNew=idx<0;
+          const r=isNew?window._tempInspection:state.inspections[idx];
+          if(!r)return;
+          r.site=document.getElementById("inspSite").value.trim();
+          if(!r.site){toast("발전소명을 입력해주세요.");return;}
+          r.address=document.getElementById("inspAddress").value.trim();
+          r.roofType=document.getElementById("inspRoofType").value;
+          r.capacity=document.getElementById("inspCapacity").value;
+          r.contractor=document.getElementById("inspContractor").value.trim();
+          r.contractAmount=document.getElementById("inspContractAmount").value.trim();
+          r.date=document.getElementById("inspDate").value;
+          r.inspector=document.getElementById("inspInspector").value.trim();
+          r.paymentApproved=document.getElementById("inspPaymentApproval")?.value||"";
+          normalizeInspection(r);
+          if(isNew){if(!state.inspections)state.inspections=[];state.inspections.unshift(r);window._tempInspection=null;}
+          saveState("검수 내역이 저장됐습니다.");
+          document.getElementById("inspectionModal").classList.remove("active");
+          renderInspectionView();
+          toast("✅ 검수 내역이 저장됐습니다.");
+        }
+      },true);
+
     })();
 
