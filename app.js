@@ -857,11 +857,15 @@
     ];
     function weatherIcon(code){if(code===0)return"☀️";if(code<=2)return"🌤️";if(code===3)return"☁️";if(code<=48)return"🌫️";if(code<=57)return"🌦️";if(code<=67)return"🌧️";if(code<=77)return"❄️";if(code<=82)return"🌧️";if(code<=86)return"❄️";if(code>=95)return"⛈️";return"🌡️"}
     function renderWeatherBox(){
+      const bgImg=state.clockBgImage?`<img class="clock-bg-image" src="${state.clockBgImage}" alt="">`:"";
       return `<div style="grid-column:1/-1;display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:stretch">
         <div class="weather-clock-box" id="dashClockBox">
-          <div style="font-size:11px;font-weight:800;letter-spacing:.5px;opacity:.6;margin-bottom:4px">한국 시간</div>
+          ${bgImg}
+          <div class="clock-content">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.5px;opacity:.75;margin-bottom:3px">한국 시간</div>
           <div class="clock-time" id="dashClock">--:--:--</div>
           <div class="clock-date" id="dashClockDate"></div>
+          </div>
         </div>
         <div>
           <div id="dashWeatherMain" class="weather-main-card">
@@ -4461,6 +4465,27 @@
         if(refBtn)refBtn.onclick=()=>{const card=$("#gcalAdminCard");if(card)card.remove();renderAdmin()};
         const colorSel=$("#gcalColorSelect");
         if(colorSel)colorSel.onchange=()=>{state.gcalSyncColor=colorSel.value;saveState();toast(`색상 필터: ${GCAL_COLORS[colorSel.value]||"전체"}`)};
+        /* 대시보드 시계 이미지 카드 (gcal 카드 바로 뒤에 추가) */
+        if(!$("#clockImgAdminCard")){
+          const previewHtml=state.clockBgImage?`<img src="${state.clockBgImage}" style="width:100%;height:100px;object-fit:cover;border-radius:10px;margin-top:10px;display:block" id="clockImgPreview">`:`<div id="clockImgPreview" style="margin-top:10px;height:80px;border:2px dashed #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px">이미지 없음</div>`;
+          grid.insertAdjacentHTML("beforeend",`<div class="card" id="clockImgAdminCard"><div class="panel-title"><h2>🖼️ 대시보드 시계 배경 이미지</h2></div><p class="meta" style="margin-bottom:10px">시계 위젯에 배경 이미지를 설정합니다. 고해상도(500px 이상) 이미지를 권장합니다.</p><input type="file" id="clockImgFileInput" accept="image/*" style="display:none"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="clockImgUploadBtn">이미지 선택</button>${state.clockBgImage?`<button class="btn danger" id="clockImgRemoveBtn">이미지 제거</button>`:""}</div>${previewHtml}</div>`);
+          document.getElementById("clockImgUploadBtn").onclick=()=>document.getElementById("clockImgFileInput").click();
+          document.getElementById("clockImgFileInput").onchange=function(){
+            const file=this.files[0];if(!file)return;
+            if(file.size>5*1024*1024){toast("파일이 너무 큽니다. 5MB 이하 이미지를 사용해주세요.");return}
+            const reader=new FileReader();
+            reader.onload=e=>{
+              state.clockBgImage=e.target.result;
+              saveState("시계 배경 이미지를 저장했습니다.");
+              toast("이미지가 저장됐습니다. 대시보드를 확인해보세요!");
+              const card=$("#clockImgAdminCard");if(card)card.remove();
+              renderAdmin();
+            };
+            reader.readAsDataURL(file);
+          };
+          const removeBtn=document.getElementById("clockImgRemoveBtn");
+          if(removeBtn)removeBtn.onclick=()=>{state.clockBgImage="";saveState("시계 배경 이미지를 제거했습니다.");toast("이미지가 제거됐습니다.");const card=$("#clockImgAdminCard");if(card)card.remove();renderAdmin()};
+        }
       };
       /* 버튼 클릭 이벤트 */
       document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="gcalConnectBtn"){e.preventDefault();e.stopImmediatePropagation();if(isConnected()){if(confirm("Google 캘린더 연결을 해제할까요?"))disconnect()}else{if(await requestToken())toast("Google 캘린더에 연결됐습니다.");updateGcalBtn()}return}if(t.id==="gcalPullBtn"){e.preventDefault();e.stopImmediatePropagation();pullFromGcal();return}if(t.id==="gcalPushBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm(`할일 전체(${state.todos.filter(x=>x.status!=="취소").length}건)를 구글 캘린더에 업로드할까요?`))pushAllToGcal();return}},true);
