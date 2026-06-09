@@ -2111,15 +2111,21 @@
       function doPrint(htmlContent,btnLabel){
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        /* ── A4: 210mm × 297mm, 여백 12mm → 내용 영역 186mm × 273mm ── */
+        /* ── A4: 210mm × 297mm
+             @page margin:0 → 브라우저 머리글/바닥글(날짜·URL·페이지번호) 완전 제거
+             body padding으로 실제 여백 확보 ── */
         const css=`
-          @page{size:A4 portrait;margin:12mm 12mm 10mm 12mm}
+          @page{size:A4 portrait;margin:0}
           *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          html,body{margin:0;padding:0;background:#fff;color:#111;
+          html{margin:0;padding:0;background:#fff}
+          body{margin:0;padding:13mm 14mm 10mm 14mm;background:#fff;color:#000;
             font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",Arial,sans-serif;
-            font-size:9pt;width:186mm}
+            font-size:9pt;width:210mm;
+            -webkit-font-smoothing:antialiased;
+            text-rendering:optimizeLegibility;
+            zoom:100%}
           /* ─── A/S 보고서 ─── */
-          .as-sheet{width:186mm}
+          .as-sheet{width:100%}
           .as-sheet h2{text-align:center;font-size:14pt;margin:8px 0 10px;font-weight:900}
           .as-section-title{font-weight:900;font-size:9pt;border-top:1.5px solid #888;border-bottom:1px solid #ddd;padding:4px 8px;background:#f8f8f8;margin-top:2px}
           .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5pt}
@@ -2136,7 +2142,7 @@
           .as-sign-row>div{height:44px;border-right:1px solid #ddd;text-align:center;font-weight:900;padding-top:6px;font-size:8.5pt}
           .as-sign-row>div:last-child{border-right:0}
           /* ─── 시공월별 보고서 ─── */
-          .monthly-a4,.clean-monthly{width:186mm;padding:0}
+          .monthly-a4,.clean-monthly{width:100%;padding:0}
           .monthly-a4 h2,.clean-monthly h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 4px}
           .monthly-title-block{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px}
           .subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:8px}
@@ -2159,7 +2165,7 @@
           .monthly-empty{text-align:center;color:#999;padding:10px;font-size:8pt}
           .monthly-profit{color:#118447;font-weight:900}.monthly-loss{color:#c0392b;font-weight:900}
           /* ─── 기타 보고서 ─── */
-          .generic-sheet{width:186mm;padding:0}
+          .generic-sheet{width:100%;padding:0}
           .generic-sheet h2{text-align:center;font-size:14pt;font-weight:900;margin:0 0 4px}
           .generic-subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:10px}
           .generic-section-title{margin-top:8px;border-top:2px solid #222;border-bottom:1px solid #c8d4d8;background:#f4f8fa;padding:4px 8px;font-weight:900;font-size:8.5pt}
