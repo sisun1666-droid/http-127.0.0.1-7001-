@@ -4355,7 +4355,7 @@
             "&redirect_uri="+encodeURIComponent(REDIRECT_URI)+
             "&response_type=token"+
             "&scope="+encodeURIComponent(SCOPE)+
-            "&prompt=consent";
+            "&prompt=select_account";
           const popup=window.open(authUrl,"gcalOAuth","width=520,height=620,left=200,top=100");
           if(!popup){toast("팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.");resolve(false);return}
           const timer=setInterval(()=>{
@@ -4376,6 +4376,53 @@
         });
       }
       function disconnect(){clearToken();updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
+      /* 무음 자동 토큰 갱신 (hidden iframe + prompt=none) */
+      let _silentRefreshing=false;
+      async function silentRefreshToken(){
+        if(_silentRefreshing||!clientId())return false;
+        _silentRefreshing=true;
+        return new Promise(resolve=>{
+          const iframe=document.createElement("iframe");
+          iframe.style.cssText="display:none;width:0;height:0;border:0;position:absolute;left:-9999px";
+          const authUrl="https://accounts.google.com/o/oauth2/v2/auth"+
+            "?client_id="+encodeURIComponent(clientId())+
+            "&redirect_uri="+encodeURIComponent(REDIRECT_URI)+
+            "&response_type=token"+
+            "&scope="+encodeURIComponent(SCOPE)+
+            "&prompt=none";  /* 팝업/UI 없이 시도 */
+          iframe.src=authUrl;
+          document.body.appendChild(iframe);
+          const timeout=setTimeout(()=>{
+            iframe.remove();_silentRefreshing=false;resolve(false);
+          },8000);
+          iframe.onload=()=>{
+            try{
+              const hash=iframe.contentWindow.location.hash.slice(1);
+              const params=new URLSearchParams(hash);
+              const token=params.get("access_token");
+              const exp=parseInt(params.get("expires_in")||"3600");
+              clearTimeout(timeout);iframe.remove();_silentRefreshing=false;
+              if(token){saveToken(token,exp);updateGcalBtn();resolve(true)}
+              else{resolve(false)}
+            }catch(e){
+              /* cross-origin 에러 = 구글이 자동 갱신 거부 → 사용자 재로그인 필요 */
+              clearTimeout(timeout);iframe.remove();_silentRefreshing=false;resolve(false);
+            }
+          };
+        });
+      }
+      /* 토큰 만료 5분 전에 자동 갱신 시도 */
+      setInterval(async()=>{
+        if(!isConnected()&&accessToken){
+          /* 이미 만료됨 → 조용히 재시도 */
+          const ok=await silentRefreshToken();
+          if(!ok)toast("⚠️ 구글 캘린더 토큰이 만료됐습니다. 할일관리 탭에서 재연결해주세요.");
+          else toast("✅ 구글 캘린더 자동 재연결됐습니다.");
+        }else if(isConnected()&&tokenExpiresAt-Date.now()<5*60*1000){
+          /* 5분 이내 만료 예정 → 선제적 갱신 */
+          await silentRefreshToken();
+        }
+      },60*1000); /* 1분마다 확인 */
       /* Todo → Calendar 이벤트 변환 */
       function todoToEvent(t){const start=t.start||t.due||today,end=t.due||start;const colorMap={"긴급":"11","높음":"6","완료":"2","진행중":"7","취소":"8","백로그":"8"};const colorId=colorMap[t.priority]==="11"?"11":colorMap[t.status];const body={summary:t.title||"할일",description:[t.detail,t.result?`✅ 결과: ${t.result}`:""].filter(Boolean).join("\n\n"),extendedProperties:{private:{kiwoomTodoId:t.id||"",kiwoomStatus:t.status||"",kiwoomOwner:t.owner||""}}};if(colorId)body.colorId=colorId;if(t.location)body.location=t.location;if(t.allDay!==false){const endD=new Date(end);endD.setDate(endD.getDate()+1);body.start={date:start};body.end={date:endD.toISOString().slice(0,10)}}else{const st=t.startTime||"09:00",et=t.endTime||"10:00";body.start={dateTime:`${start}T${st}:00`,timeZone:"Asia/Seoul"};body.end={dateTime:`${end}T${et}:00`,timeZone:"Asia/Seoul"}}return body}
       /* Calendar API 호출 */
