@@ -4326,4 +4326,58 @@
       /* 화면 크기 변경 시 재주입 */
       window.addEventListener("resize",injectMobileStyle,{passive:true});
     })();
+    (function setupGoogleCalendarSync(){
+      const CAL_API="https://www.googleapis.com/calendar/v3";
+      const SCOPE="https://www.googleapis.com/auth/calendar";
+      const TOKEN_STORE="gcal_token_v1";
+      let accessToken=null,tokenExpiresAt=0,tokenClient=null;
+      function clientId(){return state.gcalClientId||""}
+      function isConnected(){return !!accessToken&&Date.now()<tokenExpiresAt}
+      /* 토큰 복원 */
+      (function(){try{const d=JSON.parse(localStorage.getItem(TOKEN_STORE)||"{}");if(d.t&&d.e>Date.now()+5000){accessToken=d.t;tokenExpiresAt=d.e}}catch(e){}}());
+      function saveToken(t,expiresIn){accessToken=t;tokenExpiresAt=Date.now()+(expiresIn-60)*1000;localStorage.setItem(TOKEN_STORE,JSON.stringify({t:accessToken,e:tokenExpiresAt}))}
+      function clearToken(){accessToken=null;tokenExpiresAt=0;localStorage.removeItem(TOKEN_STORE)}
+      /* GIS 로드 */
+      function loadGis(){return new Promise(resolve=>{if(window.google?.accounts?.oauth2){resolve();return}const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.onload=resolve;s.onerror=resolve;document.head.appendChild(s)})}
+      async function ensureTokenClient(){if(!clientId())return false;await loadGis();if(!tokenClient){tokenClient=window.google.accounts.oauth2.initTokenClient({client_id:clientId(),scope:SCOPE,callback(resp){if(resp.access_token){saveToken(resp.access_token,resp.expires_in||3600)}updateGcalBtn()}})}return true}
+      async function requestToken(){if(!await ensureTokenClient()){toast("관리자 설정에서 Google Client ID를 먼저 등록해주세요.");return false}if(isConnected())return true;return new Promise(resolve=>{const prev=tokenClient.callback;tokenClient.callback=resp=>{tokenClient.callback=prev;prev(resp);resolve(!!resp.access_token)};tokenClient.requestAccessToken({prompt:""})})}
+      function disconnect(){if(accessToken)window.google?.accounts?.oauth2?.revoke(accessToken,()=>{});clearToken();tokenClient=null;updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
+      /* Todo → Calendar 이벤트 변환 */
+      function todoToEvent(t){const start=t.start||t.due||today,end=t.due||start;const colorMap={"긴급":"11","높음":"6","완료":"2","진행중":"7","취소":"8","백로그":"8"};const colorId=colorMap[t.priority]==="11"?"11":colorMap[t.status];const body={summary:t.title||"할일",description:[t.detail,t.result?`✅ 결과: ${t.result}`:""].filter(Boolean).join("\n\n"),extendedProperties:{private:{kiwoomTodoId:t.id||"",kiwoomStatus:t.status||"",kiwoomOwner:t.owner||""}}};if(colorId)body.colorId=colorId;if(t.location)body.location=t.location;if(t.allDay!==false){const endD=new Date(end);endD.setDate(endD.getDate()+1);body.start={date:start};body.end={date:endD.toISOString().slice(0,10)}}else{const st=t.startTime||"09:00",et=t.endTime||"10:00";body.start={dateTime:`${start}T${st}:00`,timeZone:"Asia/Seoul"};body.end={dateTime:`${end}T${et}:00`,timeZone:"Asia/Seoul"}}return body}
+      /* Calendar API 호출 */
+      async function gcalFetch(path,opts={}){const r=await fetch(CAL_API+path,{...opts,headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json",...(opts.headers||{})}});if(r.status===204)return null;if(!r.ok)throw new Error(await r.text());return r.json()}
+      async function gcalCreate(t){const ev=await gcalFetch("/calendars/primary/events",{method:"POST",body:JSON.stringify(todoToEvent(t))});return ev?.id}
+      async function gcalUpdate(gcalId,t){await gcalFetch(`/calendars/primary/events/${gcalId}`,{method:"PUT",body:JSON.stringify(todoToEvent(t))})}
+      async function gcalDelete(gcalId){await gcalFetch(`/calendars/primary/events/${gcalId}`,{method:"DELETE"})}
+      /* Todo 동기화 */
+      async function syncTodoToGcal(t){if(!isConnected()||!t)return;try{if(t.gcalEventId){await gcalUpdate(t.gcalEventId,t)}else{const id=await gcalCreate(t);if(id){t.gcalEventId=id;saveStateAfterPaint()}}}catch(e){console.warn("gcal sync:",e)}}
+      async function removeTodoFromGcal(gcalId){if(!isConnected()||!gcalId)return;try{await gcalDelete(gcalId)}catch(e){}}
+      /* 구글 → 앱 가져오기 */
+      async function pullFromGcal(){if(!await requestToken())return;toast("구글 캘린더에서 가져오는 중...");try{const now=new Date().toISOString();const data=await gcalFetch(`/calendars/primary/events?timeMin=${now}&maxResults=200&singleEvents=true&orderBy=startTime&showDeleted=false`);const events=data?.items||[];let added=0;events.forEach(ev=>{if(ev.status==="cancelled")return;if(state.todos.some(t=>t.gcalEventId===ev.id))return;const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;const newTodo=normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date});state.todos.unshift(newTodo);added++});if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}toast(added>0?`${added}건을 할일로 가져왔습니다.`:"새로운 일정이 없습니다.")}catch(e){toast("가져오기 실패: "+e.message)}}
+      /* 전체 할일 → 구글 캘린더 업로드 */
+      async function pushAllToGcal(){if(!await requestToken())return;const todos=state.todos.filter(t=>t.status!=="취소");toast(`${todos.length}건 구글 캘린더에 업로드 중...`);let ok=0;for(const t of todos){try{await syncTodoToGcal(t);ok++}catch(e){}}saveStateAfterPaint();toast(`${ok}건 업로드 완료`)}
+      /* UI 버튼 상태 갱신 */
+      function updateGcalBtn(){const btn=$("#gcalConnectBtn");if(!btn)return;if(!clientId()){btn.textContent="☁ 구글 캘린더 (Client ID 미설정)";btn.className="btn";return}if(isConnected()){btn.textContent="☁ 구글 연결됨 ✓";btn.className="btn primary"}else{btn.textContent="☁ 구글 캘린더 연동";btn.className="btn"}}
+      /* 할일 툴바에 구글 캘린더 버튼 주입 */
+      function injectGcalButtons(){if(currentView!=="todos")return;const toolbar=$("#todoBoardPanel .todo-toolbar");if(!toolbar||toolbar.querySelector("#gcalConnectBtn"))return;toolbar.insertAdjacentHTML("beforeend",`<span id="gcalBtnGroup" style="margin-left:auto;display:flex;gap:4px"><button id="gcalConnectBtn" class="btn" style="font-size:12px">☁ 구글 캘린더 연동</button><button id="gcalPullBtn" class="btn" style="font-size:12px" title="구글 캘린더 → 할일 가져오기">↓ 가져오기</button><button id="gcalPushBtn" class="btn" style="font-size:12px" title="모든 할일 → 구글 캘린더 업로드">↑ 전체 업로드</button></span>`);updateGcalBtn()}
+      /* renderTodoBoard 래핑: 버튼 자동 주입 */
+      const baseRenderTodoBoardForGcal=renderTodoBoard;
+      renderTodoBoard=function(){baseRenderTodoBoardForGcal();setTimeout(injectGcalButtons,0)};
+      /* saveTodoBtn 래핑: 저장 후 구글 동기화 */
+      const prevSaveTodo=$("#saveTodoBtn")?.onclick;
+      if(prevSaveTodo){$("#saveTodoBtn").onclick=function(){const wasEditing=editingTodoIndex;prevSaveTodo.call(this);if(!isConnected())return;const saved=wasEditing===null?state.todos[0]:state.todos[wasEditing];if(saved)syncTodoToGcal(saved)}}
+      /* deleteTodoAt 래핑: 삭제 전 구글에서도 제거 */
+      const baseDeleteTodoAtForGcal=deleteTodoAt;
+      deleteTodoAt=function(i){const t=state.todos[i];if(t?.gcalEventId)removeTodoFromGcal(t.gcalEventId);return baseDeleteTodoAtForGcal(i)};
+      /* normalizeState: gcalClientId 초기값 */
+      const baseNormalizeForGcal=normalizeState;
+      normalizeState=function(){baseNormalizeForGcal();if(state.gcalClientId===undefined)state.gcalClientId=""};
+      /* renderAdmin: Google Client ID 설정 카드 추가 */
+      const baseRenderAdminForGcal=renderAdmin;
+      renderAdmin=function(){baseRenderAdminForGcal();if($("#gcalAdminCard"))return;const grid=$("#adminView .admin-grid");if(!grid)return;grid.insertAdjacentHTML("beforeend",`<div class="card" id="gcalAdminCard"><div class="panel-title"><h2>Google 캘린더 연동</h2></div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">OAuth 2.0 클라이언트 ID</label><input class="field" id="gcalClientIdInput" placeholder="123456789-xxx.apps.googleusercontent.com" value="${esc(state.gcalClientId||"")}"><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" id="gcalSaveClientIdBtn">저장</button>${isConnected()?`<button class="btn danger" id="gcalDisconnectAdminBtn">연결 해제</button>`:""}</div><p class="meta" style="margin-top:8px">Google Cloud Console에서 발급받은 OAuth 2.0 웹 클라이언트 ID를 입력하세요.<br>승인된 JavaScript 원본에 <code>https://sisun1666-droid.github.io</code>를 추가해주세요.<br>현재 상태: ${isConnected()?"<strong style='color:#16a34a'>연결됨</strong>":"<span style='color:#94a3b8'>미연결</span>"}</p></div>`);$("#gcalSaveClientIdBtn").onclick=()=>{state.gcalClientId=$("#gcalClientIdInput").value.trim();tokenClient=null;saveState("Google Client ID를 저장했습니다.");toast("저장됐습니다. 할일관리 탭에서 연동 버튼을 누르세요.")};const discBtn=$("#gcalDisconnectAdminBtn");if(discBtn)discBtn.onclick=()=>{disconnect();renderAdmin()}};
+      /* 버튼 클릭 이벤트 */
+      document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="gcalConnectBtn"){e.preventDefault();e.stopImmediatePropagation();if(isConnected()){if(confirm("Google 캘린더 연결을 해제할까요?"))disconnect()}else{if(await requestToken())toast("Google 캘린더에 연결됐습니다.");updateGcalBtn()}return}if(t.id==="gcalPullBtn"){e.preventDefault();e.stopImmediatePropagation();pullFromGcal();return}if(t.id==="gcalPushBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm(`할일 전체(${state.todos.filter(x=>x.status!=="취소").length}건)를 구글 캘린더에 업로드할까요?`))pushAllToGcal();return}},true);
+      /* 스타일 */
+      document.head.insertAdjacentHTML("beforeend",`<style id="gcalStyle">#gcalBtnGroup{flex-shrink:0}@media(max-width:600px){#gcalBtnGroup{display:none!important}}</style>`);
+    })();
 
