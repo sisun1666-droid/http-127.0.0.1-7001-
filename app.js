@@ -2105,22 +2105,69 @@
           $(".report-preview").innerHTML=renderAsSheet();updatePhotoCounts();toast(`${kind==="before"?"작업 전":"작업 후"} 사진 ${urls.length}장을 넣었습니다.`);
         });
       }
-      /* ── 공통 인쇄 함수: afterprint 이벤트로 안정적 정리 ── */
+      /* ── 공통 인쇄 함수: 새 창으로 열어서 A4 내용만 인쇄 ── */
       function doPrint(htmlContent,btnLabel){
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        const root=document.createElement("div");
-        root.className="print-root";
-        root.innerHTML=htmlContent;
-        document.body.appendChild(root);
-        const cleanup=()=>{
-          root.remove();
-          if(button){button.classList.remove("report-printing");button.textContent=btnLabel}
-          window.removeEventListener("afterprint",cleanup);
-        };
-        window.addEventListener("afterprint",cleanup);
-        /* 100ms 여유를 주어 DOM이 완전히 렌더된 뒤 인쇄 다이얼로그 열기 */
-        setTimeout(()=>window.print(),150);
+        const css=`
+          @page{size:A4 portrait;margin:10mm}
+          *{box-sizing:border-box}
+          body{margin:0;padding:0;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}
+          /* A/S */
+          .as-sheet{width:100%;background:#fff;color:#111}
+          .as-sheet h2{text-align:center;font-size:20px;margin:14px 0 16px}
+          .as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:6px 10px;background:#fff}
+          .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+          .as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:6px 8px;white-space:normal;height:28px}
+          .as-table th{width:90px;text-align:center;background:#fff;font-weight:900}
+          .as-table td:last-child,.as-table th:last-child{border-right:0}
+          .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}
+          .as-photo-cell{border-right:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;min-height:150px;display:grid;grid-template-rows:24px 1fr}
+          .as-photo-cell:nth-child(3n){border-right:0}
+          .as-photo-label{text-align:center;font-weight:900;font-size:12px;padding-top:3px}
+          .as-photo-cell img{width:100%;height:130px;object-fit:cover;display:block}
+          .as-photo-empty{display:grid;place-items:center;color:#aaa;font-size:11px;background:#fafafa;height:130px}
+          .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}
+          .as-sign-row>div{height:56px;border-right:1px solid #d8d8d8;text-align:center;font-weight:900;padding-top:8px}
+          .as-sign-row>div:last-child{border-right:0}
+          /* 월별 */
+          .monthly-a4,.clean-monthly{width:100%;background:#fff;color:#111;padding:16px}
+          .monthly-a4 h2,.clean-monthly h2{text-align:center;margin:0 0 6px;font-size:20px}
+          .monthly-title-block{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
+          .subtitle{text-align:center;color:#555;font-size:12px;margin-bottom:14px}
+          .monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+          .monthly-kpi{border:1px solid #d8d8d8;padding:7px;text-align:center}
+          .monthly-kpi strong{display:block;font-size:15px}
+          .monthly-kpi em{display:block;font-style:normal;font-size:10px;color:#17834d;font-weight:900}
+          .monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}
+          .monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;margin-top:8px}
+          .monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:4px 3px;vertical-align:middle}
+          .monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}
+          .monthly-table td:first-child{text-align:left}
+          .monthly-table td:nth-child(2){text-align:left;overflow:hidden;text-overflow:ellipsis}
+          .monthly-table td:nth-child(n+3){text-align:right;white-space:nowrap}
+          .monthly-note{margin-top:10px;border:1px solid #d8d8d8;padding:8px;font-size:10px;line-height:1.5}
+          .monthly-stamp{margin-top:14px;text-align:right;font-size:12px;font-weight:900}
+          .monthly-detail{font-size:10px;color:#444;line-height:1.4}
+          .monthly-empty{text-align:center;color:#777;padding:16px}
+          .monthly-profit{color:#118447}.monthly-loss{color:#c0392b}
+          /* 기타 */
+          .generic-sheet{width:100%;background:#fff;color:#111;padding:16px}
+          .generic-sheet h2{text-align:center;margin:0 0 6px;font-size:21px}
+          .generic-subtitle{text-align:center;color:#555;font-size:12px;margin-bottom:14px}
+          .generic-section-title{margin-top:10px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:6px 8px;font-weight:900;font-size:13px}
+          .generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
+          .generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:7px 8px;vertical-align:top;word-break:keep-all;line-height:1.5}
+          .generic-table th{width:110px;background:#f1f6f8;text-align:center;font-weight:900}
+          .generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
+          .generic-photo-grid img{width:100%;height:180px;object-fit:cover;border:1px solid #cfd8dc}
+        `;
+        const w=window.open('','_blank','width=900,height=1100');
+        if(!w){toast("팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해주세요.");if(button){button.classList.remove("report-printing");button.textContent=btnLabel}return}
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>보고서 인쇄</title><style>${css}</style></head><body>${htmlContent}</body></html>`);
+        w.document.close();
+        w.focus();
+        setTimeout(()=>{w.print();setTimeout(()=>{w.close();if(button){button.classList.remove("report-printing");button.textContent=btnLabel}},500)},400);
       }
       function printAsReport(){doPrint(renderAsSheet(),"A4 출력")}
       function printMonthlyReport(){doPrint(renderMonthlyReportSheet(),"A4 출력")}
