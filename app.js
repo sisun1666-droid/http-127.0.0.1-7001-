@@ -1847,8 +1847,8 @@
             .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid #d8d8d8}.as-photo-cell{border-right:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;min-height:178px;display:grid;grid-template-rows:26px 1fr}.as-photo-cell:nth-child(3n){border-right:0}
             .as-photo-label{text-align:center;font-weight:900;font-size:13px;padding-top:4px}.as-photo-cell img{width:100%;height:150px;object-fit:cover;display:block}.as-photo-empty{display:grid;place-items:center;color:#aaa;font-size:12px;background:#fafafa}
             .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}.as-sign-row>div{height:64px;border-right:1px solid #d8d8d8;text-align:center;font-weight:900;padding-top:8px}.as-sign-row>div:last-child{border-right:0}
-            .monthly-report-shell{display:grid;grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start}.monthly-report-controls{display:grid;gap:10px;width:100%;max-width:380px;overflow:hidden}.monthly-rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:100%}.monthly-a4{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.monthly-a4 h2{text-align:center;margin:0 0 8px;font-size:24px}.monthly-a4 .subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.monthly-kpi{border:1px solid #d8d8d8;padding:9px;text-align:center}.monthly-kpi strong{display:block;font-size:18px}.monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;margin-top:10px}.monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:6px 5px;text-align:right;vertical-align:middle}.monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}.monthly-table td:first-child,.monthly-table td:nth-child(2){text-align:left}.monthly-note{margin-top:12px;border:1px solid #d8d8d8;padding:10px;font-size:12px;line-height:1.6}.monthly-stamp{margin-top:18px;text-align:right;font-size:13px;font-weight:900}.monthly-detail{font-size:11px;color:#444;line-height:1.45}.monthly-empty{text-align:center;color:#777;padding:22px!important}.clean-monthly{padding:30px 34px}.monthly-title-block{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.clean-monthly h2{font-size:22px}.monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}.monthly-kpi em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:#17834d;font-weight:900}.monthly-table.summary th,.monthly-table.summary td{font-size:12px}.monthly-table.cost td:nth-child(4),.monthly-table.detail td:nth-child(2){text-align:left}.monthly-profit{color:#118447}.monthly-loss{color:#c0392b}.monthly-input{display:grid;gap:5px;min-width:0}.monthly-input span{font-size:12px;font-weight:900;color:#34444b;white-space:normal;line-height:1.3}.monthly-input .field{width:100%;min-width:0;box-sizing:border-box}.monthly-input small{font-size:11px;line-height:1.35;color:var(--muted);min-height:30px}.monthly-rate-grid.single{grid-template-columns:minmax(0,1fr)}.monthly-rate-summary{display:grid;gap:4px;border:1px solid #d7e7df;background:#f7fffb;border-radius:8px;padding:10px;font-size:13px}.monthly-rate-summary span{color:#118447;font-weight:900}.clean-monthly .monthly-table th,.clean-monthly .monthly-table td{line-height:1.35;white-space:normal;word-break:keep-all}.clean-monthly .monthly-table.summary td:nth-child(n+3),.clean-monthly .monthly-table.summary th:nth-child(n+3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.cost td:nth-child(2),.clean-monthly .monthly-table.cost td:nth-child(3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(3),.clean-monthly .monthly-table.detail td:nth-child(4),.clean-monthly .monthly-table.detail td:nth-child(5){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(2){max-width:0;overflow:hidden;text-overflow:ellipsis}
-            .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}.generic-sheet{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.generic-sheet h2{text-align:center;margin:0 0 8px;font-size:23px}.generic-subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.generic-section-title{margin-top:12px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:7px 10px;font-weight:900}.generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:8px 9px;vertical-align:top;white-space:pre-wrap;word-break:keep-all;line-height:1.55}.generic-table th{width:118px;background:#f1f6f8;text-align:center;font-weight:900}.generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.generic-photo-grid img{width:100%;height:205px;object-fit:cover;border:1px solid #cfd8dc}.generic-photo-caption{text-align:center;font-size:12px;color:#555;margin-top:3px}.generic-photo-drop{border:2px dashed #b8c8cf;border-radius:8px;background:#fbfdfe;min-height:116px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:900;padding:12px;cursor:pointer}.generic-photo-drop.dragover{border-color:var(--teal);background:#e8f8fa;color:var(--ink)}.generic-report-form .report-form-grid{grid-template-columns:1fr 1fr}.generic-report-form textarea.field{min-height:86px}.generic-report-form .wide-textarea{min-height:120px}
+            .monthly-report-shell{display:grid;grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start}.monthly-report-controls{display:grid;gap:10px;width:100%;max-width:380px;overflow:hidden}.monthly-rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:100%}.monthly-a4{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.monthly-a4 h2{text-align:center;margin:0 0 8px;font-size:24px}.monthly-a4 .subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.monthly-kpi{border:1px solid #d8d8d8;padding:9px;text-align:center}.monthly-kpi strong{display:block;font-size:18px}.monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;margin-top:10px}.monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:6px 5px;text-align:right;vertical-align:middle}.monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}.monthly-table td:first-child,.monthly-table td:nth-child(2){text-align:left}.monthly-note{margin-top:12px;border:1px solid #d8d8d8;padding:10px;font-size:12px;line-height:1.6}.monthly-stamp{margin-top:18px;text-align:right;font-size:13px;font-weight:900}.monthly-detail{font-size:11px;color:#444;line-height:1.45}.monthly-empty{text-align:center;color:#777;padding:22px!important}.clean-monthly{padding:30px 34px}.monthly-title-block{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.clean-monthly h2{font-size:22px}.monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}.monthly-kpi em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:#17834d;font-weight:900}.monthly-table.summary th,.monthly-table.summary td{font-size:12px}.monthly-table.cost td:nth-child(4),.monthly-table.detail td:nth-child(2){text-align:left}.monthly-profit{color:#118447}.monthly-loss{color:#c0392b}.monthly-input{display:grid;gap:5px;min-width:0}.monthly-input span{font-size:12px;font-weight:900;color:#34444b;white-space:normal;line-height:1.3}.monthly-input .field{width:100%;min-width:0;box-sizing:border-box}.monthly-input small{font-size:11px;line-height:1.35;color:var(--muted);min-height:30px}.monthly-rate-grid.single{grid-template-columns:minmax(0,1fr)}.monthly-rate-summary{display:grid;gap:4px;border:1px solid #d7e7df;background:#f7fffb;border-radius:8px;padding:10px;font-size:13px}.monthly-rate-summary span{color:#118447;font-weight:900}.clean-monthly .monthly-table th,.clean-monthly .monthly-table td{line-height:1.35;white-space:normal;word-break:keep-all}.clean-monthly .monthly-table.summary td:nth-child(n+3),.clean-monthly .monthly-table.summary th:nth-child(n+3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.cost td:nth-child(2),.clean-monthly .monthly-table.cost td:nth-child(3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(3),.clean-monthly .monthly-table.detail td:nth-child(4),.clean-monthly .monthly-table.detail td:nth-child(5){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}.generic-sheet{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.generic-sheet h2{text-align:center;margin:0 0 8px;font-size:23px}.generic-subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.generic-section-title{margin-top:12px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:7px 10px;font-weight:900}.generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:8px 9px;vertical-align:top;white-space:pre-wrap;word-break:keep-all;line-height:1.55}.generic-table th{width:118px;background:#f1f6f8;text-align:center;font-weight:900}.generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.generic-photo-grid img{width:100%;height:205px;object-fit:cover;border:1px solid #cfd8dc}.generic-photo-caption{text-align:center;font-size:12px;color:#555;margin-top:3px}.generic-photo-drop{border:2px dashed #b8c8cf;border-radius:8px;background:#fbfdfe;min-height:116px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:900;padding:12px;cursor:pointer}.generic-photo-drop.dragover{border-color:var(--teal);background:#e8f8fa;color:var(--ink)}.generic-report-form .report-form-grid{grid-template-columns:1fr 1fr}.generic-report-form textarea.field{min-height:86px}.generic-report-form .wide-textarea{min-height:120px}
             body.report-page #sharedNotice{display:none!important}
             @media(max-width:1050px){.report-shell,.monthly-report-shell{grid-template-columns:1fr}.as-sheet,.monthly-a4{width:100%}}@media print{@page{size:A4;margin:10mm}body>*{display:none!important}body>.print-root{display:block!important}.print-root{display:block!important;margin:0;padding:0}.as-sheet{border:0!important;width:100%!important;min-height:auto!important;box-shadow:none!important}.monthly-a4{border:0!important;width:100%!important;min-height:auto!important;padding:20px!important;box-shadow:none!important}.generic-sheet{border:0!important;width:100%!important;min-height:auto!important;padding:20px!important;box-shadow:none!important}.monthly-table{font-size:11px}.as-photo-cell img{max-height:160px;object-fit:cover}.monthly-report-shell{display:block!important}.monthly-report-controls{display:none!important}}
           #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
@@ -2107,69 +2107,75 @@
           $(".report-preview").innerHTML=renderAsSheet();updatePhotoCounts();toast(`${kind==="before"?"작업 전":"작업 후"} 사진 ${urls.length}장을 넣었습니다.`);
         });
       }
-      /* ── 공통 인쇄 함수: 새 창으로 열어서 A4 내용만 인쇄 ── */
+      /* ── 공통 인쇄 함수: 새 창 A4 전용 출력 ── */
       function doPrint(htmlContent,btnLabel){
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
+        /* ── A4: 210mm × 297mm, 여백 12mm → 내용 영역 186mm × 273mm ── */
         const css=`
-          @page{size:A4 portrait;margin:10mm}
-          *{box-sizing:border-box}
-          body{margin:0;padding:0;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}
-          /* A/S */
-          .as-sheet{width:100%;background:#fff;color:#111}
-          .as-sheet h2{text-align:center;font-size:20px;margin:14px 0 16px}
-          .as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:6px 10px;background:#fff}
-          .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
-          .as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:6px 8px;white-space:normal;height:28px}
-          .as-table th{width:90px;text-align:center;background:#fff;font-weight:900}
+          @page{size:A4 portrait;margin:12mm 12mm 10mm 12mm}
+          *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+          html,body{margin:0;padding:0;background:#fff;color:#111;
+            font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",Arial,sans-serif;
+            font-size:9pt;width:186mm}
+          /* ─── A/S 보고서 ─── */
+          .as-sheet{width:186mm}
+          .as-sheet h2{text-align:center;font-size:14pt;margin:8px 0 10px;font-weight:900}
+          .as-section-title{font-weight:900;font-size:9pt;border-top:1.5px solid #888;border-bottom:1px solid #ddd;padding:4px 8px;background:#f8f8f8;margin-top:2px}
+          .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5pt}
+          .as-table th,.as-table td{border-bottom:1px solid #ddd;border-right:1px solid #ddd;padding:4px 6px;vertical-align:middle;height:auto;min-height:20px}
+          .as-table th{width:70px;text-align:center;background:#f8f8f8;font-weight:900;white-space:nowrap}
           .as-table td:last-child,.as-table th:last-child{border-right:0}
-          .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}
-          .as-photo-cell{border-right:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;min-height:150px;display:grid;grid-template-rows:24px 1fr}
+          .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #ddd;page-break-inside:avoid}
+          .as-photo-cell{border-right:1px solid #ddd;border-bottom:1px solid #ddd;display:grid;grid-template-rows:18px 1fr}
           .as-photo-cell:nth-child(3n){border-right:0}
-          .as-photo-label{text-align:center;font-weight:900;font-size:12px;padding-top:3px}
-          .as-photo-cell img{width:100%;height:130px;object-fit:cover;display:block}
-          .as-photo-empty{display:grid;place-items:center;color:#aaa;font-size:11px;background:#fafafa;height:130px}
-          .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}
-          .as-sign-row>div{height:56px;border-right:1px solid #d8d8d8;text-align:center;font-weight:900;padding-top:8px}
+          .as-photo-label{text-align:center;font-weight:900;font-size:8pt;padding-top:2px}
+          .as-photo-cell img{width:100%;height:90px;object-fit:cover;display:block}
+          .as-photo-empty{height:90px;display:grid;place-items:center;color:#bbb;font-size:8pt;background:#fafafa}
+          .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #ddd;page-break-inside:avoid}
+          .as-sign-row>div{height:44px;border-right:1px solid #ddd;text-align:center;font-weight:900;padding-top:6px;font-size:8.5pt}
           .as-sign-row>div:last-child{border-right:0}
-          /* 월별 */
-          .monthly-a4,.clean-monthly{width:100%;background:#fff;color:#111;padding:16px}
-          .monthly-a4 h2,.clean-monthly h2{text-align:center;margin:0 0 6px;font-size:20px}
-          .monthly-title-block{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
-          .subtitle{text-align:center;color:#555;font-size:12px;margin-bottom:14px}
-          .monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
-          .monthly-kpi{border:1px solid #d8d8d8;padding:7px;text-align:center}
-          .monthly-kpi strong{display:block;font-size:15px}
-          .monthly-kpi em{display:block;font-style:normal;font-size:10px;color:#17834d;font-weight:900}
+          /* ─── 시공월별 보고서 ─── */
+          .monthly-a4,.clean-monthly{width:186mm;padding:0}
+          .monthly-a4 h2,.clean-monthly h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 4px}
+          .monthly-title-block{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px}
+          .subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:8px}
+          .monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0}
+          .monthly-kpi{border:1px solid #d0d0d0;padding:5px 4px;text-align:center}
+          .monthly-kpi span{font-size:7.5pt;display:block;color:#555}
+          .monthly-kpi strong{display:block;font-size:10pt;font-weight:900;margin-top:2px}
+          .monthly-kpi em{display:block;font-style:normal;font-size:7pt;color:#17834d;font-weight:900;margin-top:1px}
           .monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}
-          .monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;margin-top:8px}
-          .monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:4px 3px;vertical-align:middle}
-          .monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}
+          .monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;margin-top:6px}
+          .monthly-table th,.monthly-table td{border:1px solid #ccc;padding:3px 4px;vertical-align:middle}
+          .monthly-table th{background:#f0f4f6;text-align:center;font-weight:900;white-space:nowrap}
+          .monthly-table td{text-align:right}
           .monthly-table td:first-child{text-align:left}
-          .monthly-table td:nth-child(2){text-align:left;overflow:hidden;text-overflow:ellipsis}
-          .monthly-table td:nth-child(n+3){text-align:right;white-space:nowrap}
-          .monthly-note{margin-top:10px;border:1px solid #d8d8d8;padding:8px;font-size:10px;line-height:1.5}
-          .monthly-stamp{margin-top:14px;text-align:right;font-size:12px;font-weight:900}
-          .monthly-detail{font-size:10px;color:#444;line-height:1.4}
-          .monthly-empty{text-align:center;color:#777;padding:16px}
-          .monthly-profit{color:#118447}.monthly-loss{color:#c0392b}
-          /* 기타 */
-          .generic-sheet{width:100%;background:#fff;color:#111;padding:16px}
-          .generic-sheet h2{text-align:center;margin:0 0 6px;font-size:21px}
-          .generic-subtitle{text-align:center;color:#555;font-size:12px;margin-bottom:14px}
-          .generic-section-title{margin-top:10px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:6px 8px;font-weight:900;font-size:13px}
-          .generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
-          .generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:7px 8px;vertical-align:top;word-break:keep-all;line-height:1.5}
-          .generic-table th{width:110px;background:#f1f6f8;text-align:center;font-weight:900}
+          .monthly-table td:nth-child(2){text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .monthly-table.cost td:nth-child(4){text-align:left}
+          .monthly-note{margin-top:6px;border:1px solid #ddd;padding:6px 8px;font-size:7.5pt;line-height:1.5;background:#fafafa}
+          .monthly-stamp{margin-top:10px;text-align:right;font-size:8.5pt;font-weight:900}
+          .monthly-detail{font-size:7.5pt;color:#555;line-height:1.35;margin-top:1px}
+          .monthly-empty{text-align:center;color:#999;padding:10px;font-size:8pt}
+          .monthly-profit{color:#118447;font-weight:900}.monthly-loss{color:#c0392b;font-weight:900}
+          /* ─── 기타 보고서 ─── */
+          .generic-sheet{width:186mm;padding:0}
+          .generic-sheet h2{text-align:center;font-size:14pt;font-weight:900;margin:0 0 4px}
+          .generic-subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:10px}
+          .generic-section-title{margin-top:8px;border-top:2px solid #222;border-bottom:1px solid #c8d4d8;background:#f4f8fa;padding:4px 8px;font-weight:900;font-size:8.5pt}
+          .generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5pt}
+          .generic-table th,.generic-table td{border:1px solid #ccc;padding:5px 7px;vertical-align:top;word-break:keep-all;line-height:1.5;white-space:pre-wrap}
+          .generic-table th{width:80px;background:#f0f4f6;text-align:center;font-weight:900;white-space:nowrap}
           .generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
-          .generic-photo-grid img{width:100%;height:180px;object-fit:cover;border:1px solid #cfd8dc}
+          .generic-photo-grid img{width:100%;height:150px;object-fit:cover;border:1px solid #ccc}
+          .monthly-stamp{margin-top:10px;text-align:right;font-size:8.5pt;font-weight:900}
         `;
-        const w=window.open('','_blank','width=900,height=1100');
+        const w=window.open('','_blank','width=860,height=1120');
         if(!w){toast("팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해주세요.");if(button){button.classList.remove("report-printing");button.textContent=btnLabel}return}
         w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>보고서 인쇄</title><style>${css}</style></head><body>${htmlContent}</body></html>`);
         w.document.close();
         w.focus();
-        setTimeout(()=>{w.print();setTimeout(()=>{w.close();if(button){button.classList.remove("report-printing");button.textContent=btnLabel}},500)},400);
+        setTimeout(()=>{w.print();setTimeout(()=>{w.close();if(button){button.classList.remove("report-printing");button.textContent=btnLabel}},600)},500);
       }
       function printAsReport(){doPrint(renderAsSheet(),"A4 출력")}
       function printMonthlyReport(){doPrint(renderMonthlyReportSheet(),"A4 출력")}
