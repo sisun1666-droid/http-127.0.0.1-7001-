@@ -1,4 +1,24 @@
-﻿(function(){const v="fix-20260610c";if(localStorage.getItem("_appCleanup")!==v){const keep=["solar-device-id","solar-presence-device-id-v1","gcalCleaned_v2","solar-pending-deletes-v1","gcalDeletedIds"];const keys=Object.keys(localStorage);keys.forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});localStorage.setItem("_appCleanup",v)}})();
+﻿(function(){
+  const v="fix-20260610d";
+  const keep=["solar-device-id","solar-presence-device-id-v1","gcalCleaned_v2","solar-pending-deletes-v1","gcalDeletedIds"];
+  if(localStorage.getItem("_appCleanup")!==v){
+    Object.keys(localStorage).forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});
+    localStorage.setItem("_appCleanup",v);
+  }
+  /* 매 로드마다: 저장된 state에서 hiddenNavLabels의 보호 항목 강제 제거 */
+  const PROTECTED=["구조물 검수"];
+  try{
+    const stateKey="solar-admin-state-v1";
+    const raw=localStorage.getItem(stateKey);
+    if(raw){
+      const obj=JSON.parse(raw);
+      if(Array.isArray(obj.hiddenNavLabels)&&PROTECTED.some(p=>obj.hiddenNavLabels.includes(p))){
+        obj.hiddenNavLabels=obj.hiddenNavLabels.filter(l=>!PROTECTED.includes(l));
+        localStorage.setItem(stateKey,JSON.stringify(obj));
+      }
+    }
+  }catch(e){}
+})();
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
