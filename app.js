@@ -257,6 +257,8 @@
       localStorage.setItem(storageKey,JSON.stringify(state));
       setSyncNotice("ok","✅ 팀원의 최신 데이터를 불러왔습니다.");
       render();
+      /* 필수 nav 추가 시 즉시 Supabase에 저장 (폴링이 덮어쓰기 전에) */
+      if(navDirty)setTimeout(()=>pushSharedState().catch(()=>{}),300);
     }
     async function loadSharedState(silent=false,forceRemote=false){
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
