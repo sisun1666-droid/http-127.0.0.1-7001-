@@ -4337,11 +4337,38 @@
       (function(){try{const d=JSON.parse(localStorage.getItem(TOKEN_STORE)||"{}");if(d.t&&d.e>Date.now()+5000){accessToken=d.t;tokenExpiresAt=d.e}}catch(e){}}());
       function saveToken(t,expiresIn){accessToken=t;tokenExpiresAt=Date.now()+(expiresIn-60)*1000;localStorage.setItem(TOKEN_STORE,JSON.stringify({t:accessToken,e:tokenExpiresAt}))}
       function clearToken(){accessToken=null;tokenExpiresAt=0;localStorage.removeItem(TOKEN_STORE)}
-      /* GIS 로드 */
-      function loadGis(){return new Promise(resolve=>{if(window.google?.accounts?.oauth2){resolve();return}const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.onload=resolve;s.onerror=resolve;document.head.appendChild(s)})}
-      async function ensureTokenClient(){if(!clientId())return false;await loadGis();if(!tokenClient){tokenClient=window.google.accounts.oauth2.initTokenClient({client_id:clientId(),scope:SCOPE,callback(resp){if(resp.access_token){saveToken(resp.access_token,resp.expires_in||3600)}updateGcalBtn()}})}return true}
-      async function requestToken(){if(!await ensureTokenClient()){toast("관리자 설정에서 Google Client ID를 먼저 등록해주세요.");return false}if(isConnected())return true;return new Promise(resolve=>{const prev=tokenClient.callback;tokenClient.callback=resp=>{tokenClient.callback=prev;prev(resp);resolve(!!resp.access_token)};tokenClient.requestAccessToken({prompt:""})})}
-      function disconnect(){if(accessToken)window.google?.accounts?.oauth2?.revoke(accessToken,()=>{});clearToken();tokenClient=null;updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
+      /* 직접 OAuth 팝업 방식 */
+      const REDIRECT_URI="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
+      async function requestToken(){
+        if(!clientId()){toast("관리자 설정에서 Google Client ID를 먼저 등록해주세요.");return false}
+        if(isConnected())return true;
+        return new Promise(resolve=>{
+          const authUrl="https://accounts.google.com/o/oauth2/v2/auth"+
+            "?client_id="+encodeURIComponent(clientId())+
+            "&redirect_uri="+encodeURIComponent(REDIRECT_URI)+
+            "&response_type=token"+
+            "&scope="+encodeURIComponent(SCOPE)+
+            "&prompt=consent";
+          const popup=window.open(authUrl,"gcalOAuth","width=520,height=620,left=200,top=100");
+          if(!popup){toast("팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.");resolve(false);return}
+          const timer=setInterval(()=>{
+            try{
+              if(popup.closed){clearInterval(timer);resolve(false);return}
+              const url=popup.location.href;
+              if(url.startsWith(REDIRECT_URI)||url.startsWith("https://sisun1666-droid.github.io")){
+                const hash=popup.location.hash.slice(1);
+                const params=new URLSearchParams(hash);
+                const token=params.get("access_token");
+                const exp=parseInt(params.get("expires_in")||"3600");
+                popup.close();clearInterval(timer);
+                if(token){saveToken(token,exp);updateGcalBtn();resolve(true)}
+                else{resolve(false)}
+              }
+            }catch(e){}
+          },400);
+        });
+      }
+      function disconnect(){clearToken();updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
       /* Todo → Calendar 이벤트 변환 */
       function todoToEvent(t){const start=t.start||t.due||today,end=t.due||start;const colorMap={"긴급":"11","높음":"6","완료":"2","진행중":"7","취소":"8","백로그":"8"};const colorId=colorMap[t.priority]==="11"?"11":colorMap[t.status];const body={summary:t.title||"할일",description:[t.detail,t.result?`✅ 결과: ${t.result}`:""].filter(Boolean).join("\n\n"),extendedProperties:{private:{kiwoomTodoId:t.id||"",kiwoomStatus:t.status||"",kiwoomOwner:t.owner||""}}};if(colorId)body.colorId=colorId;if(t.location)body.location=t.location;if(t.allDay!==false){const endD=new Date(end);endD.setDate(endD.getDate()+1);body.start={date:start};body.end={date:endD.toISOString().slice(0,10)}}else{const st=t.startTime||"09:00",et=t.endTime||"10:00";body.start={dateTime:`${start}T${st}:00`,timeZone:"Asia/Seoul"};body.end={dateTime:`${end}T${et}:00`,timeZone:"Asia/Seoul"}}return body}
       /* Calendar API 호출 */
