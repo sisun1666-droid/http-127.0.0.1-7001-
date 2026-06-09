@@ -1586,6 +1586,7 @@
             kiwoomLoaded=true;
           }catch(e){}
         }
+        window.kiwoomData={get stations(){return kiwoomStations},get loaded(){return kiwoomLoaded},load:loadKiwoomStations};
         function renderKiwoomDetail(s){
           if(!s)return "";
           const keys=Object.keys(s);
@@ -2189,13 +2190,13 @@
         close?.insertAdjacentHTML("beforebegin",`<div class="construction-db-search"><input class="field" id="constructionDbSearch" placeholder="DB 검색"><div class="construction-db-results hidden" id="constructionDbResults"></div></div>`);
       }
       const baseOpenConstructionForDb=openConstructionModal;
-      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden");if(!kiwoomLoaded)loadKiwoomStations().then(function(){if($("#constructionDbSearch")&&$("#constructionDbSearch").value.trim())renderConstructionDbResults();});};
+      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden");if(!window.kiwoomData?.loaded)window.kiwoomData?.load().then(function(){if($("#constructionDbSearch")&&$("#constructionDbSearch").value.trim())renderConstructionDbResults();});};
       function renderConstructionDbResults(){
         const box=$("#constructionDbResults"),q=$("#constructionDbSearch")?.value||"";
         if(!box)return;
         const dbRows=(window.solarDb&&window.solarDb.search)?window.solarDb.search(q,12):[];
         const kq=q.toLowerCase().trim();
-        const kRows=kq&&kiwoomStations.length?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(kq);}).slice(0,12).map(function(s,i){return{row:{발전소명:s["발전소명"]||s.site||"",사업주:s["영업담당자"]||s.owner||"",현장주소:s["현장주소"]||s.address||"",공사용량:s["발전_허가용량"]||s.kw||""},i:"k"+i,_kiwoom:s};}):[];
+        const _ks=window.kiwoomData?.stations||[];const kRows=kq&&_ks.length?_ks.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(kq);}).slice(0,12).map(function(s,i){return{row:{발전소명:s["발전소명"]||s.site||"",사업주:s["영업담당자"]||s.owner||"",현장주소:s["현장주소"]||s.address||"",공사용량:s["발전_허가용량"]||s.kw||""},i:"k"+i,_kiwoom:s};}):[];
         const rows=[...dbRows,...kRows].slice(0,12);
         window.__constructionDbMatches=rows;
         box.classList.toggle("hidden",!q.trim()||!rows.length);
@@ -2265,8 +2266,8 @@
         const label=items.length>1?groupLabel(items):items[0].site,kw=Math.round(items.reduce((s,x)=>s+x.kw,0)*100)/100;
         applyDbGroupToConstruction({items,label,kw});
       }
-      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch"){if(!kiwoomLoaded){loadKiwoomStations().then(renderConstructionDbResults);}else{renderConstructionDbResults();}}},true);
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="applySelectedConstructionDbRows"){e.preventDefault();e.stopImmediatePropagation();applySelectedDbRowsToConstruction();return}if(t.dataset.constructionDbRow!==undefined){e.preventDefault();e.stopImmediatePropagation();const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
+      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch"){if(!window.kiwoomData?.loaded){window.kiwoomData?.load().then(renderConstructionDbResults);}else{renderConstructionDbResults();}}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="applySelectedConstructionDbRows"){e.preventDefault();e.stopImmediatePropagation();applySelectedDbRowsToConstruction();return}if(t.dataset.constructionDbRow!==undefined){e.preventDefault();e.stopImmediatePropagation();const idx=t.dataset.constructionDbRow;let row;if(String(idx).startsWith("k")){const match=window.__constructionDbMatches?.find(x=>x.i===idx);row=match?._kiwoom||match?.row;}else{row=window.solarDb?.rows()[Number(idx)];}if(row)applyDbRowToConstruction(row)}},true);
     })();
     (function setupFieldworkView(){
       function ensureFieldworkChrome(){
