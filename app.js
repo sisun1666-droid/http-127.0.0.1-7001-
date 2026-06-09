@@ -4396,7 +4396,28 @@
       async function syncTodoToGcal(t){if(!isConnected()||!t)return;try{if(t.gcalEventId){await gcalUpdate(t.gcalEventId,t)}else{const id=await gcalCreate(t);if(id){t.gcalEventId=id;saveStateAfterPaint()}}}catch(e){console.warn("gcal sync:",e)}}
       async function removeTodoFromGcal(gcalId){if(!isConnected()||!gcalId)return;try{await gcalDelete(gcalId)}catch(e){}}
       /* 구글 → 앱 가져오기 */
-      async function pullFromGcal(){if(!await requestToken())return;toast("구글 캘린더에서 가져오는 중...");try{const now=new Date().toISOString();const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${now}&maxResults=200&singleEvents=true&orderBy=startTime&showDeleted=false`);const events=data?.items||[];let added=0;events.forEach(ev=>{if(ev.status==="cancelled")return;if(state.todos.some(t=>t.gcalEventId===ev.id))return;const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;const newTodo=normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date});state.todos.unshift(newTodo);added++});if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}toast(added>0?`${added}건을 할일로 가져왔습니다.`:"새로운 일정이 없습니다.")}catch(e){toast("가져오기 실패: "+e.message)}}
+      function todayStartISO(){return new Date(today+"T00:00:00+09:00").toISOString()}
+      async function pullFromGcal(){
+        if(!await requestToken())return;
+        const colorNote=syncColor()?` (색상필터: ${GCAL_COLORS[syncColor()]||syncColor()})`:"";
+        toast("구글 캘린더에서 가져오는 중..."+colorNote);
+        try{
+          const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${todayStartISO()}&maxResults=300&singleEvents=true&orderBy=startTime&showDeleted=false`);
+          const events=data?.items||[];
+          let added=0;
+          events.forEach(ev=>{
+            if(ev.status==="cancelled")return;
+            if(syncColor()&&(ev.colorId||"")!==syncColor())return;
+            if(state.todos.some(t=>t.gcalEventId===ev.id))return;
+            const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
+            const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
+            state.todos.unshift(normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date}));
+            added++;
+          });
+          if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}
+          toast(added>0?`${added}건을 할일로 가져왔습니다.`:`새로운 일정이 없습니다.${syncColor()?" (색상 필터 적용중)":""}`);
+        }catch(e){toast("가져오기 실패: "+e.message)}
+      }
       /* 전체 할일 → 구글 캘린더 업로드 */
       async function pushAllToGcal(){if(!await requestToken())return;const todos=state.todos.filter(t=>t.status!=="취소");toast(`${todos.length}건 구글 캘린더에 업로드 중...`);let ok=0;for(const t of todos){try{await syncTodoToGcal(t);ok++}catch(e){}}saveStateAfterPaint();toast(`${ok}건 업로드 완료`)}
       /* 자동 pull (연결된 경우에만, 특정 캘린더 선택된 경우에만) */
@@ -4404,8 +4425,8 @@
         if(!isConnected())return;
         if(!state.gcalCalendarId)return; /* 캘린더 미선택 시 pull 안함 */
         try{
-          const now=new Date().toISOString();
-          const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${now}&maxResults=200&singleEvents=true&orderBy=startTime&showDeleted=false`);
+          /* 오늘 00:00부터 가져와야 오늘 등록한 이벤트도 포함됨 */
+          const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${todayStartISO()}&maxResults=300&singleEvents=true&orderBy=startTime&showDeleted=false`);
           const events=data?.items||[];
           let added=0;
           events.forEach(ev=>{
