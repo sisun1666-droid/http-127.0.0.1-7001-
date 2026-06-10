@@ -1,37 +1,17 @@
-﻿(function(){
-  const v="fix-20260610h";
-  const keep=["solar-device-id","solar-presence-device-id-v1","gcalCleaned_v2","solar-pending-deletes-v1","gcalDeletedIds"];
-  if(localStorage.getItem("_appCleanup")!==v){
-    Object.keys(localStorage).forEach(k=>{if(!keep.includes(k))localStorage.removeItem(k)});
-    localStorage.setItem("_appCleanup",v);
-  }
-  /* 매 로드마다: 저장된 state에서 hiddenNavLabels의 보호 항목 강제 제거 */
-  const PROTECTED=["구조물 검수"];
-  try{
-    const stateKey="solar-admin-state-v1";
-    const raw=localStorage.getItem(stateKey);
-    if(raw){
-      const obj=JSON.parse(raw);
-      if(Array.isArray(obj.hiddenNavLabels)&&PROTECTED.some(p=>obj.hiddenNavLabels.includes(p))){
-        obj.hiddenNavLabels=obj.hiddenNavLabels.filter(l=>!PROTECTED.includes(l));
-        localStorage.setItem(stateKey,JSON.stringify(obj));
-      }
-    }
-  }catch(e){}
-})();
+﻿
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"🔍",label:"구조물 검수"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],inspections:[]};
-    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),inspectionView:$("#inspectionView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
-    let state=loadState();loadPendingDeletes();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages","inspection"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"]};
+    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
+    let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
     const staffSessionKey="solar-staff-session-v1";
     const adminUnlockKey="solar-admin-unlocked",adminOwnerKey="solar-admin-owner";
     function cleanEmail(v){return String(v||"").trim().toLowerCase()}
     function authMsg(msg){const el=$("#authMessage");if(el)el.textContent=msg}
     function showAuthGate(msg="직원 이름과 개인 PIN을 입력해주세요."){document.body.classList.add("auth-pending");authMsg(msg)}
-    function showApp(){authReady=true;loadSharedState(true,true).finally(()=>{if(!authUser)return;render();ensureSheetSyncButton();document.body.classList.remove("auth-pending");
+    function showApp(){authReady=true;loadSharedState(true).finally(()=>{if(!authUser)return;render();ensureSheetSyncButton();document.body.classList.remove("auth-pending");
       /* ── 새 테이블로 마이그레이션: Supabase에서 이미 데이터를 불러왔으면 완료 처리만 ── */
       setTimeout(()=>{
         if(!authUser)return;
@@ -77,9 +57,9 @@
       }
     }
     function fillStaffLoginNames(){ensureDefaultStaffPins();const s=$("#staffLoginName");if(!s)return;const current=s.value||"";s.innerHTML=`<option value="">직원 선택</option>`+(state.people||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");s.value=[...s.options].some(o=>o.value===current)?current:""}
-    function staffSession(){try{return JSON.parse(sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
+    function staffSession(){try{return JSON.parse(localStorage.getItem(staffSessionKey)||sessionStorage.getItem(staffSessionKey)||"null")}catch{return null}}
     function loginName(){return authUser?.user_metadata?.name||authUser?.user_metadata?.full_name||authUser?.email||""}
-    function setStaffSession(person){if(sessionStorage.getItem(adminOwnerKey)!==person.name){adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey)}authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};sessionStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}));localStorage.removeItem(staffSessionKey)}
+    function setStaffSession(person){if(sessionStorage.getItem(adminOwnerKey)!==person.name){adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey)}authUser={email:person.email||`${person.name}@staff.local`,user_metadata:{name:person.name,full_name:person.name},staff:true};localStorage.setItem(staffSessionKey,JSON.stringify({name:person.name,email:authUser.email,at:Date.now()}));sessionStorage.removeItem(staffSessionKey)}
     function clearStaffSession(){adminUnlocked=false;localStorage.removeItem(staffSessionKey);sessionStorage.removeItem(staffSessionKey);sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);if(currentView==="admin"){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}}
     function acceptStaffSession(){const sess=staffSession();if(!sess?.name)return false;const person=(state.people||[]).find(p=>p.name===sess.name);if(!person)return false;setStaffSession(person);$("#googleLogoutBtn")?.classList.remove("hidden");showApp();return true}
     function setLoginButtonState(loading=false,label="업무관리 로그인"){const b=$("#staffLoginBtn");if(!b)return;b.classList.toggle("auth-loading",loading);b.classList.remove("auth-clicked");b.disabled=!!loading;b.textContent=label}
@@ -136,20 +116,22 @@
     const TABLE_KEYS=["todos","assignments","construction","projects","meetings","fieldworkLogs"];
     /* Supabase 테이블명 매핑 (JS키 → DB테이블명) */
     const TABLE_NAME={todos:"todos",assignments:"assignments",construction:"construction",projects:"projects",meetings:"meetings",fieldworkLogs:"fieldwork_logs"};
-    /* 소프트 딜리트: deleted_at을 Supabase에 기록해 어떤 기기에서도 부활 불가 */
-    const pendingDeletesKey="solar-pending-deletes-v1";
-    let _pendingDeletes={};TABLE_KEYS.forEach(t=>_pendingDeletes[t]=[]);
-    function loadPendingDeletes(){try{const s=localStorage.getItem(pendingDeletesKey);if(s)_pendingDeletes=JSON.parse(s);}catch{}}
-    function savePendingDeletes(){try{localStorage.setItem(pendingDeletesKey,JSON.stringify(_pendingDeletes));}catch{}}
-    function softDelete(table,id,item){if(!id)return;if(!_pendingDeletes[table])_pendingDeletes[table]=[];_pendingDeletes[table].push({id,data:item,deleted_at:new Date().toISOString()});savePendingDeletes();}
-    function clearPendingDeletes(){TABLE_KEYS.forEach(t=>_pendingDeletes[t]=[]);savePendingDeletes();}
+    /* 서버에 존재하는 ID 목록 (삭제 감지용) */
+    let _svrIds={todos:new Set(),assignments:new Set(),construction:new Set(),projects:new Set(),meetings:new Set(),fieldworkLogs:new Set()};
+    const svrIdsKey="solar-svr-ids-v1";
+    function loadSvrIds(){try{const s=localStorage.getItem(svrIdsKey);if(!s)return;const p=JSON.parse(s);Object.keys(_svrIds).forEach(t=>{if(Array.isArray(p[t]))_svrIds[t]=new Set(p[t]);});}catch{}}
+    function saveSvrIds(){try{const o={};Object.keys(_svrIds).forEach(t=>{o[t]=[..._svrIds[t]];});localStorage.setItem(svrIdsKey,JSON.stringify(o));}catch{}}
+    /* 최근 삭제된 항목 보호 (60초간): 다른 브라우저의 덮어쓰기로 인한 부활 방지 */
+    const _deletedTombstones={};TABLE_KEYS.forEach(t=>_deletedTombstones[t]=new Map());
+    function markDeleted(table,id){if(id&&_deletedTombstones[table])_deletedTombstones[table].set(id,Date.now())}
+    function wasRecentlyDeleted(table,id){const ts=_deletedTombstones[table]?.get(id);return !!ts&&Date.now()-ts<60000}
 
-    /* 개별 테이블에서 데이터 로드 (deleted_at이 설정된 항목은 제외) */
+    /* 개별 테이블에서 데이터 로드 */
     async function loadSupabaseData(){
       const h=supabaseHeaders();
       const [cfgRes,...tableRes]=await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.main&select=data`,{cache:"no-store",headers:h}),
-        ...TABLE_KEYS.map(t=>fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME[t]||t}?select=id,data&deleted_at=is.null&order=updated_at.desc`,{cache:"no-store",headers:h}))
+        ...TABLE_KEYS.map(t=>fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME[t]||t}?select=id,data&order=updated_at.desc`,{cache:"no-store",headers:h}))
       ]);
       /* 모든 응답 실패 = 연결 불가 */
       if(!cfgRes.ok&&tableRes.every(r=>!r.ok))throw new Error("Supabase 연결 실패");
@@ -177,11 +159,12 @@
       TABLE_KEYS.forEach((table,i)=>{
         const rows=tableData[i]||[];
         combined[table]=rows.map(r=>r.data).filter(Boolean);
+        _svrIds[table]=new Set(rows.map(r=>r.id).filter(Boolean));saveSvrIds();
       });
       return combined;
     }
 
-    /* 개별 테이블에 저장 (upsert + 소프트 딜리트) */
+    /* 개별 테이블에 저장 (upsert + delete) */
     async function saveDataToSupabase(data=state,options={}){
       const now=new Date().toISOString();
       const h=supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"});
@@ -192,35 +175,37 @@
       });
       ["__lastSavedAt","__lastSavedAtText","__deviceId","__updatedAt"].forEach(k=>{if(data[k]!==undefined)cfgData[k]=data[k]});
       const cfgBody=JSON.stringify({id:"main",data:cfgData,updated_at:now});
-      /* 2. 각 테이블에 항목 upsert + 삭제 항목 deleted_at 기록 (소프트 딜리트) */
+      /* 2. 각 테이블에 항목 upsert + 삭제된 항목 DELETE */
       const ops=[fetch(`${SUPABASE_URL}/rest/v1/app_config`,{method:"POST",headers:h,body:cfgBody,keepalive:!!options.keepalive})];
+      const _pendingIds={};
       for(const table of TABLE_KEYS){
         const items=(data[table]||[]).filter(x=>x&&x.id);
+        const currentIds=new Set(items.map(x=>x.id));
+        const prevIds=_svrIds[table]||new Set();
+        const deletedIds=[...prevIds].filter(id=>!currentIds.has(id));
         const dbTable=TABLE_NAME[table]||table;
         if(items.length){
           ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}`,{
             method:"POST",headers:h,keepalive:!!options.keepalive,
-            body:JSON.stringify(items.map(item=>({id:item.id,data:item,updated_at:now,deleted_at:null})))
+            body:JSON.stringify(items.map(item=>({id:item.id,data:item,updated_at:now})))
           }));
         }
-        /* 소프트 딜리트: deleted_at 타임스탬프를 기록해 모든 기기에서 영구 삭제 */
-        const toDelete=(_pendingDeletes[table]||[]).filter(x=>x&&x.id);
-        if(toDelete.length){
-          ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}`,{
-            method:"POST",headers:h,keepalive:!!options.keepalive,
-            body:JSON.stringify(toDelete.map(x=>({id:x.id,data:x.data||{},updated_at:now,deleted_at:x.deleted_at||now})))
+        if(deletedIds.length){
+          ops.push(fetch(`${SUPABASE_URL}/rest/v1/${dbTable}?id=in.(${deletedIds.map(id=>`"${id}"`).join(",")})`,{
+            method:"DELETE",headers:supabaseHeaders(),keepalive:!!options.keepalive
           }));
         }
+        _pendingIds[table]=currentIds;
       }
       const results=await Promise.all(ops);
       const failed=results.filter(r=>!r.ok);
       if(failed.length){const s=await Promise.all(failed.map(r=>r.status));throw new Error(`저장 실패(${s.join(",")})`);}
-      /* 저장 성공 후 pendingDeletes 초기화 */
-      clearPendingDeletes();
+      /* 저장 성공 후에만 _svrIds 업데이트 (실패 시 다음 저장에서 다시 DELETE 재시도 가능) */
+      Object.assign(_svrIds,_pendingIds);saveSvrIds();
       return true;
     }
 
-    function cleanStateForCloud(source=state){const data=clone(source);delete data.__pendingCloudSync;delete data.__pendingCloudSyncAt;delete data.__pendingDeletes;return data}
+    function cleanStateForCloud(source=state){const data=clone(source);delete data.__pendingCloudSync;delete data.__pendingCloudSyncAt;return data}
     async function saveToSupabase(options={}){return saveDataToSupabase(cleanStateForCloud(state),options)}
     function setSyncNotice(kind,msg){const n=$("#sharedNotice");if(!n)return;n.dataset.sync=kind;n.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px"><div><strong>${kind==="ok"?"✅ 팀 동기화 연결됨":kind==="saving"?"💾 저장 중...":"⚠️ 동기화 확인 필요"}</strong><p class="meta" style="margin:2px 0 0">${esc(msg)}</p></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn primary" id="forceSheetUploadBtn" type="button">지금 동기화</button><button class="btn" id="checkSheetLoadBtn" type="button">최신 불러오기</button></div></div>`}
     function ensureSheetSyncButton(){if($("#sheetSyncFloatBtn"))return;document.body.insertAdjacentHTML("beforeend",`<button class="btn primary" id="sheetSyncFloatBtn" type="button" title="수동으로 즉시 동기화" style="position:fixed;right:18px;bottom:76px;z-index:9998;box-shadow:0 10px 26px rgba(8,125,143,.28)">지금 동기화</button>`)}
@@ -231,7 +216,7 @@
     /* refreshFromGoogleSheetsBeforeManualSave: 제거됨 (Google Sheets 비활성화) */
     function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
-    /* 삭제 전용: 즉시 동기화 → 탭 닫기 전에도 반드시 Supabase에 DELETE 전송 */
+    /* 삭제 전용: 즉시 동기화 (300ms 후) → 다른 브라우저가 바로 삭제 확인 */
     function deleteAndSync(msg="삭제됐습니다."){
       state.__updatedAt=Date.now();
       state.__pendingCloudSync=true;
@@ -240,9 +225,9 @@
       localStorage.setItem(storageKey,JSON.stringify(state));
       sharedLoaded=true;
       toast(msg);
-      /* 타이머 없이 즉시 실행 (300ms 지연 중 탭 닫히면 DELETE 미전송 버그 방지) */
+      /* 지연 없이 즉시 동기화 (삭제는 빠른 전파 필요) */
       clearTimeout(syncSaveTimer);
-      pushSharedState();
+      syncSaveTimer=setTimeout(()=>pushSharedState(),300);
     }
     function saveStateAfterPaint(msg="저장되었습니다."){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__pendingCloudSyncAt=new Date().toLocaleString("ko-KR");state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;const run=()=>{scheduleSharedSave(80);toast(msg)};if("requestIdleCallback" in window)requestIdleCallback(run,{timeout:900});else setTimeout(run,40)}
     const syncWorkKeys=["todos","assignments","construction","projects","fieldworkLogs","meetings","messages","messageInbox","genericReports","asReports"];
@@ -265,29 +250,50 @@
       /* 서버가 내 마지막 저장보다 더 최신 = 다른 팀원이 저장했음 */
       return sharedStamp>localStamp;
     }
-    function applySharedState(shared){
-      /* 서버 데이터가 항상 정답 — 단, 사용자가 명시적으로 숨긴 nav 항목은 로컬 값을 보존 */
-      const _localHidden=Array.isArray(state.hiddenNavLabels)?[...state.hiddenNavLabels]:[];
+    /* ── 병합: 서버에 없는 로컬 항목 중 진짜 새 항목만 추가 (삭제된 항목 부활 방지) ── */
+    function mergeLocalItems(sharedArr,localArr,table){
+      if(!Array.isArray(localArr)||!localArr.length)return sharedArr||[];
+      if(!Array.isArray(sharedArr)||!sharedArr.length)return localArr;
+      const sharedIds=new Set(sharedArr.map(x=>x.id).filter(Boolean));
+      /* 이전 서버 상태: 여기에 있었는데 지금 서버에 없으면 → 다른 기기가 삭제한 것 */
+      const prevServerIds=_svrIds[table]||new Set();
+      const localOnly=localArr.filter(x=>{
+        if(!x.id)return false;
+        if(sharedIds.has(x.id))return false; /* 서버에 있음 */
+        if(prevServerIds.has(x.id))return false; /* 이전에 서버에 있었음 → 삭제된 것 */
+        return true; /* 진짜 새로 추가된 로컬 항목만 */
+      });
+      return localOnly.length?[...localOnly,...sharedArr]:sharedArr;
+    }
+    function applySharedState(shared,forceReplace=false){
+      /* 첫 로드 시 _svrIds가 비어있으면 타임스탬프 무관하게 로컬 병합을 건너뜀
+         (스마트폰 등 오래된 캐시가 클라우드 데이터를 오염시키는 버그 방지) */
+      const isFirstLoad=!sharedLoaded;
+      const svrIdsEmpty=Object.values(_svrIds).every(s=>s.size===0);
+      if(isFirstLoad&&svrIdsEmpty)forceReplace=true;
       sharedLoaded=true;
-      state={...clone(defaults),...shared};
-      /* hiddenNavLabels 병합: 서버+로컬 합집합 (사용자가 삭제한 항목 복구 방지) */
-      state.hiddenNavLabels=[...new Set([...(Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels:[]),..._localHidden])];
-      /* 필수 nav 항목이 서버 데이터에 없으면 즉시 추가 후 재저장 */
-      const _requiredNav=[{icon:"🔍",label:"구조물 검수"}];
-      let navDirty=false;
-      /* hiddenNavLabels에서 먼저 제거 — 과거에 삭제된 경우도 복구 */
-      const _hiddenBefore=[...hiddenNavLabels()];
-      _requiredNav.forEach(item=>showNavLabel(item.label));
-      const _hiddenChanged=_hiddenBefore.some(l=>_requiredNav.some(r=>r.label===l));
-      _requiredNav.forEach(item=>{if(!state.nav.some(n=>n.label===item.label)){const ai=state.nav.findIndex(n=>String(n.label||"").includes("관리자"));state.nav.splice(ai>=0?ai:state.nav.length,0,item);navDirty=true;}});
-      if(navDirty||_hiddenChanged){state.__updatedAt=Date.now();state.__pendingCloudSync=true;}
-      localStorage.setItem(storageKey,JSON.stringify(state));
-      setSyncNotice("ok","✅ 팀원의 최신 데이터를 불러왔습니다.");
-      render();
-      /* 필수 nav 추가 or hiddenNavLabels 수정 시 즉시 Supabase에 저장 */
-      if(navDirty||_hiddenChanged){
-        setTimeout(()=>pushSharedState().catch(()=>{}),300);
+      const merged={...clone(defaults),...shared};
+      let hadLocalOnly=false;
+      if(!forceReplace){
+        /* 병합: 진짜 새 로컬 항목만 추가 (삭제된 항목은 부활 안 함) */
+        for(const key of (TABLE_KEYS||syncWorkKeys)){
+          if(Array.isArray(state[key])&&Array.isArray(merged[key])){
+            const before=merged[key].length;
+            merged[key]=mergeLocalItems(merged[key],state[key],key); /* table 정보 전달 */
+            if(merged[key].length>before)hadLocalOnly=true;
+          }
+        }
       }
+      /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
+      TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
+      state=merged;
+      /* _svrIds 업데이트 (서버 기준 ID 동기화) */
+      if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});saveSvrIds();
+      localStorage.setItem(storageKey,JSON.stringify(state));
+      setSyncNotice("ok",hadLocalOnly?"내 변경사항과 팀원 데이터를 병합했습니다.":"✅ 팀원의 최신 데이터를 불러왔습니다.");
+      render();
+      /* 로컬 항목이 있었으면 병합 결과를 즉시 서버에 올려 다른 팀원도 볼 수 있게 함 */
+      if(hadLocalOnly)scheduleSharedSave(500);
     }
     async function loadSharedState(silent=false,forceRemote=false){
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
@@ -301,12 +307,7 @@
         }
         /* forceRemote=수동 불러오기 버튼 → 서버 데이터로 완전 교체 / 자동=항상 병합 */
         if(shouldUseSharedState(shared,forceRemote))applySharedState(shared,!!forceRemote);
-        else {
-          sharedLoaded=true;
-          /* 서버가 더 최신이 아닐 때만 pendingSync 재시도 (서버 로드 후 타임스탬프 확인 완료) */
-          if(state.__pendingCloudSync&&!syncSaveBusy)pushSharedState().catch(()=>{});
-          if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");
-        }
+        else {sharedLoaded=true;if(!silent)setSyncNotice("ok",hasUsefulWorkData(state)?"현재 브라우저의 저장 데이터를 사용합니다.":"저장된 업무 데이터가 없습니다.");}
         return;
       }catch(err){
         try{
@@ -372,45 +373,39 @@
 }
     function syncAssignmentToTodo(i){const a=normalizeAssignment(state.assignments[i]);let ti=state.todos.findIndex(t=>t.id===a.linkedTodoId||t.linkedAssignmentId===a.id);if(ti<0){const t=assignmentToTodo(a);a.linkedTodoId=t.id;state.todos.unshift(t)}else{const t=assignmentToTodo(a,state.todos[ti]);a.linkedTodoId=t.id;state.todos[ti]=t}}
     function syncTodoToAssignment(i){const t=normalizeTodo(state.todos[i]);let ai=state.assignments.findIndex(a=>a.id===t.linkedAssignmentId||a.linkedTodoId===t.id);if(ai<0){const a=todoToAssignment(t);t.linkedAssignmentId=a.id;state.assignments.unshift(a)}else{const a=todoToAssignment(t,state.assignments[ai]);t.linkedAssignmentId=a.id;state.assignments[ai]=a}}
-    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;softDelete("assignments",a.id,a);if(a.linkedTodoId){const t=state.todos.find(x=>x.id===a.linkedTodoId);softDelete("todos",a.linkedTodoId,t);}state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
-    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;softDelete("todos",t.id,t);if(t.gcalEventId)window.addGcalDeleted?.(t.gcalEventId);if(t.linkedAssignmentId){const a=state.assignments.find(x=>x.id===t.linkedAssignmentId);softDelete("assignments",t.linkedAssignmentId,a);}state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
+    function deleteAssignmentAt(i){const a=state.assignments[i];if(!a)return;markDeleted("assignments",a.id);if(a.linkedTodoId)markDeleted("todos",a.linkedTodoId);state.assignments.splice(i,1);if(a.linkedTodoId)state.todos=state.todos.filter(t=>t.id!==a.linkedTodoId)}
+    function deleteTodoAt(i){const t=state.todos[i];if(!t)return;markDeleted("todos",t.id);if(t.linkedAssignmentId)markDeleted("assignments",t.linkedAssignmentId);state.todos.splice(i,1);if(t.linkedAssignmentId)state.assignments=state.assignments.filter(a=>a.id!==t.linkedAssignmentId)}
     function syncAllTaskLinks(){state.assignments.forEach((_,i)=>syncAssignmentToTodo(i));state.todos.forEach((_,i)=>syncTodoToAssignment(i))}
     function hiddenNavLabels(){state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?[...new Set(state.hiddenNavLabels.filter(Boolean))]:[];return state.hiddenNavLabels}
     function isNavHidden(label){return hiddenNavLabels().includes(label)}
     function hideNavLabel(label){if(label&&!isNavHidden(label))state.hiddenNavLabels.push(label)}
     function showNavLabel(label){state.hiddenNavLabels=hiddenNavLabels().filter(x=>x!==label)}
-    normalizeState=function(){state={...clone(defaults),...state};["people","projects","construction","assignments","todos","inspections"].forEach(k=>state[k]=state[k]||[]);state.nav=(state.nav||defaults.nav).map(n=>({...n,label:n.label==="\uC9C1\uC6D0\uC5C5\uBB34"?"\uC77C\uC815\uAD00\uB9AC":n.label}));if(!state.nav.some(n=>n.label==="\uD560\uC77C\uAD00\uB9AC")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"\u2611",label:"\uD560\uC77C\uAD00\uB9AC"})}
-      /* \uAD6C\uC870\uBB3C \uAC80\uC218\uB294 \uD544\uC218 \uD56D\uBAA9 \u2014 hiddenNavLabels\uC5D0\uC11C \uBC18\uB4DC\uC2DC \uC81C\uAC70 \uD6C4 \uCD94\uAC00 */
-      showNavLabel("\uAD6C\uC870\uBB3C \uAC80\uC218");
-      if(!state.nav.some(n=>n.label==="\uAD6C\uC870\uBB3C \uAC80\uC218")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"\uD83D\uDD0D",label:"\uAD6C\uC870\uBB3C \uAC80\uC218"});state.__updatedAt=Date.now();state.__pendingCloudSync=true;try{localStorage.setItem(storageKey,JSON.stringify(state))}catch{}}state.construction.forEach(c=>{if(!c.structureTeam)c.structureTeam=state.structureTeams[0]||""});state.assignments.forEach(a=>normalizeAssignment(a));state.todos.forEach(t=>normalizeTodo(t));ensureTaskLinks()};assignmentToTodoStatus=function(a){if(a.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(a.status==="\uBCF4\uB958")return"\uBC31\uB85C\uADF8";if(a.status==="\uC9C4\uD589"||a.status==="\uAC80\uD1A0\uC694\uCCAD")return"\uC9C4\uD589\uC911";return"\uD560 \uC77C"};todoToAssignmentStatus=function(t){if(t.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(t.status==="\uCDE8\uC18C")return"\uBCF4\uB958";if(t.status==="\uC9C4\uD589\uC911")return"\uC9C4\uD589";return"\uC9C0\uC2DC"};normalizeAssignment=function(a){if(!a.id)a.id=uid("assignment");if(!a.start)a.start=a.due||today;if(!a.due)a.due=a.start||today;if(!a.priority)a.priority="\uBCF4\uD1B5";if(!a.status)a.status="\uC9C0\uC2DC";if(!a.type)a.type="\uC77C\uBC18\uC5C5\uBB34";if(!a.project)a.project="\uC77C\uBC18\uC5C5\uBB34";if(!a.title)a.title="\uC81C\uBAA9 \uC5C6\uB294 \uC77C\uC815";return a};normalizeTodo=function(t){if(!t.id)t.id=uid("todo");if(!t.status)t.status=t.badge||"\uD560 \uC77C";if(!t.owner)t.owner=state.people[0]?.name||"";if(!t.priority)t.priority="\uBCF4\uD1B5";if(!t.due)t.due=t.date||today;if(!t.title)t.title="\uC81C\uBAA9 \uC5C6\uB294 \uD560\uC77C";return t};function unlockAdmin(){if(adminUnlocked)return true;const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem("solar-admin-unlocked","true");toast("관리자 권한이 확인되었습니다.");return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}function phaseForMenu(label){if(!label)return"전체";if(label.includes("고객")||label.includes("계약"))return"고객상담";if(label.includes("현장"))return"현장조사";if(label.includes("설계")||label.includes("자재"))return"자재발주";if(label.includes("시공"))return"시공중";return"전체"}function viewForLabel(label){if(label.includes("대시보드"))return"dashboard";if(label.includes("관리자"))return"admin";if(label.includes("할일관리"))return"todos";if(label.includes("직원업무")||label.includes("일정관리"))return"assignments";if(label.includes("시공일정"))return"construction";if(label.includes("구조물 검수")||label.includes("검수관리"))return"inspection";return"projects"}function statusClass(t){if((t||"").includes("지연")||(t||"").includes("보완")||(t||"").includes("긴급"))return"red";if((t||"").includes("대기")||(t||"").includes("예정"))return"amber";if((t||"").includes("진행")||(t||"").includes("시공중"))return"blue";return"green"}function priorityClass(p){return p==="긴급"?"red":p==="높음"?"amber":p==="보통"?"blue":"green"}function pulseTopButton(t,msg=""){if(!t)return;t.classList.remove("top-click-pop");void t.offsetWidth;t.classList.add("top-click-pop");setTimeout(()=>t.classList.remove("top-click-pop"),360);if(msg)toast(msg)}function updateTopButtons(){$("#adminTopBtn")?.classList.toggle("is-active",currentView==="admin");$("#maskToggleBtn")?.classList.toggle("is-active",maskingMode);$$("header .toolbar button").forEach(b=>{if(b.id==="exportBtn"||b.textContent.includes("내보내기"))b.classList.add("hidden")});const adminExport=$("#adminView #exportBtn");if(adminExport)adminExport.classList.toggle("hidden",currentView!=="admin")}
+    normalizeState=function(){state={...clone(defaults),...state};["people","projects","construction","assignments","todos"].forEach(k=>state[k]=state[k]||[]);state.nav=(state.nav||defaults.nav).map(n=>({...n,label:n.label==="\uC9C1\uC6D0\uC5C5\uBB34"?"\uC77C\uC815\uAD00\uB9AC":n.label}));if(!state.nav.some(n=>n.label==="\uD560\uC77C\uAD00\uB9AC")){const adminIndex=state.nav.findIndex(n=>n.label.includes("\uAD00\uB9AC\uC790")),insertAt=adminIndex>=0?adminIndex:state.nav.length;state.nav.splice(insertAt,0,{icon:"?",label:"\uD560\uC77C\uAD00\uB9AC"})}state.construction.forEach(c=>{if(!c.structureTeam)c.structureTeam=state.structureTeams[0]||""});state.assignments.forEach(a=>normalizeAssignment(a));state.todos.forEach(t=>normalizeTodo(t));ensureTaskLinks()};assignmentToTodoStatus=function(a){if(a.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(a.status==="\uBCF4\uB958")return"\uBC31\uB85C\uADF8";if(a.status==="\uC9C4\uD589"||a.status==="\uAC80\uD1A0\uC694\uCCAD")return"\uC9C4\uD589\uC911";return"\uD560 \uC77C"};todoToAssignmentStatus=function(t){if(t.status==="\uC644\uB8CC")return"\uC644\uB8CC";if(t.status==="\uCDE8\uC18C")return"\uBCF4\uB958";if(t.status==="\uC9C4\uD589\uC911")return"\uC9C4\uD589";return"\uC9C0\uC2DC"};normalizeAssignment=function(a){if(!a.id)a.id=uid("assignment");if(!a.start)a.start=a.due||today;if(!a.due)a.due=a.start||today;if(!a.priority)a.priority="\uBCF4\uD1B5";if(!a.status)a.status="\uC9C0\uC2DC";if(!a.type)a.type="\uC77C\uBC18\uC5C5\uBB34";if(!a.project)a.project="\uC77C\uBC18\uC5C5\uBB34";if(!a.title)a.title="\uC81C\uBAA9 \uC5C6\uB294 \uC77C\uC815";return a};normalizeTodo=function(t){if(!t.id)t.id=uid("todo");if(!t.status)t.status=t.badge||"\uD560 \uC77C";if(!t.owner)t.owner=state.people[0]?.name||"";if(!t.priority)t.priority="\uBCF4\uD1B5";if(!t.due)t.due=t.date||today;if(!t.title)t.title="\uC81C\uBAA9 \uC5C6\uB294 \uD560\uC77C";return t};function unlockAdmin(){if(adminUnlocked)return true;const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem("solar-admin-unlocked","true");toast("관리자 권한이 확인되었습니다.");return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}function phaseForMenu(label){if(label.includes("고객")||label.includes("계약"))return"고객상담";if(label.includes("현장"))return"현장조사";if(label.includes("설계")||label.includes("자재"))return"자재발주";if(label.includes("시공"))return"시공중";return"전체"}function viewForLabel(label){if(label.includes("대시보드"))return"dashboard";if(label.includes("관리자"))return"admin";if(label.includes("할일관리"))return"todos";if(label.includes("직원업무")||label.includes("일정관리"))return"assignments";if(label.includes("시공일정"))return"construction";return"projects"}function statusClass(t){if((t||"").includes("지연")||(t||"").includes("보완")||(t||"").includes("긴급"))return"red";if((t||"").includes("대기")||(t||"").includes("예정"))return"amber";if((t||"").includes("진행")||(t||"").includes("시공중"))return"blue";return"green"}function priorityClass(p){return p==="긴급"?"red":p==="높음"?"amber":p==="보통"?"blue":"green"}function pulseTopButton(t,msg=""){if(!t)return;t.classList.remove("top-click-pop");void t.offsetWidth;t.classList.add("top-click-pop");setTimeout(()=>t.classList.remove("top-click-pop"),360);if(msg)toast(msg)}function updateTopButtons(){$("#adminTopBtn")?.classList.toggle("is-active",currentView==="admin");$("#maskToggleBtn")?.classList.toggle("is-active",maskingMode);$$("header .toolbar button").forEach(b=>{if(b.id==="exportBtn"||b.textContent.includes("내보내기"))b.classList.add("hidden")});const adminExport=$("#adminView #exportBtn");if(adminExport)adminExport.classList.toggle("hidden",currentView!=="admin")}
     function renderLoginInfo(){const box=$("#loginInfo");if(!box)return;const name=loginName(),person=(state.people||[]).find(p=>p.name===name);box.classList.toggle("admin",adminUnlocked);box.innerHTML=name?`${esc(name)}<span class="role">${esc(person?.role||"직원")} · ${adminUnlocked?"관리자 권한":"직원 로그인"}</span>`:"로그인 확인 중"}
     const baseUpdateTopButtons=updateTopButtons;
     updateTopButtons=function(){baseUpdateTopButtons();renderLoginInfo()}
     unlockAdmin=function(){const owner=loginName();if(adminUnlocked&&sessionStorage.getItem(adminOwnerKey)===owner)return true;adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);const pin=prompt("관리자 PIN을 입력하세요.");if(pin===state.adminPin){adminUnlocked=true;sessionStorage.setItem(adminUnlockKey,"true");sessionStorage.setItem(adminOwnerKey,owner);toast("관리자 권한이 확인되었습니다.");updateTopButtons();return true}if(pin!==null)toast("관리자 PIN이 맞지 않습니다.");return false}
-    function render(){normalizeState();updateTopButtons();els.brandName.textContent=state.brand;els.pageTitle.textContent=currentView==="assignments"?"일정관리":currentView==="todos"?"할일관리":state.title;els.pageSub.textContent=currentView==="assignments"?"회의는 짧게, 성과는 길게 가면 좋겠습니다.":currentView==="todos"?"작게 쪼개면 일도 덜 무서워 보입니다.":state.subtitle;$("#addProjectBtn").textContent=currentView==="assignments"?"일정 등록":currentView==="todos"?"할일 추가":currentView==="inspection"?"검수 등록":"신규 현장";renderNav();renderFilters();renderKpiFilters();renderCalendarFilters();renderAssignmentCalendarFilters();renderConstructionReportFilters();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderNav(){els.nav.innerHTML=state.nav.filter(n=>n&&n.label).map((n,i)=>`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${state.nav.indexOf(n)}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`).join("")}function isActive(label){if(!label)return false;if(currentView==="dashboard")return label.includes("대시보드");if(currentView==="admin")return label.includes("관리자");if(currentView==="todos")return label.includes("할일관리");if(currentView==="assignments")return label.includes("직원업무")||label.includes("일정관리");if(currentView==="construction")return label.includes("시공일정");if(currentView==="inspection")return label.includes("구조물 검수")||label.includes("검수관리");return phaseForMenu(label)!=="전체"&&els.phaseFilter.value===phaseForMenu(label)}function protectedView(view,label=""){return view==="construction"||view==="db"||view==="drive"||label.includes("시공일정")||label.includes("DB")||label.includes("프로젝트 파일")}function goToView(view,label=""){currentView=view;localStorage.setItem(viewStorageKey,view);renderFilters();if(label){const p=phaseForMenu(label);els.phaseFilter.value=view==="construction"?"전체":state.phases.includes(p)?p:"전체"}renderNav();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderView(){$("#kpis").classList.toggle("hidden",currentView==="assignments"||currentView==="todos"||currentView==="inspection");document.body.classList.toggle("schedule-page",currentView==="assignments");document.body.classList.toggle("todo-page",currentView==="todos");els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");els.adminView.classList.toggle("hidden",currentView!=="admin");els.inspectionView?.classList.toggle("hidden",currentView!=="inspection");if(currentView==="inspection"&&els.inspectionView)renderInspectionView();els.mainGrid.classList.toggle("hidden",currentView==="dashboard"||currentView==="admin"||currentView==="inspection");els.mainGrid.classList.toggle("schedule-mode",currentView==="assignments");els.mainGrid.classList.toggle("todo-mode",currentView==="todos");els.mainGrid.classList.toggle("construction-mode",currentView==="construction");renderEmployeePanels()}function renderEmployeePanels(){const emp=currentView==="assignments",con=currentView==="construction",todo=currentView==="todos";els.employeeTabs.classList.toggle("hidden",!emp);els.assignmentsPanel.classList.toggle("hidden",!emp||employeeSubView!=="assignments");els.peoplePanel.classList.toggle("hidden",!emp||employeeSubView!=="workload");els.employeeKpiPanel.classList.toggle("hidden",!emp||employeeSubView!=="kpi");els.todosPanel.classList.toggle("hidden",emp||con||todo);els.constructionReportPanel.classList.toggle("hidden",!con);els.currentPlantsPanel.classList.toggle("hidden",!con);els.upcomingPlantsPanel.classList.toggle("hidden",!con);$$("[data-employee-tab]").forEach(b=>b.classList.toggle("active",b.dataset.employeeTab===employeeSubView))}
+    function render(){normalizeState();updateTopButtons();els.brandName.textContent=state.brand;els.pageTitle.textContent=currentView==="assignments"?"일정관리":currentView==="todos"?"할일관리":state.title;els.pageSub.textContent=currentView==="assignments"?"회의는 짧게, 성과는 길게 가면 좋겠습니다.":currentView==="todos"?"작게 쪼개면 일도 덜 무서워 보입니다.":state.subtitle;$("#addProjectBtn").textContent=currentView==="assignments"?"일정 등록":currentView==="todos"?"할일 추가":"신규 현장";renderNav();renderFilters();renderKpiFilters();renderCalendarFilters();renderAssignmentCalendarFilters();renderConstructionReportFilters();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderNav(){els.nav.innerHTML=state.nav.map((n,i)=>`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`).join("")}function isActive(label){if(currentView==="dashboard")return label.includes("대시보드");if(currentView==="admin")return label.includes("관리자");if(currentView==="todos")return label.includes("할일관리");if(currentView==="assignments")return label.includes("직원업무")||label.includes("일정관리");if(currentView==="construction")return label.includes("시공일정");return phaseForMenu(label)!=="전체"&&els.phaseFilter.value===phaseForMenu(label)}function protectedView(view,label=""){return view==="construction"||view==="db"||view==="drive"||label.includes("시공일정")||label.includes("DB")||label.includes("프로젝트 파일")}function goToView(view,label=""){currentView=view;localStorage.setItem(viewStorageKey,view);renderFilters();if(label){const p=phaseForMenu(label);els.phaseFilter.value=view==="construction"?"전체":state.phases.includes(p)?p:"전체"}renderNav();renderView();renderCurrentContent();renderKpis();updateTopButtons()}function renderView(){$("#kpis").classList.toggle("hidden",currentView==="assignments"||currentView==="todos");document.body.classList.toggle("schedule-page",currentView==="assignments");document.body.classList.toggle("todo-page",currentView==="todos");els.dashboardView.classList.toggle("hidden",currentView!=="dashboard");els.adminView.classList.toggle("hidden",currentView!=="admin");els.mainGrid.classList.toggle("hidden",currentView==="dashboard"||currentView==="admin");els.mainGrid.classList.toggle("schedule-mode",currentView==="assignments");els.mainGrid.classList.toggle("todo-mode",currentView==="todos");els.mainGrid.classList.toggle("construction-mode",currentView==="construction");renderEmployeePanels()}function renderEmployeePanels(){const emp=currentView==="assignments",con=currentView==="construction",todo=currentView==="todos";els.employeeTabs.classList.toggle("hidden",!emp);els.assignmentsPanel.classList.toggle("hidden",!emp||employeeSubView!=="assignments");els.peoplePanel.classList.toggle("hidden",!emp||employeeSubView!=="workload");els.employeeKpiPanel.classList.toggle("hidden",!emp||employeeSubView!=="kpi");els.todosPanel.classList.toggle("hidden",emp||con||todo);els.constructionReportPanel.classList.toggle("hidden",!con);els.currentPlantsPanel.classList.toggle("hidden",!con);els.upcomingPlantsPanel.classList.toggle("hidden",!con);$$("[data-employee-tab]").forEach(b=>b.classList.toggle("active",b.dataset.employeeTab===employeeSubView))}
     function renderFilters(){const phases=currentView==="construction"?state.constructionPhases:state.phases;els.phaseFilter.innerHTML=`<option value="전체">전체 단계</option>`+phases.map(p=>`<option>${esc(p)}</option>`).join("");$("#projectPhase").innerHTML=state.phases.map(p=>`<option>${esc(p)}</option>`).join("");$("#projectStatus").innerHTML=state.statuses.map(s=>`<option>${esc(s)}</option>`).join("");$("#assignmentOwner").innerHTML=state.people.map(p=>`<option>${esc(p.name)}</option>`).join("");$("#assignmentProject").innerHTML=(state.projects.length?state.projects:[{name:"일반업무"}]).map(p=>`<option>${esc(p.name)}</option>`).join("");$("#assignmentStatus").innerHTML=state.assignmentStatuses.map(s=>`<option>${esc(s)}</option>`).join("");$("#constructionCompany").innerHTML=state.constructionTeams.map(t=>`<option>${esc(t)}</option>`).join("");$("#constructionStructureTeam").innerHTML=state.structureTeams.map(t=>`<option>${esc(t)}</option>`).join("");$("#constructionPhase").innerHTML=state.constructionPhases.map(p=>`<option>${esc(p)}</option>`).join("")}
     function durationDays(start,end){if(!start||!end)return 0;const s=new Date(start),e=new Date(end);if(Number.isNaN(s.getTime())||Number.isNaN(e.getTime())||e<s)return 0;return Math.round((e-s)/86400000)+1}function completionMonth(end){return end&&/^\d{4}-\d{2}/.test(end)?end.slice(0,7):""}function filterValue(view,key){return columnFilters[view]?.[key]||""}function sortLabel(view,key,label){const s=sortState[view],mark=s.key===key?`<span class="sort-mark">${s.dir==="asc"?"▲":"▼"}</span>`:"";return `<button class="sort-head" data-sort-view="${view}" data-sort-key="${key}">${esc(label)}${mark}</button>`}function columnFilter(view,key,label){return `<input class="column-filter" data-column-view="${view}" data-column-filter="${key}" value="${esc(filterValue(view,key))}" placeholder="${esc(label)}">`}function renderHead(view,cols){els.tableHead.innerHTML=`<tr>${cols.map(c=>`<th ${c.style?`style="${c.style}"`:""}>${c.key?sortLabel(view,c.key,c.label):esc(c.label)}</th>`).join("")}</tr><tr class="filter-row">${cols.map(c=>c.key?`<th>${columnFilter(view,c.key,c.label)}</th>`:"<th></th>").join("")}</tr>`}function matchesColumnFilters(view,row){return Object.entries(columnFilters[view]||{}).every(([k,v])=>!v||String(row[k]??"").toLowerCase().includes(v.toLowerCase()))}function sortRows(view,rows,rowFn,prop){const s=sortState[view];if(!s.key)return rows;return rows.slice().sort((a,b)=>{const av=rowFn(a[prop])[s.key],bv=rowFn(b[prop])[s.key],as=String(av??""),bs=String(bv??""),num=/^-?\d+(\.\d+)?$/.test(as)&&/^-?\d+(\.\d+)?$/.test(bs);let r=num?Number(as)-Number(bs):as.localeCompare(bs,"ko",{numeric:true});return s.dir==="asc"?r:-r})}
-    function projectFilter(p){return{name:p.name,phase:p.phase,owner:p.owner,due:p.due,status:p.status,next:p.next}}function assignmentFilter(a){return{owner:a.owner,type:a.type,title:a.title,priority:a.priority,start:a.start,due:a.due,status:a.status}}function assignmentPriorityOptions(v){return["보통","높음","긴급","낮음"].map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function assignmentStatusOptions(v){return state.assignmentStatuses.map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function constructionFilter(c){return{company:c.company,structureTeam:c.structureTeam||"",site:c.site,kw:c.kw,sales:c.sales,customer:c.customer,phase:c.phase,owner:c.owner,start:c.start,end:c.end,duration:durationDays(c.start,c.end),completionMonth:completionMonth(c.end),status:c.status,next:c.next,structurePlannedDays:c.structurePlannedDays||0,structureActualDays:durationDays(c.structureStart,c.structureEnd),electricPlannedDays:c.electricPlannedDays||0,electricActualDays:durationDays(c.electricStart,c.electricEnd),delayReason:c.delayReason||"",earlyReason:c.earlyReason||"",issues:c.issues||""}}function renderProjectHead(){renderHead("projects",[{key:"name",label:"고객/현장",style:"width:18%"},{key:"phase",label:"업무단계",style:"width:13%"},{key:"owner",label:"담당",style:"width:12%"},{key:"due",label:"마감일",style:"width:13%"},{key:"status",label:"상태",style:"width:13%"},{key:"next",label:"다음 액션",style:"width:23%"},{label:"관리",style:"width:8%"}])}function renderAssignmentHead(){renderHead("assignments",[{key:"owner",label:"담당",style:"width:12%"},{key:"type",label:"구분",style:"width:11%"},{key:"title",label:"지시 제목",style:"width:22%"},{key:"priority",label:"우선",style:"width:10%"},{key:"start",label:"시작일",style:"width:12%"},{key:"due",label:"마감일",style:"width:12%"},{key:"status",label:"상태",style:"width:11%"},{label:"관리",style:"width:10%"}])}function renderConstructionHead(){renderHead("construction",[{key:"company",label:"시공사"},{key:"structureTeam",label:"구조물팀"},{key:"site",label:"현장"},{key:"kw",label:"kW"},{key:"sales",label:"영업자"},{key:"customer",label:"고객"},{key:"phase",label:"업무단계"},{key:"owner",label:"담당"},{key:"start",label:"시작일"},{key:"end",label:"완료일"},{key:"duration",label:"소요일"},{key:"completionMonth",label:"완료월"},{key:"status",label:"상태"},{key:"structurePlannedDays",label:"구조물예상"},{key:"structureActualDays",label:"구조물실제"},{key:"electricPlannedDays",label:"전기예상"},{key:"electricActualDays",label:"전기실제"},{key:"next",label:"다음 액션"},{label:"관리"}])}function renderWorkTable(){currentView==="assignments"?renderAssignmentRows():currentView==="construction"?renderConstructionRows():renderProjectRows()}
-    function renderProjectRows(){els.dbPasteBtn.classList.add("hidden");els.undoDbImportBtn.classList.add("hidden");$("#exportConstructionBtn")?.classList.add("hidden");els.rows.closest("table").style.minWidth="";els.tableTitle.textContent="현장·공무 진행표";$("#addContentBtn").textContent="현장 추가";renderProjectHead();const q=els.search.value.trim(),ph=els.phaseFilter.value||"전체";const rows=sortRows("projects",state.projects.map((p,i)=>({p,i})).filter(({p})=>(ph==="전체"||p.phase===ph)&&Object.values(p).join(" ").includes(q)&&matchesColumnFilters("projects",projectFilter(p))),projectFilter,"p");els.rows.innerHTML=rows.map(({p,i})=>`<tr><td>${esc(p.name)}</td><td>${esc(p.phase)}</td><td>${esc(p.owner)}</td><td>${esc(p.due)}</td><td><span class="badge ${statusClass(p.status)}">${esc(p.status)}</span></td><td>${esc(p.next)}</td><td><button class="btn icon" data-edit-project="${i}">✎</button></td></tr>`).join("")}
-    function renderConstructionRows(){els.dbPasteBtn.classList.remove("hidden");els.undoDbImportBtn.classList.toggle("hidden",!state.lastDbImportBackup);$("#exportConstructionBtn")?.classList.remove("hidden");els.rows.closest("table").style.minWidth="2100px";els.tableTitle.textContent="시공일정관리";$("#addContentBtn").textContent="시공일정 추가";renderConstructionHead();const q=els.search.value.trim(),ph=els.phaseFilter.value||"전체";const rows=sortRows("construction",state.construction.map((c,i)=>({c,i})).filter(({c})=>(ph==="전체"||c.phase===ph)&&Object.values(c).join(" ").includes(q)&&matchesColumnFilters("construction",constructionFilter(c))),constructionFilter,"c");els.rows.innerHTML=rows.map(({c,i})=>{const sa=durationDays(c.structureStart,c.structureEnd),ea=durationDays(c.electricStart,c.electricEnd);return`<tr><td>${esc(c.company)}</td><td>${esc(c.structureTeam||"")}</td><td><button class="cell-link" data-edit-construction="${i}" type="button">${esc(c.site)}</button></td><td>${esc(c.kw)}</td><td>${esc(c.sales)}</td><td>${esc(c.customer)}</td><td>${esc(c.phase)}</td><td>${esc(c.owner)}</td><td>${esc(c.start)}</td><td>${esc(c.end)}</td><td>${durationDays(c.start,c.end)}일</td><td>${esc(completionMonth(c.end))}</td><td><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></td><td>${c.structurePlannedDays?c.structurePlannedDays+"일":"-"}</td><td>${sa?sa+"일":"-"}</td><td>${c.electricPlannedDays?c.electricPlannedDays+"일":"-"}</td><td>${ea?ea+"일":"-"}</td><td>${esc(c.next)}</td><td><button class="btn icon" data-edit-construction="${i}">✎</button></td></tr>`}).join("")}
-    function renderAssignmentRows(){els.dbPasteBtn.classList.add("hidden");els.undoDbImportBtn.classList.add("hidden");$("#exportConstructionBtn")?.classList.add("hidden");els.rows.closest("table").style.minWidth="980px";els.tableTitle.textContent="직원 업무지시 목록";$("#addContentBtn").textContent="업무지시 추가";renderAssignmentHead();const q=els.search.value.trim();const rows=sortRows("assignments",state.assignments.map((a,i)=>({a,i})).filter(({a})=>Object.values(a).join(" ").includes(q)&&matchesColumnFilters("assignments",assignmentFilter(a))),assignmentFilter,"a");els.rows.innerHTML=rows.map(({a,i})=>`<tr><td>${esc(a.owner)}</td><td>${esc(a.type)}</td><td title="${esc(a.detail)}">${esc(a.title)}</td><td><select class="inline-select" data-assignment-priority="${i}">${assignmentPriorityOptions(a.priority)}</select></td><td>${esc(a.start)}</td><td>${esc(a.due)}</td><td><select class="inline-select" data-assignment-status="${i}">${assignmentStatusOptions(a.status)}</select></td><td><button class="btn icon" data-edit-assignment="${i}">✎</button></td></tr>`).join("")}
+    function projectFilter(p){return{name:p.name,phase:p.phase,owner:p.owner,due:p.due,status:p.status,next:p.next}}function assignmentFilter(a){return{owner:a.owner,type:a.type,title:a.title,priority:a.priority,start:a.start,due:a.due,status:a.status}}function assignmentPriorityOptions(v){return["보통","높음","긴급","낮음"].map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function assignmentStatusOptions(v){return state.assignmentStatuses.map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("")}function constructionFilter(c){return{company:c.company,structureTeam:c.structureTeam||"",site:c.site,kw:c.kw,sales:c.sales,customer:c.customer,phase:c.phase,owner:c.owner,start:c.start,end:c.end,duration:durationDays(c.start,c.end),completionMonth:completionMonth(c.end),status:c.status,next:c.next}}function renderProjectHead(){renderHead("projects",[{key:"name",label:"고객/현장",style:"width:18%"},{key:"phase",label:"업무단계",style:"width:13%"},{key:"owner",label:"담당",style:"width:12%"},{key:"due",label:"마감일",style:"width:13%"},{key:"status",label:"상태",style:"width:13%"},{key:"next",label:"다음 액션",style:"width:23%"},{label:"관리",style:"width:8%"}])}function renderAssignmentHead(){renderHead("assignments",[{key:"owner",label:"담당",style:"width:12%"},{key:"type",label:"구분",style:"width:11%"},{key:"title",label:"지시 제목",style:"width:22%"},{key:"priority",label:"우선",style:"width:10%"},{key:"start",label:"시작일",style:"width:12%"},{key:"due",label:"마감일",style:"width:12%"},{key:"status",label:"상태",style:"width:11%"},{label:"관리",style:"width:10%"}])}function renderConstructionHead(){renderHead("construction",[{key:"company",label:"시공사"},{key:"structureTeam",label:"구조물팀"},{key:"site",label:"현장"},{key:"kw",label:"kW"},{key:"sales",label:"영업자"},{key:"customer",label:"고객"},{key:"phase",label:"업무단계"},{key:"owner",label:"담당"},{key:"start",label:"시작일"},{key:"end",label:"완료일"},{key:"duration",label:"소요일"},{key:"completionMonth",label:"완료월"},{key:"status",label:"상태"},{key:"next",label:"다음 액션"},{label:"관리"}])}function renderWorkTable(){currentView==="assignments"?renderAssignmentRows():currentView==="construction"?renderConstructionRows():renderProjectRows()}
+    function renderProjectRows(){els.dbPasteBtn.classList.add("hidden");els.undoDbImportBtn.classList.add("hidden");els.rows.closest("table").style.minWidth="";els.tableTitle.textContent="현장·공무 진행표";$("#addContentBtn").textContent="현장 추가";renderProjectHead();const q=els.search.value.trim(),ph=els.phaseFilter.value||"전체";const rows=sortRows("projects",state.projects.map((p,i)=>({p,i})).filter(({p})=>(ph==="전체"||p.phase===ph)&&Object.values(p).join(" ").includes(q)&&matchesColumnFilters("projects",projectFilter(p))),projectFilter,"p");els.rows.innerHTML=rows.map(({p,i})=>`<tr><td>${esc(p.name)}</td><td>${esc(p.phase)}</td><td>${esc(p.owner)}</td><td>${esc(p.due)}</td><td><span class="badge ${statusClass(p.status)}">${esc(p.status)}</span></td><td>${esc(p.next)}</td><td><button class="btn icon" data-edit-project="${i}">✎</button></td></tr>`).join("")}
+    function renderConstructionRows(){els.dbPasteBtn.classList.remove("hidden");els.undoDbImportBtn.classList.toggle("hidden",!state.lastDbImportBackup);els.rows.closest("table").style.minWidth="1660px";els.tableTitle.textContent="시공일정관리";$("#addContentBtn").textContent="시공일정 추가";renderConstructionHead();const q=els.search.value.trim(),ph=els.phaseFilter.value||"전체";const rows=sortRows("construction",state.construction.map((c,i)=>({c,i})).filter(({c})=>(ph==="전체"||c.phase===ph)&&Object.values(c).join(" ").includes(q)&&matchesColumnFilters("construction",constructionFilter(c))),constructionFilter,"c");els.rows.innerHTML=rows.map(({c,i})=>`<tr><td>${esc(c.company)}</td><td>${esc(c.structureTeam||"")}</td><td><button class="cell-link" data-edit-construction="${i}" type="button">${esc(c.site)}</button></td><td>${esc(c.kw)}</td><td>${esc(c.sales)}</td><td>${esc(c.customer)}</td><td>${esc(c.phase)}</td><td>${esc(c.owner)}</td><td>${esc(c.start)}</td><td>${esc(c.end)}</td><td>${durationDays(c.start,c.end)}일</td><td>${esc(completionMonth(c.end))}</td><td><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></td><td>${esc(c.next)}</td><td><button class="btn icon" data-edit-construction="${i}">✎</button></td></tr>`).join("")}
+    function renderAssignmentRows(){els.dbPasteBtn.classList.add("hidden");els.undoDbImportBtn.classList.add("hidden");els.rows.closest("table").style.minWidth="980px";els.tableTitle.textContent="직원 업무지시 목록";$("#addContentBtn").textContent="업무지시 추가";renderAssignmentHead();const q=els.search.value.trim();const rows=sortRows("assignments",state.assignments.map((a,i)=>({a,i})).filter(({a})=>Object.values(a).join(" ").includes(q)&&matchesColumnFilters("assignments",assignmentFilter(a))),assignmentFilter,"a");els.rows.innerHTML=rows.map(({a,i})=>`<tr><td>${esc(a.owner)}</td><td>${esc(a.type)}</td><td title="${esc(a.detail)}">${esc(a.title)}</td><td><select class="inline-select" data-assignment-priority="${i}">${assignmentPriorityOptions(a.priority)}</select></td><td>${esc(a.start)}</td><td>${esc(a.due)}</td><td><select class="inline-select" data-assignment-status="${i}">${assignmentStatusOptions(a.status)}</select></td><td><button class="btn icon" data-edit-assignment="${i}">✎</button></td></tr>`).join("")}
     function selectedRange(){return{year:els.kpiYear.value||today.slice(0,4),month:els.kpiMonth.value||"all"}}function inRange(a,r){return a.due&&a.due.startsWith(r.year)&&(r.month==="all"||a.due.slice(5,7)===r.month)}function employeeStats(name){const r=selectedRange(),rel=state.assignments.filter(a=>a.owner===name&&inRange(a,r));return{assigned:rel.length,completed:rel.filter(a=>a.status==="완료").length,open:rel.filter(a=>a.status!=="완료"&&a.status!=="보류").length,overdue:rel.filter(a=>a.status!=="완료"&&a.due&&a.due<today).length}}function renderPeople(){els.people.innerHTML=state.people.length?state.people.map((p,i)=>{const s=employeeStats(p.name),load=Math.min(100,Math.round(s.open/Math.max(Number(p.monthlyTarget)||1,1)*100));return`<div class="card"><div class="card-top"><span class="name">${esc(p.name)}</span><span class="badge ${load>90?"red":load>70?"amber":"green"}">${load}%</span></div><div class="meta">${esc(p.role)} · ${esc(p.area)}</div><div class="meta">진행 ${s.open}건 · 완료 ${s.completed}건 · 지연 ${s.overdue}건</div><div class="bar"><span style="width:${load}%"></span></div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-person="${i}">✎</button><button class="btn icon danger" data-delete-person="${i}">×</button></div></div>`}).join(""):`<div class="meta">등록된 직원이 없습니다.</div>`}function renderEmployeeKpis(){const r=selectedRange();els.employeeKpis.innerHTML=state.people.map(p=>{const s=employeeStats(p.name),target=r.month==="all"?(Number(p.yearlyTarget)||1):(Number(p.monthlyTarget)||1),rate=s.assigned?Math.round(s.completed/s.assigned*100):0,score=Math.max(0,Math.min(120,Math.round(s.completed/target*100))-s.overdue*5);return`<div class="card"><div class="card-top"><span class="name">${esc(p.name)}</span><span class="badge ${score>=90?"green":score>=70?"amber":"red"}">${score}점</span></div><div class="meta">${r.month==="all"?"연간":Number(r.month)+"월"} 목표 ${target}건 기준</div><div class="mini-grid"><div class="mini-stat">배정<strong>${s.assigned}</strong></div><div class="mini-stat">완료<strong>${s.completed}</strong></div><div class="mini-stat">완료율<strong>${rate}%</strong></div><div class="mini-stat">지연<strong>${s.overdue}</strong></div></div></div>`}).join("")}
     function renderAssignments(){els.assignments.innerHTML=state.assignments.length?state.assignments.slice(0,20).map((a,i)=>`<div class="card"><div class="card-top"><span class="name">${esc(a.title)}</span><span class="badge ${priorityClass(a.priority)}">${esc(a.priority)}</span></div><div class="meta">${esc(a.owner)} · ${esc(a.project)} · 시작 ${esc(a.start)} · 마감 ${esc(a.due)}</div><div class="meta">${esc(a.detail)}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-assignment="${i}">✎</button></div></div>`).join(""):`<div class="meta">등록된 업무지시가 없습니다.</div>`}function renderTodos(){els.todos.innerHTML=state.todos.length?state.todos.map((t,i)=>`<div class="card"><div class="card-top"><span class="name">${esc(t.title)}</span><span class="badge blue">${esc(t.status||t.badge||"확인")}</span></div><div class="meta">${esc(t.detail||"")}</div><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div>`).join(""):`<div class="meta">확인할 항목이 없습니다.</div>`}function todoStatusClass(s){return s==="백로그"?"todo-backlog":s==="할 일"?"todo-ready":s==="진행중"?"todo-doing":s==="완료"?"todo-done":"todo-cancel"}function todoMatches(t,q){return [t.title,t.detail,t.owner,t.status,t.priority].join(" ").toLowerCase().includes(q.toLowerCase())}function renderTodoBoard(){const panel=$("#todoBoardPanel"),statuses=["백로그","할 일","진행중","완료","취소"],q=$("#todoSearch")?.value||"",owners=["전체",...state.people.map(p=>p.name)],filtered=state.todos.map((t,i)=>({t,i})).filter(({t})=>(todoStatusFilter==="전체"||t.status===todoStatusFilter)&&(todoOwnerFilter==="전체"||t.owner===todoOwnerFilter)&&todoMatches(t,q));panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="active">보드</button><button>목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}"><div class="todo-chips"><button class="todo-chip ${todoStatusFilter==="전체"?"active":""}" data-todo-status-filter="전체">전체 <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>t.status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${esc(o)} <strong>${o==="전체"?state.todos.length:state.todos.filter(t=>t.owner===o).length}</strong></button>`).join("")}</div></div><div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta">${esc(t.owner||"담당 미정")} · ${esc(t.priority||"보통")} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button></div>`}).join("")}</div>`;$("#todoSearch")?.addEventListener("input",renderTodoBoard)}
-    function exportConstructionExcel(){const csvQ=v=>'"'+String(v??"").replaceAll('"','""')+'"';const headers=["시공사","구조물팀","현장","kW","영업자","고객","업무단계","담당","시작일","완료일","소요일","완료월","상태","구조물예상(일)","구조물실제(일)","전기예상(일)","전기실제(일)","다음액션","지연사유","조기완료사유","시공중문제점"];const rows=[headers.map(csvQ).join(",")];state.construction.forEach(c=>{const sa=durationDays(c.structureStart,c.structureEnd),ea=durationDays(c.electricStart,c.electricEnd);rows.push([c.company,c.structureTeam||"",c.site,c.kw,c.sales,c.customer,c.phase,c.owner,c.start,c.end||"",durationDays(c.start,c.end),completionMonth(c.end),c.status,c.structurePlannedDays||"",sa||"",c.electricPlannedDays||"",ea||"",c.next||"",c.delayReason||"",c.earlyReason||"",c.issues||""].map(v=>csvQ(String(v))).join(","))});const blob=new Blob(["﻿"+rows.join("\n")],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`시공일정_${today}.csv`;a.click();URL.revokeObjectURL(url);toast("시공일정을 내보냈습니다.")}function constructionStatusClass(s){const v=s||"";if(v==="시공중")return"blue";if(v==="예정")return"amber";if(v==="완료")return"green";if(v.includes("지연"))return"red";return"green"}function renderConstructionPanels(){const current=state.construction.filter(c=>c.status==="시공중"),upcoming=state.construction.filter(c=>c.status==="예정");els.currentPlants.innerHTML=current.length?current.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">현재 시공중인 발전소가 없습니다.</div>`;els.upcomingPlants.innerHTML=upcoming.length?upcoming.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">시공 예정 발전소가 없습니다.</div>`}function plantCard(c,i){const original=state.construction.indexOf(c);const sc=constructionStatusClass(c.status);return`<div class="card"><div class="card-top"><span class="name">${esc(c.site)}</span><span class="badge ${sc}">${esc(c.status||"예정")}</span></div><div class="meta">${esc(c.company)} · ${esc(c.kw)}kW · ${esc(c.customer||"고객")}</div><div class="meta">${esc(c.phase)} · ${esc(c.owner||"담당 미입력")} · ${esc(c.start)} ~ ${esc(c.end||"")}</div><div class="meta">완료월 ${esc(completionMonth(c.end)||"-")} · 소요일 ${durationDays(c.start,c.end)}일</div><button class="btn icon" data-edit-construction="${original}">✎</button></div>`}
-    function renderKpis(){
-  /* 대시보드에서는 KPI 패널 완전히 숨김 (대시보드 내부 KPI 카드로 대체) */
-  if(currentView==="dashboard"){els.kpis.innerHTML="";els.kpis.classList.add("hidden");return}
-  const con=state.construction,total=con.length,done=con.filter(c=>c.status==="완료").length,rate=total?Math.round(done/total*100):0,byStatus=["시공중","예정","지연"],byPhase=state.constructionPhases,byTeam=state.constructionTeams,kw=con.reduce((s,c)=>s+(Number(c.kw)||0),0),avg=done?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/done):0;els.kpis.innerHTML=`<div class="kpi"><div class="label">시공 진행률</div><div class="donut" style="--p:${rate}%"><span>${rate}%</span></div><div class="delta">완료 ${done} / 전체 ${total}</div></div><div class="kpi"><div class="label">상태별 발전소</div>${byStatus.map(x=>barRow(x,con.filter(c=>c.status===x).length,total)).join("")}</div><div class="kpi"><div class="label">업무단계 분포</div>${byPhase.map(x=>barRow(x,con.filter(c=>c.phase===x).length,total)).join("")}</div><div class="kpi"><div class="label">시공 물량</div><div class="value">${kw}kW</div><div class="delta">평균 소요일 ${avg}일</div>${byTeam.map(x=>barRow(x,con.filter(c=>c.company===x).length,total)).join("")}</div>`;}function barRow(label,value,total){const pct=total?Math.round(value/total*100):0;return`<div class="chart-row"><span>${esc(label)}</span><div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div><strong>${value}</strong></div>`}
+    function renderConstructionPanels(){const current=state.construction.filter(c=>c.status==="시공중"),upcoming=state.construction.filter(c=>c.status==="예정");els.currentPlants.innerHTML=current.length?current.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">현재 시공중인 발전소가 없습니다.</div>`;els.upcomingPlants.innerHTML=upcoming.length?upcoming.map((c,i)=>plantCard(c,i)).join(""):`<div class="meta">시공 예정 발전소가 없습니다.</div>`}function plantCard(c,i){const original=state.construction.indexOf(c);return`<div class="card"><div class="card-top"><span class="name">${esc(c.site)}</span><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></div><div class="meta">${esc(c.company)} · ${esc(c.kw)}kW · ${esc(c.customer||"고객")}</div><div class="meta">${esc(c.phase)} · ${esc(c.owner||"담당 미입력")} · ${esc(c.start)} ~ ${esc(c.end||"")}</div><div class="meta">완료월 ${esc(completionMonth(c.end)||"-")} · 소요일 ${durationDays(c.start,c.end)}일</div><button class="btn icon" data-edit-construction="${original}">✎</button></div>`}
+    function renderKpis(){const con=state.construction,total=con.length,done=con.filter(c=>c.status==="완료").length,rate=total?Math.round(done/total*100):0,byStatus=["시공중","예정","지연"],byPhase=state.constructionPhases,byTeam=state.constructionTeams,kw=con.reduce((s,c)=>s+(Number(c.kw)||0),0),avg=done?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/done):0;els.kpis.innerHTML=`<div class="kpi"><div class="label">시공 진행률</div><div class="donut" style="--p:${rate}%"><span>${rate}%</span></div><div class="delta">완료 ${done} / 전체 ${total}</div></div><div class="kpi"><div class="label">상태별 발전소</div>${byStatus.map(x=>barRow(x,con.filter(c=>c.status===x).length,total)).join("")}</div><div class="kpi"><div class="label">업무단계 분포</div>${byPhase.map(x=>barRow(x,con.filter(c=>c.phase===x).length,total)).join("")}</div><div class="kpi"><div class="label">시공 물량</div><div class="value">${kw}kW</div><div class="delta">평균 소요일 ${avg}일</div>${byTeam.map(x=>barRow(x,con.filter(c=>c.company===x).length,total)).join("")}</div>`}function barRow(label,value,total){const pct=total?Math.round(value/total*100):0;return`<div class="chart-row"><span>${esc(label)}</span><div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div><strong>${value}</strong></div>`}
     function renderCalendarFilters(){ensureMonthOptions(els.calendarYear,els.calendarMonth)}function renderAssignmentCalendarFilters(){ensureMonthOptions(els.assignmentCalendarYear,els.assignmentCalendarMonth)}function renderAssignmentCalendar(){const y=Number(els.assignmentCalendarYear.value),m=Number(els.assignmentCalendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"];let html=names.map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>a.start===iso||a.due===iso);html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(t=>`<div class="calendar-task">${esc(t.owner)} · ${esc(t.title)}<br>${esc(t.status)} · ${esc(t.priority)}</div>`).join("")}</div>`}els.assignmentCalendarGrid.innerHTML=html}function renderCalendar(){const y=Number(els.calendarYear.value),m=Number(els.calendarMonth.value)-1,first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());const names=["일","월","화","수","목","금","토"];let html=names.map(n=>`<div class="day-name">${n}</div>`).join("");for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const iso=localDateString(d),tasks=state.assignments.filter(a=>a.due===iso);html+=`<div class="day-cell ${d.getMonth()!==m?"muted":""}"><div class="day-number">${d.getDate()}</div>${tasks.map(t=>`<div class="calendar-task">${esc(t.owner)} · ${esc(t.title)}</div>`).join("")}</div>`}els.calendarGrid.innerHTML=html}
     function renderKpiFilters(){const y=Number(today.slice(0,4));els.kpiYear.innerHTML=[y-1,y,y+1].map(v=>`<option ${v===y?"selected":""}>${v}년</option>`).join("")}function renderConstructionReportFilters(){const y=Number(today.slice(0,4));els.constructionReportYear.innerHTML=[y-1,y,y+1].map(v=>`<option value="${v}" ${v===y?"selected":""}>${v}</option>`).join("");els.constructionReportMonth.innerHTML=Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${i+1===Number(today.slice(5,7))?"selected":""}>${i+1}월</option>`).join("")}
-    function renderConstructionReport(){const ym=`${els.constructionReportYear.value}-${els.constructionReportMonth.value}`,done=state.construction.filter(c=>c.status==="완료"&&completionMonth(c.end)===ym),teams=state.constructionTeams.map(team=>{const list=done.filter(c=>c.company===team),kw=list.reduce((s,c)=>s+(Number(c.kw)||0),0),avg=list.length?Math.round(list.reduce((s,c)=>s+durationDays(c.start,c.end),0)/list.length):0;return{team,count:list.length,kw,avg}}).sort((a,b)=>b.kw-a.kw),totalKw=done.reduce((s,c)=>s+(Number(c.kw)||0),0);const strucActualList=done.filter(c=>c.structureStart&&c.structureEnd).map(c=>durationDays(c.structureStart,c.structureEnd)).filter(v=>v>0);const elecActualList=done.filter(c=>c.electricStart&&c.electricEnd).map(c=>durationDays(c.electricStart,c.electricEnd)).filter(v=>v>0);const strucPlannedList=done.filter(c=>c.structurePlannedDays>0).map(c=>c.structurePlannedDays);const elecPlannedList=done.filter(c=>c.electricPlannedDays>0).map(c=>c.electricPlannedDays);const avgOrDash=arr=>arr.length?Math.round(arr.reduce((s,v)=>s+v,0)/arr.length)+"일":"-";const delayItems=done.filter(c=>c.delayReason);const earlyItems=done.filter(c=>c.earlyReason);const issueItems=done.filter(c=>c.issues);els.constructionReport.textContent=`${ym} 시공 완료 보고서\n\n1. 총괄\n- 완료 발전소: ${done.length}건\n- 완료 용량: ${totalKw}kW\n\n2. 시공사별 실적 및 순위\n${teams.map((t,i)=>`- ${i+1}위 ${t.team}: ${t.kw}kW / ${t.count}건 / 평균 ${t.avg}일`).join("\n")}\n\n3. 공정별 평균 소요일\n- 구조물시공: 예상 평균 ${avgOrDash(strucPlannedList)} / 실제 평균 ${avgOrDash(strucActualList)}\n- 전기시공: 예상 평균 ${avgOrDash(elecPlannedList)} / 실제 평균 ${avgOrDash(elecActualList)}\n\n4. 지연 사유 (${delayItems.length}건)\n${delayItems.length?delayItems.map(c=>`- ${c.site}: ${c.delayReason}`)  .join("\n"):"없음"}\n\n5. 조기완료 사유 (${earlyItems.length}건)\n${earlyItems.length?earlyItems.map(c=>`- ${c.site}: ${c.earlyReason}`).join("\n"):"없음"}\n\n6. 시공 중 문제점 (${issueItems.length}건)\n${issueItems.length?issueItems.map(c=>`- ${c.site}: ${c.issues}`).join("\n"):"없음"}\n\n7. 개선 의견\n- 완료월과 완료일을 정확히 입력하면 월별 실적과 순위가 자동으로 정리됩니다.\n- 구조물/전기 시작·완료일을 입력하면 공정별 예실 분석이 자동으로 집계됩니다.`}
+    function renderConstructionReport(){const ym=`${els.constructionReportYear.value}-${els.constructionReportMonth.value}`,done=state.construction.filter(c=>c.status==="완료"&&completionMonth(c.end)===ym),teams=state.constructionTeams.map(team=>{const list=done.filter(c=>c.company===team),kw=list.reduce((s,c)=>s+(Number(c.kw)||0),0),avg=list.length?Math.round(list.reduce((s,c)=>s+durationDays(c.start,c.end),0)/list.length):0;return{team,count:list.length,kw,avg}}).sort((a,b)=>b.kw-a.kw),totalKw=done.reduce((s,c)=>s+(Number(c.kw)||0),0);els.constructionReport.textContent=`${ym} 시공 완료 보고서\n\n1. 총괄\n- 완료 발전소: ${done.length}건\n- 완료 용량: ${totalKw}kW\n\n2. 시공사별 실적 및 순위\n${teams.map((t,i)=>`- ${i+1}위 ${t.team}: ${t.kw}kW / ${t.count}건 / 평균 ${t.avg}일`).join("\n")}\n\n3. 속도 분석\n${teams.map(t=>`- ${t.team}: ${t.count?`${t.avg}일 평균. 짧은 기간이면 착공 전 준비와 구조물팀 배정이 원활했던 것으로 볼 수 있고, 긴 기간이면 자재·인력·현장 조건을 확인해야 합니다.`:"완료 건 없음"}`).join("\n")}\n\n4. 개선 의견\n- 완료월과 완료일을 정확히 입력하면 월별 실적과 순위가 자동으로 정리됩니다.\n- 지연 사유는 다음 액션에 구체적으로 남기면 다음 보고서 분석 정확도가 올라갑니다.`}
     function renderCurrentContent(){if(currentView==="admin"){renderAdmin();return}if(currentView==="dashboard"){renderCalendar();return}renderWorkTable();if(currentView==="assignments"){renderAssignments();if(employeeSubView==="workload")renderPeople();if(employeeSubView==="kpi")renderEmployeeKpis()}else if(currentView==="construction")renderConstructionPanels();else renderTodos()}function adminListHtml(list,attr,placeholder){return list.map((v,i)=>`<div class="admin-item single"><input class="field" data-${attr}="${i}" value="${esc(v)}" placeholder="${esc(placeholder)}"><button class="btn icon danger" data-delete-${attr}="${i}">×</button></div>`).join("")}function renderAdmin(){if(!adminBasicEditMode){$("#adminBrand").value=state.brand;$("#adminTitle").value=state.title;$("#adminSubtitle").value=state.subtitle;$("#adminPin").value=state.adminPin}["#adminBrand","#adminTitle","#adminSubtitle","#adminPin"].forEach(id=>$(id).readOnly=!adminBasicEditMode);$("#saveAdminBasicBtn").disabled=!adminBasicEditMode;$("#editAdminBasicBtn").textContent=adminBasicEditMode?"수정 중":"수정 시작";$("#adminNavList").innerHTML=state.nav.map((n,i)=>`<div class="admin-item"><input class="field" data-admin-nav-icon="${i}" value="${esc(n.icon)}"><input class="field" data-admin-nav-label="${i}" value="${esc(n.label)}"><button class="btn icon" data-move-admin-nav="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-nav="${i}" data-dir="1" ${i===state.nav.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-nav="${i}">&times;</button></div>`).join("");$("#adminPhaseList").innerHTML=adminListHtml(state.phases,"admin-phase","업무단계");$("#adminConstructionPhaseList").innerHTML=adminListHtml(state.constructionPhases,"admin-construction-phase","시공단계");$("#adminAssignmentStatusList").innerHTML=adminListHtml(state.assignmentStatuses,"admin-assignment-status","업무상태");$("#adminTeamList").innerHTML=adminListHtml(state.constructionTeams,"admin-team","시공사");$("#adminStructureTeamList").innerHTML=adminListHtml(state.structureTeams,"admin-structure-team","구조물팀")}
-    function openProjectModal(i=null){editingProjectIndex=i;const p=i===null?{name:"",phase:state.phases[0],owner:"",due:today,status:"정상",next:""}:state.projects[i];$("#projectName").value=p.name;$("#projectPhase").value=p.phase;$("#projectOwner").value=p.owner;$("#projectDue").value=p.due;$("#projectStatus").value=p.status;$("#projectNext").value=p.next;$("#deleteProjectInModalBtn").classList.toggle("hidden",i===null);$("#projectModal").classList.add("open")}function openConstructionModal(i=null){editingConstructionIndex=i;const c=i===null?{company:state.constructionTeams[0],structureTeam:state.structureTeams[0],site:"",kw:0,sales:"",customer:"",phase:state.constructionPhases[0],owner:"",start:today,end:"",status:"예정",next:""}:state.construction[i];$("#constructionCompany").value=c.company;$("#constructionStructureTeam").value=c.structureTeam||state.structureTeams[0];$("#constructionSite").value=c.site;$("#constructionKw").value=c.kw;$("#constructionSales").value=c.sales;$("#constructionCustomer").value=c.customer;$("#constructionPhase").value=c.phase;$("#constructionOwner").value=c.owner;$("#constructionStart").value=c.start;$("#constructionEnd").value=c.end;$("#constructionStatus").value=c.status;$("#constructionNext").value=c.next;$("#structurePlannedDays").value=c.structurePlannedDays||"";$("#structureStart").value=c.structureStart||"";$("#structureEnd").value=c.structureEnd||"";$("#electricPlannedDays").value=c.electricPlannedDays||"";$("#electricStart").value=c.electricStart||"";$("#electricEnd").value=c.electricEnd||"";$("#constructionDelayReason").value=c.delayReason||"";$("#constructionEarlyReason").value=c.earlyReason||"";$("#constructionIssues").value=c.issues||"";$("#deleteConstructionInModalBtn").classList.toggle("hidden",i===null);updateConstructionDuration();updateConstructionPhaseDays();$("#constructionModal").classList.add("open")}function updateConstructionPhaseDays(){const sa=durationDays($("#structureStart").value,$("#structureEnd").value);const ea=durationDays($("#electricStart").value,$("#electricEnd").value);$("#structureActualDays").value=sa?sa+"일":"";$("#electricActualDays").value=ea?ea+"일":""}function updateConstructionDuration(){$("#constructionDuration").value=durationDays($("#constructionStart").value,$("#constructionEnd").value)+"일"}function withConstructionStatusLine(text,status){const line=`진행상태: ${status||""}`,raw=String(text||"");if(!status)return raw;const lines=raw.split(/\r?\n/),idx=lines.findIndex(x=>/^\s*진행상태\s*:/.test(x));if(idx>=0){lines[idx]=line;return lines.join("\n")}return raw.trim()?`${raw.replace(/\s+$/,"")}\n${line}`:line}function syncConstructionNextStatus(){const next=$("#constructionNext"),status=$("#constructionStatus")?.value;if(next&&status)next.value=withConstructionStatusLine(next.value,status)}function openAssignmentModal(i=null){editingAssignmentIndex=i;const a=i===null?{owner:state.people[0]?.name||"",project:state.projects[0]?.name||"일반업무",priority:"보통",status:"지시",start:today,due:today,type:"서류요청",title:"",detail:"",result:""}:state.assignments[i];$("#assignmentOwner").value=a.owner;$("#assignmentProject").value=a.project;$("#assignmentPriority").value=a.priority;$("#assignmentStatus").value=a.status;$("#assignmentStart").value=a.start||a.due||today;$("#assignmentDue").value=a.due;$("#assignmentType").value=a.type;$("#assignmentTitle").value=a.title;$("#assignmentDetail").value=a.detail;$("#assignmentResult").value=a.result;$("#deleteAssignmentInModalBtn").classList.toggle("hidden",i===null);$("#assignmentModal").classList.add("open")}function openPersonModal(i=null){editingPersonIndex=i;const p=i===null?{name:"",role:"직원",area:"",monthlyTarget:30,yearlyTarget:360}:state.people[i];$("#personName").value=p.name;$("#personRole").value=p.role;$("#personArea").value=p.area;$("#personMonthlyTarget").value=p.monthlyTarget;$("#personYearlyTarget").value=p.yearlyTarget;$("#deletePersonInModalBtn").classList.toggle("hidden",i===null);$("#personModal").classList.add("open")}function openTodoModal(i=null,status="\uD560 \uC77C"){editingTodoIndex=i;const t=i===null?{title:"",owner:state.people[0]?.name||"",status,priority:"\uBCF4\uD1B5",due:today,detail:""}:state.todos[i];$("#todoOwner").innerHTML=state.people.map(p=>`<option>${esc(p.name)}</option>`).join("")||`<option>\uB2F4\uB2F9 \uBBF8\uC815</option>`;$("#todoTitle").value=t.title||"";$("#todoOwner").value=t.owner||state.people[0]?.name||"\uB2F4\uB2F9 \uBBF8\uC815";$("#todoStatus").value=t.status||"\uD560 \uC77C";$("#todoPriority").value=t.priority||"\uBCF4\uD1B5";$("#todoDue").value=t.due||today;$("#todoDetail").value=t.detail||"";$("#deleteTodoInModalBtn").classList.toggle("hidden",i===null);$("#todoModal").classList.add("open")}
+    function openProjectModal(i=null){editingProjectIndex=i;const p=i===null?{name:"",phase:state.phases[0],owner:"",due:today,status:"정상",next:""}:state.projects[i];$("#projectName").value=p.name;$("#projectPhase").value=p.phase;$("#projectOwner").value=p.owner;$("#projectDue").value=p.due;$("#projectStatus").value=p.status;$("#projectNext").value=p.next;$("#deleteProjectInModalBtn").classList.toggle("hidden",i===null);$("#projectModal").classList.add("open")}function openConstructionModal(i=null){editingConstructionIndex=i;const c=i===null?{company:state.constructionTeams[0],structureTeam:state.structureTeams[0],site:"",kw:0,sales:"",customer:"",phase:state.constructionPhases[0],owner:"",start:today,end:"",status:"예정",next:""}:state.construction[i];$("#constructionCompany").value=c.company;$("#constructionStructureTeam").value=c.structureTeam||state.structureTeams[0];$("#constructionSite").value=c.site;$("#constructionKw").value=c.kw;$("#constructionSales").value=c.sales;$("#constructionCustomer").value=c.customer;$("#constructionPhase").value=c.phase;$("#constructionOwner").value=c.owner;$("#constructionStart").value=c.start;$("#constructionEnd").value=c.end;$("#constructionStatus").value=c.status;$("#constructionNext").value=c.next;$("#deleteConstructionInModalBtn").classList.toggle("hidden",i===null);updateConstructionDuration();$("#constructionModal").classList.add("open")}function updateConstructionDuration(){$("#constructionDuration").value=durationDays($("#constructionStart").value,$("#constructionEnd").value)+"일"}function withConstructionStatusLine(text,status){const line=`진행상태: ${status||""}`,raw=String(text||"");if(!status)return raw;const lines=raw.split(/\r?\n/),idx=lines.findIndex(x=>/^\s*진행상태\s*:/.test(x));if(idx>=0){lines[idx]=line;return lines.join("\n")}return raw.trim()?`${raw.replace(/\s+$/,"")}\n${line}`:line}function syncConstructionNextStatus(){const next=$("#constructionNext"),status=$("#constructionStatus")?.value;if(next&&status)next.value=withConstructionStatusLine(next.value,status)}function openAssignmentModal(i=null){editingAssignmentIndex=i;const a=i===null?{owner:state.people[0]?.name||"",project:state.projects[0]?.name||"일반업무",priority:"보통",status:"지시",start:today,due:today,type:"서류요청",title:"",detail:"",result:""}:state.assignments[i];$("#assignmentOwner").value=a.owner;$("#assignmentProject").value=a.project;$("#assignmentPriority").value=a.priority;$("#assignmentStatus").value=a.status;$("#assignmentStart").value=a.start||a.due||today;$("#assignmentDue").value=a.due;$("#assignmentType").value=a.type;$("#assignmentTitle").value=a.title;$("#assignmentDetail").value=a.detail;$("#assignmentResult").value=a.result;$("#deleteAssignmentInModalBtn").classList.toggle("hidden",i===null);$("#assignmentModal").classList.add("open")}function openPersonModal(i=null){editingPersonIndex=i;const p=i===null?{name:"",role:"직원",area:"",monthlyTarget:30,yearlyTarget:360}:state.people[i];$("#personName").value=p.name;$("#personRole").value=p.role;$("#personArea").value=p.area;$("#personMonthlyTarget").value=p.monthlyTarget;$("#personYearlyTarget").value=p.yearlyTarget;$("#deletePersonInModalBtn").classList.toggle("hidden",i===null);$("#personModal").classList.add("open")}function openTodoModal(i=null,status="\uD560 \uC77C"){editingTodoIndex=i;const t=i===null?{title:"",owner:state.people[0]?.name||"",status,priority:"\uBCF4\uD1B5",due:today,detail:""}:state.todos[i];$("#todoOwner").innerHTML=state.people.map(p=>`<option>${esc(p.name)}</option>`).join("")||`<option>\uB2F4\uB2F9 \uBBF8\uC815</option>`;$("#todoTitle").value=t.title||"";$("#todoOwner").value=t.owner||state.people[0]?.name||"\uB2F4\uB2F9 \uBBF8\uC815";$("#todoStatus").value=t.status||"\uD560 \uC77C";$("#todoPriority").value=t.priority||"\uBCF4\uD1B5";$("#todoDue").value=t.due||today;$("#todoDetail").value=t.detail||"";$("#deleteTodoInModalBtn").classList.toggle("hidden",i===null);$("#todoModal").classList.add("open")}
     function splitDbLine(line){if(line.includes("\t"))return line.split("\t").map(x=>x.trim());if(line.includes(","))return line.split(",").map(x=>x.trim());return line.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean)}function normalizeDate(v){const s=String(v||"").trim(),m=s.match(/(20\d{2})[.\-\/년\s]*(\d{1,2})[.\-\/월\s]*(\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`:""}function pickValue(obj,names){const key=Object.keys(obj).find(k=>names.some(n=>k.replace(/\s/g,"").includes(n)));return key?obj[key]:""}function mapDbStatus(v){const s=String(v||"");if(s.includes("완료")||s.includes("준공"))return"완료";if(s.includes("지연")||s.includes("보류"))return"지연";if(s.includes("시공")||s.includes("진행"))return"시공중";return"예정"}function mapDbPhase(v){const s=String(v||"");if(s.includes("완료")||s.includes("준공"))return"완료";if(s.includes("전기"))return"전기시공";if(s.includes("구조"))return"구조물시공";return"자재입고완료"}function parseDbPaste(){const lines=els.dbPasteText.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),first=splitDbLine(lines[0]||""),hasHeader=first.some(x=>/발전|현장|용량|kw|상태|시공|담당|고객|영업|착공|시작|완료/i.test(x)),headers=hasHeader?first:first.map((_,i)=>String(i)),data=hasHeader?lines.slice(1):lines;pendingDbImport=data.map(line=>{const cols=splitDbLine(line),obj={};headers.forEach((h,i)=>obj[h]=cols[i]||"");const all=cols.join(" "),site=pickValue(obj,["발전소명","발전소","현장명","현장","사업명"])||cols.find(c=>c.includes("발전")||c.includes("태양광"))||cols[0]||"",kwText=pickValue(obj,["용량","kw","KW","kW"])||all,company=state.constructionTeams.find(t=>all.includes(t))||pickValue(obj,["시공사","시공팀","업체"])||state.constructionTeams[0],structureTeam=state.structureTeams.find(t=>all.includes(t))||state.structureTeams[0],statusText=pickValue(obj,["상태","진행상태","공정","단계"])||all,start=normalizeDate(pickValue(obj,["시작일","착공일","시공시작","공사시작"])),end=normalizeDate(pickValue(obj,["완료일","준공일","종료일","공사완료"])),kw=(kwText.match(/(\d+(?:\.\d+)?)/)||[])[1]||0;return{company,structureTeam,site,kw:Number(kw)||0,sales:pickValue(obj,["영업자","영업","담당영업"]),customer:pickValue(obj,["고객","고객명","발주처"])||"",phase:mapDbPhase(statusText),owner:pickValue(obj,["담당자","담당","관리자"])||"",start:start||today,end:end||"",status:mapDbStatus(statusText),next:"DB 붙여넣기 가져옴"}}).filter(x=>x.site);renderDbPreview()}function renderDbPreview(){els.dbImportPreview.innerHTML=pendingDbImport.length?`<strong>${pendingDbImport.length}건 인식됨</strong>\n\n`+pendingDbImport.map((c,i)=>`${i+1}. ${c.site} / ${c.company} / ${c.kw}kW / ${c.status} / ${c.phase}`).join("\n"):"인식된 데이터가 없습니다."}function applyDbImport(){if(!pendingDbImport.length)parseDbPaste();if(!pendingDbImport.length)return;state.lastDbImportBackup={at:new Date().toISOString(),construction:clone(state.construction)};let added=0,updated=0;pendingDbImport.forEach(c=>{const i=state.construction.findIndex(x=>x.site===c.site);if(i>=0){state.construction[i]={...state.construction[i],...c};updated++}else{state.construction.unshift(c);added++}});$("#dbImportModal").classList.remove("open");saveState(`DB 데이터 ${added}건 추가, ${updated}건 업데이트했습니다.`);render()}function undoDbImport(){if(!state.lastDbImportBackup)return;state.construction=clone(state.lastDbImportBackup.construction);delete state.lastDbImportBackup;saveState("DB 가져오기 이전 상태로 되돌렸습니다.");render()}
-    document.addEventListener("click",e=>{const t=e.target.closest("button,[data-sort-key]")||e.target;if(t.dataset.close)$("#"+t.dataset.close).classList.remove("open");if(t.dataset.sortKey){const s=sortState[t.dataset.sortView];s.dir=s.key===t.dataset.sortKey&&s.dir==="asc"?"desc":"asc";s.key=t.dataset.sortKey;renderWorkTable()}if(t.matches(".nav-btn")){const label=t.textContent.trim(),view=viewForLabel(label);if((view==="admin"||protectedView(view,label))&&!unlockAdmin())return;goToView(view,label)}if(t.id==="adminTopBtn"){if(unlockAdmin())goToView("admin","관리자")}if(t.id==="editAdminBasicBtn"){t.classList.remove("admin-click-pop");void t.offsetWidth;t.classList.add("admin-click-pop");adminBasicEditMode=true;renderAdmin()}if(t.dataset.employeeTab){if((t.dataset.employeeTab==="workload"||t.dataset.employeeTab==="kpi")&&!unlockAdmin())return;employeeSubView=t.dataset.employeeTab;renderEmployeePanels();renderCurrentContent()}if(t.id==="addProjectBtn"){if(currentView==="assignments")openAssignmentModal();else if(currentView==="todos")openTodoModal();else if(currentView==="inspection")window.openInspectionModal(-1);else openProjectModal()}if(t.id==="dbPasteBtn"){pendingDbImport=[];els.dbPasteText.value="";els.dbImportPreview.textContent="붙여넣은 뒤 미리보기를 눌러주세요.";$("#dbImportModal").classList.add("open")}if(t.id==="parseDbPasteBtn")parseDbPaste();if(t.id==="applyDbImportBtn")applyDbImport();if(t.id==="undoDbImportBtn"&&confirm("마지막 DB 가져오기 이전 상태로 되돌릴까요?"))undoDbImport();if(t.id==="addContentBtn"){if(currentView==="assignments")openAssignmentModal();else if(currentView==="construction")openConstructionModal();else if(currentView==="todos")openTodoModal();else if(currentView==="inspection")window.openInspectionModal(-1);else openProjectModal()}if(t.id==="calendarAddAssignmentBtn"||t.id==="addAssignmentBtn"||t.id==="assignmentCalendarAddBtn")openAssignmentModal();if(t.id==="addPersonBtn")openPersonModal();if(t.id==="openConstructionReportBtn"){renderConstructionReport();$("#constructionReportModal").classList.add("open")}if(t.id==="copyConstructionReportBtn"){navigator.clipboard?.writeText(els.constructionReport.textContent||"");toast("보고서를 복사했습니다.")}if(t.dataset.editProject)openProjectModal(Number(t.dataset.editProject));if(t.dataset.editConstruction)openConstructionModal(Number(t.dataset.editConstruction));if(t.dataset.editAssignment)openAssignmentModal(Number(t.dataset.editAssignment));if(t.dataset.editPerson)openPersonModal(Number(t.dataset.editPerson));if(t.id==="deleteProjectInModalBtn"&&editingProjectIndex!==null&&confirm("이 현장을 삭제할까요?")){const p=state.projects[editingProjectIndex];softDelete("projects",p?.id,p);state.projects.splice(editingProjectIndex,1);$("#projectModal").classList.remove("open");deleteAndSync("현장을 삭제했습니다.");render()}if(t.id==="deletePersonInModalBtn"&&editingPersonIndex!==null&&confirm("이 직원을 삭제할까요?")){state.people.splice(editingPersonIndex,1);$("#personModal").classList.remove("open");deleteAndSync("직원을 삭제했습니다.");render()}if(t.dataset.todoStatusFilter){todoStatusFilter=t.dataset.todoStatusFilter;renderTodoBoard()}if(t.dataset.todoOwnerFilter){todoOwnerFilter=t.dataset.todoOwnerFilter;renderTodoBoard()}if(t.id==="addTodoBtn"||t.id==="todoAddBtn")openTodoModal();if(t.dataset.addTodoStatus)openTodoModal(null,t.dataset.addTodoStatus);if(t.dataset.editTodo)openTodoModal(Number(t.dataset.editTodo));if(t.dataset.deleteTodo){const ti=Number(t.dataset.deleteTodo),td=state.todos[ti];softDelete("todos",td?.id,td);if(td?.gcalEventId)window.addGcalDeleted?.(td.gcalEventId);if(td?.linkedAssignmentId){const a=state.assignments.find(x=>x.id===td.linkedAssignmentId);softDelete("assignments",td.linkedAssignmentId,a);state.assignments=state.assignments.filter(x=>x.id!==td.linkedAssignmentId);}state.todos.splice(ti,1);deleteAndSync("할일을 삭제했습니다.");render()}if(t.id==="exportBtn"){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="solar-admin-data.json";a.click();URL.revokeObjectURL(url)}if(t.id==="exportKpiBtn"){const lines=["직원명,배정,완료,지연"];state.people.forEach(p=>{const s=employeeStats(p.name);lines.push([p.name,s.assigned,s.completed,s.overdue].join(","))});const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="employee-kpi.csv";a.click();URL.revokeObjectURL(url)}if(t.id==="exportConstructionBtn")exportConstructionExcel();});
-    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.moveAdminNav){const i=Number(t.dataset.moveAdminNav),j=i+Number(t.dataset.dir);if(j>=0&&j<state.nav.length){[state.nav[i],state.nav[j]]=[state.nav[j],state.nav[i]];saveState("순서를 변경했습니다.");render()}return}if(t.id==="adminAddNavBtn"){state.nav.push({icon:"•",label:"새 카테고리"});saveState("카테고리를 추가했습니다.");render()}if(t.id==="adminAddPhaseBtn"){state.phases.push("새 단계");saveState("업무단계를 추가했습니다.");render()}if(t.id==="adminAddConstructionPhaseBtn"){state.constructionPhases.push("새 단계");saveState("시공단계를 추가했습니다.");render()}if(t.id==="adminAddAssignmentStatusBtn"){state.assignmentStatuses.push("새 상태");saveState("업무상태를 추가했습니다.");render()}if(t.id==="adminAddTeamBtn"){state.constructionTeams.push("새 시공사");saveState("시공사를 추가했습니다.");render()}if(t.id==="adminAddStructureTeamBtn"){state.structureTeams.push("새 팀");saveState("구조물팀을 추가했습니다.");render()}if(t.dataset.deleteAdminPhase){state.phases.splice(Number(t.dataset.deleteAdminPhase),1);saveState("업무단계를 삭제했습니다.");render()}if(t.dataset.deleteAdminConstructionPhase){state.constructionPhases.splice(Number(t.dataset.deleteAdminConstructionPhase),1);saveState("시공단계를 삭제했습니다.");render()}if(t.dataset.deleteAdminAssignmentStatus){state.assignmentStatuses.splice(Number(t.dataset.deleteAdminAssignmentStatus),1);saveState("업무상태를 삭제했습니다.");render()}if(t.dataset.deleteAdminTeam){state.constructionTeams.splice(Number(t.dataset.deleteAdminTeam),1);saveState("시공사를 삭제했습니다.");render()}if(t.dataset.deleteAdminStructureTeam){state.structureTeams.splice(Number(t.dataset.deleteAdminStructureTeam),1);saveState("구조물팀을 삭제했습니다.");render()}});
+    document.addEventListener("click",e=>{const t=e.target.closest("button,[data-sort-key]")||e.target;if(t.dataset.close)$("#"+t.dataset.close).classList.remove("open");if(t.dataset.sortKey){const s=sortState[t.dataset.sortView];s.dir=s.key===t.dataset.sortKey&&s.dir==="asc"?"desc":"asc";s.key=t.dataset.sortKey;renderWorkTable()}if(t.matches(".nav-btn")){const label=t.textContent.trim(),view=viewForLabel(label);if((view==="admin"||protectedView(view,label))&&!unlockAdmin())return;goToView(view,label)}if(t.id==="adminTopBtn"){if(unlockAdmin())goToView("admin","관리자")}if(t.id==="editAdminBasicBtn"){t.classList.remove("admin-click-pop");void t.offsetWidth;t.classList.add("admin-click-pop");adminBasicEditMode=true;renderAdmin()}if(t.dataset.employeeTab){if((t.dataset.employeeTab==="workload"||t.dataset.employeeTab==="kpi")&&!unlockAdmin())return;employeeSubView=t.dataset.employeeTab;renderEmployeePanels();renderCurrentContent()}if(t.id==="addProjectBtn"){if(currentView==="assignments")openAssignmentModal();else if(currentView==="todos")openTodoModal();else openProjectModal()}if(t.id==="dbPasteBtn"){pendingDbImport=[];els.dbPasteText.value="";els.dbImportPreview.textContent="붙여넣은 뒤 미리보기를 눌러주세요.";$("#dbImportModal").classList.add("open")}if(t.id==="parseDbPasteBtn")parseDbPaste();if(t.id==="applyDbImportBtn")applyDbImport();if(t.id==="undoDbImportBtn"&&confirm("마지막 DB 가져오기 이전 상태로 되돌릴까요?"))undoDbImport();if(t.id==="addContentBtn"){if(currentView==="assignments")openAssignmentModal();else if(currentView==="construction")openConstructionModal();else if(currentView==="todos")openTodoModal();else openProjectModal()}if(t.id==="calendarAddAssignmentBtn"||t.id==="addAssignmentBtn"||t.id==="assignmentCalendarAddBtn")openAssignmentModal();if(t.id==="addPersonBtn")openPersonModal();if(t.id==="openConstructionReportBtn"){renderConstructionReport();$("#constructionReportModal").classList.add("open")}if(t.id==="copyConstructionReportBtn"){navigator.clipboard?.writeText(els.constructionReport.textContent||"");toast("보고서를 복사했습니다.")}if(t.dataset.editProject)openProjectModal(Number(t.dataset.editProject));if(t.dataset.editConstruction)openConstructionModal(Number(t.dataset.editConstruction));if(t.dataset.editAssignment)openAssignmentModal(Number(t.dataset.editAssignment));if(t.dataset.editPerson)openPersonModal(Number(t.dataset.editPerson));if(t.id==="deleteProjectInModalBtn"&&editingProjectIndex!==null&&confirm("이 현장을 삭제할까요?")){state.projects.splice(editingProjectIndex,1);$("#projectModal").classList.remove("open");deleteAndSync("현장을 삭제했습니다.");render()}if(t.id==="deleteConstructionInModalBtn"&&editingConstructionIndex!==null&&confirm("이 시공일정을 삭제할까요?")){state.construction.splice(editingConstructionIndex,1);$("#constructionModal").classList.remove("open");deleteAndSync("시공일정을 삭제했습니다.");render()}if(t.id==="deleteAssignmentInModalBtn"&&editingAssignmentIndex!==null&&confirm("이 업무지시를 삭제할까요?")){state.assignments.splice(editingAssignmentIndex,1);$("#assignmentModal").classList.remove("open");deleteAndSync("업무지시를 삭제했습니다.");render()}if(t.id==="deletePersonInModalBtn"&&editingPersonIndex!==null&&confirm("이 직원을 삭제할까요?")){state.people.splice(editingPersonIndex,1);$("#personModal").classList.remove("open");deleteAndSync("직원을 삭제했습니다.");render()}if(t.dataset.todoStatusFilter){todoStatusFilter=t.dataset.todoStatusFilter;renderTodoBoard()}if(t.dataset.todoOwnerFilter){todoOwnerFilter=t.dataset.todoOwnerFilter;renderTodoBoard()}if(t.id==="addTodoBtn"||t.id==="todoAddBtn")openTodoModal();if(t.dataset.addTodoStatus)openTodoModal(null,t.dataset.addTodoStatus);if(t.dataset.editTodo)openTodoModal(Number(t.dataset.editTodo));if(t.dataset.deleteTodo){state.todos.splice(Number(t.dataset.deleteTodo),1);deleteAndSync("할일을 삭제했습니다.");render()}if(t.id==="exportBtn"){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="solar-admin-data.json";a.click();URL.revokeObjectURL(url)}if(t.id==="exportKpiBtn"){const lines=["직원명,배정,완료,지연"];state.people.forEach(p=>{const s=employeeStats(p.name);lines.push([p.name,s.assigned,s.completed,s.overdue].join(","))});const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="employee-kpi.csv";a.click();URL.revokeObjectURL(url)}});
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.moveAdminNav){const i=Number(t.dataset.moveAdminNav),j=i+Number(t.dataset.dir);if(j>=0&&j<state.nav.length){[state.nav[i],state.nav[j]]=[state.nav[j],state.nav[i]];saveState("순서를 변경했습니다.");render()}return}if(t.id==="adminAddNavBtn"){state.nav.push({icon:"•",label:"새 카테고리"});saveState("카테고리를 추가했습니다.");render()}if(t.id==="adminAddPhaseBtn"){state.phases.push("새 단계");saveState("업무단계를 추가했습니다.");render()}if(t.id==="adminAddConstructionPhaseBtn"){state.constructionPhases.push("새 단계");saveState("시공단계를 추가했습니다.");render()}if(t.id==="adminAddAssignmentStatusBtn"){state.assignmentStatuses.push("새 상태");saveState("업무상태를 추가했습니다.");render()}if(t.id==="adminAddTeamBtn"){state.constructionTeams.push("새 시공사");saveState("시공사를 추가했습니다.");render()}if(t.id==="adminAddStructureTeamBtn"){state.structureTeams.push("새 팀");saveState("구조물팀을 추가했습니다.");render()}if(t.dataset.deleteAdminNav){state.nav.splice(Number(t.dataset.deleteAdminNav),1);saveState("카테고리를 삭제했습니다.");render()}if(t.dataset.deleteAdminPhase){state.phases.splice(Number(t.dataset.deleteAdminPhase),1);saveState("업무단계를 삭제했습니다.");render()}if(t.dataset.deleteAdminConstructionPhase){state.constructionPhases.splice(Number(t.dataset.deleteAdminConstructionPhase),1);saveState("시공단계를 삭제했습니다.");render()}if(t.dataset.deleteAdminAssignmentStatus){state.assignmentStatuses.splice(Number(t.dataset.deleteAdminAssignmentStatus),1);saveState("업무상태를 삭제했습니다.");render()}if(t.dataset.deleteAdminTeam){state.constructionTeams.splice(Number(t.dataset.deleteAdminTeam),1);saveState("시공사를 삭제했습니다.");render()}if(t.dataset.deleteAdminStructureTeam){state.structureTeams.splice(Number(t.dataset.deleteAdminStructureTeam),1);saveState("구조물팀을 삭제했습니다.");render()}});
     document.addEventListener("change",e=>{const t=e.target;if(t.dataset.assignmentPriority){const a=state.assignments[Number(t.dataset.assignmentPriority)];if(a){a.priority=t.value;saveState("우선순위를 변경했습니다.");renderCurrentContent();renderKpis()}}if(t.dataset.assignmentStatus){const a=state.assignments[Number(t.dataset.assignmentStatus)];if(a){a.status=t.value;saveState("상태를 변경했습니다.");renderCurrentContent();renderKpis()}}});
-    document.addEventListener("input",e=>{const t=e.target;if(t.id==="constructionStart"||t.id==="constructionEnd")updateConstructionDuration();if(t.id==="structureStart"||t.id==="structureEnd"||t.id==="electricStart"||t.id==="electricEnd")updateConstructionPhaseDays();if(t.dataset.adminNavIcon){state.nav[Number(t.dataset.adminNavIcon)].icon=t.value;persistState();renderNav()}if(t.dataset.adminNavLabel){state.nav[Number(t.dataset.adminNavLabel)].label=t.value;persistState();renderNav()}if(t.dataset.adminPhase){state.phases[Number(t.dataset.adminPhase)]=t.value;persistState();renderFilters()}if(t.dataset.adminConstructionPhase){state.constructionPhases[Number(t.dataset.adminConstructionPhase)]=t.value;persistState();renderFilters()}if(t.dataset.adminAssignmentStatus){state.assignmentStatuses[Number(t.dataset.adminAssignmentStatus)]=t.value;persistState();renderFilters()}if(t.dataset.adminTeam){state.constructionTeams[Number(t.dataset.adminTeam)]=t.value;persistState();renderFilters();renderKpis()}if(t.dataset.adminStructureTeam){state.structureTeams[Number(t.dataset.adminStructureTeam)]=t.value;persistState();renderFilters()}if(t.dataset.columnFilter){const view=t.dataset.columnView,key=t.dataset.columnFilter,pos=t.selectionStart;columnFilters[view][key]=t.value;renderWorkTable();const next=document.querySelector(`[data-column-view="${view}"][data-column-filter="${key}"]`);if(next){next.focus();next.setSelectionRange(pos,pos)}}});
+    document.addEventListener("input",e=>{const t=e.target;if(t.id==="constructionStart"||t.id==="constructionEnd")updateConstructionDuration();if(t.dataset.adminNavIcon){state.nav[Number(t.dataset.adminNavIcon)].icon=t.value;persistState();renderNav()}if(t.dataset.adminNavLabel){state.nav[Number(t.dataset.adminNavLabel)].label=t.value;persistState();renderNav()}if(t.dataset.adminPhase){state.phases[Number(t.dataset.adminPhase)]=t.value;persistState();renderFilters()}if(t.dataset.adminConstructionPhase){state.constructionPhases[Number(t.dataset.adminConstructionPhase)]=t.value;persistState();renderFilters()}if(t.dataset.adminAssignmentStatus){state.assignmentStatuses[Number(t.dataset.adminAssignmentStatus)]=t.value;persistState();renderFilters()}if(t.dataset.adminTeam){state.constructionTeams[Number(t.dataset.adminTeam)]=t.value;persistState();renderFilters();renderKpis()}if(t.dataset.adminStructureTeam){state.structureTeams[Number(t.dataset.adminStructureTeam)]=t.value;persistState();renderFilters()}if(t.dataset.columnFilter){const view=t.dataset.columnView,key=t.dataset.columnFilter,pos=t.selectionStart;columnFilters[view][key]=t.value;renderWorkTable();const next=document.querySelector(`[data-column-view="${view}"][data-column-filter="${key}"]`);if(next){next.focus();next.setSelectionRange(pos,pos)}}});
     document.addEventListener("change",e=>{const t=e.target;if(t.id==="constructionStatus")syncConstructionNextStatus()});
     els.search.addEventListener("input",renderWorkTable);els.phaseFilter.addEventListener("change",()=>{if(currentView!=="construction")currentView="projects";localStorage.setItem(viewStorageKey,currentView);renderNav();renderView();renderCurrentContent()});els.kpiYear.addEventListener("change",()=>{renderPeople();renderEmployeeKpis()});els.kpiMonth.addEventListener("change",()=>{renderPeople();renderEmployeeKpis()});els.calendarYear.addEventListener("change",renderCalendar);els.calendarMonth.addEventListener("change",renderCalendar);els.constructionReportYear.addEventListener("change",renderConstructionReport);els.constructionReportMonth.addEventListener("change",renderConstructionReport);
     /* ── 관리자 기본설정 저장 ── */
@@ -422,7 +417,7 @@
     /* ── 직원 저장 ── */
     $("#savePersonBtn").onclick=()=>{const p={name:$("#personName").value||"이름 없는 직원",role:$("#personRole").value||"직원",area:$("#personArea").value||"담당업무 미입력",monthlyTarget:Number($("#personMonthlyTarget").value)||0,yearlyTarget:Number($("#personYearlyTarget").value)||0};editingPersonIndex===null?state.people.push(p):state.people[editingPersonIndex]=p;$("#personModal").classList.remove("open");saveState("직원 정보를 저장했습니다.");render()};
     /* ── 할일 삭제 ── */
-    $("#deleteTodoInModalBtn").onclick=()=>{if(editingTodoIndex!==null&&confirm("이 할일과 연결된 일정을 함께 삭제할까요?")){deleteTodoAt(editingTodoIndex);$("#todoModal").classList.remove("open");deleteAndSync("삭제했습니다.");render()}};
+    $("#deleteTodoInModalBtn").onclick=()=>{if(editingTodoIndex!==null&&confirm("이 할일과 연결된 일정을 함께 삭제할까요?")){deleteTodoAt(editingTodoIndex);$("#todoModal").classList.remove("open");saveState("삭제했습니다.");render()}};
     /* ── saveAssignmentBtn / saveTodoBtn 은 아래 assignmentSave / saveTodoBtn.onclick 에서 등록됨 ── */
     els.assignmentCalendarYear.addEventListener("change",renderAssignmentCalendar);els.assignmentCalendarMonth.addEventListener("change",renderAssignmentCalendar);$("#assignmentCalendarAddBtn").onclick=openAssignmentModal;
     
@@ -475,7 +470,7 @@
     adminArrayFor=function(attr){return{"admin-phase":state.phases,"admin-status":state.statuses,"admin-construction-phase":state.constructionPhases,"admin-assignment-status":state.assignmentStatuses,"admin-todo-status":state.todoStatuses,"admin-priority":state.priorities,"admin-assignment-type":state.assignmentTypes,"admin-team":state.constructionTeams,"admin-structure-team":state.structureTeams}[attr]||null}
     adminListHtml=function(list,attr,placeholder){return list.map((v,i)=>`<div class="admin-item single"><input class="field" data-admin-list="${attr}" data-index="${i}" value="${esc(v)}" placeholder="${esc(placeholder)}"><button class="btn icon" data-move-admin-list="${attr}" data-index="${i}" data-dir="-1" ${i===0?"disabled":""}>&uarr;</button><button class="btn icon" data-move-admin-list="${attr}" data-index="${i}" data-dir="1" ${i===list.length-1?"disabled":""}>&darr;</button><button class="btn icon danger" data-delete-admin-list="${attr}" data-index="${i}">&times;</button></div>`).join("")}
     function adminCard(title,attr,placeholder,button){return `<div class="card"><div class="panel-title"><h2>${title}</h2><button class="btn" data-add-admin-list="${attr}" data-placeholder="${esc(placeholder)}">${button}</button></div><div class="admin-list">${adminListHtml(adminArrayFor(attr)||[],attr,placeholder)}</div></div>`}
-    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.addAdminList){const arr=adminArrayFor(t.dataset.addAdminList);if(arr){arr.push(t.dataset.placeholder||"새 항목");saveState("항목을 추가했습니다.");render()}}if(t.dataset.deleteAdminList){const arr=adminArrayFor(t.dataset.deleteAdminList);if(arr){arr.splice(Number(t.dataset.index),1);saveState("항목을 삭제했습니다.");render()}}if(t.dataset.addAdminPerson){state.people.push({name:"새 직원",role:"직원",area:"",monthlyTarget:30,yearlyTarget:360});saveState("직원을 추가했습니다.");render()}if(t.dataset.deleteAdminPerson){state.people.splice(Number(t.dataset.deleteAdminPerson),1);saveState("직원을 삭제했습니다.");render()}if(t.dataset.moveAdminPerson){const i=Number(t.dataset.moveAdminPerson),j=i+Number(t.dataset.dir);if(j>=0&&j<state.people.length){[state.people[i],state.people[j]]=[state.people[j],state.people[i]];saveState("순서를 변경했습니다.");render()}}if(t.dataset.addAdminProject){state.projects.push({name:"새 프로젝트"});saveState("프로젝트를 추가했습니다.");render()}if(t.dataset.deleteAdminProject){const pi=Number(t.dataset.deleteAdminProject),pp=state.projects[pi];softDelete("projects",pp?.id,pp);state.projects.splice(pi,1);deleteAndSync("프로젝트를 삭제했습니다.");render()}if(t.dataset.moveAdminProject){const i=Number(t.dataset.moveAdminProject),j=i+Number(t.dataset.dir);if(j>=0&&j<state.projects.length){[state.projects[i],state.projects[j]]=[state.projects[j],state.projects[i]];saveState("순서를 변경했습니다.");render()}}},true)
+    document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.addAdminList){const arr=adminArrayFor(t.dataset.addAdminList);if(arr){arr.push(t.dataset.placeholder||"새 항목");saveState("항목을 추가했습니다.");render()}}if(t.dataset.deleteAdminList){const arr=adminArrayFor(t.dataset.deleteAdminList);if(arr){arr.splice(Number(t.dataset.index),1);saveState("항목을 삭제했습니다.");render()}}if(t.dataset.addAdminPerson){state.people.push({name:"새 직원",role:"직원",area:"",monthlyTarget:30,yearlyTarget:360});saveState("직원을 추가했습니다.");render()}if(t.dataset.deleteAdminPerson){state.people.splice(Number(t.dataset.deleteAdminPerson),1);saveState("직원을 삭제했습니다.");render()}if(t.dataset.moveAdminPerson){const i=Number(t.dataset.moveAdminPerson),j=i+Number(t.dataset.dir);if(j>=0&&j<state.people.length){[state.people[i],state.people[j]]=[state.people[j],state.people[i]];saveState("순서를 변경했습니다.");render()}}if(t.dataset.addAdminProject){state.projects.push({name:"새 프로젝트"});saveState("프로젝트를 추가했습니다.");render()}if(t.dataset.deleteAdminProject){state.projects.splice(Number(t.dataset.deleteAdminProject),1);saveState("프로젝트를 삭제했습니다.");render()}if(t.dataset.moveAdminProject){const i=Number(t.dataset.moveAdminProject),j=i+Number(t.dataset.dir);if(j>=0&&j<state.projects.length){[state.projects[i],state.projects[j]]=[state.projects[j],state.projects[i]];saveState("순서를 변경했습니다.");render()}}},true)
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminList){const arr=adminArrayFor(t.dataset.adminList);if(arr){arr[Number(t.dataset.index)]=t.value;persistState();renderFilters()}}if(t.dataset.adminPersonName){state.people[Number(t.dataset.adminPersonName)].name=t.value;persistState();renderFilters()}if(t.dataset.adminPersonRole){state.people[Number(t.dataset.adminPersonRole)].role=t.value;persistState()}if(t.dataset.adminProjectName){state.projects[Number(t.dataset.adminProjectName)].name=t.value;persistState();renderFilters()}})
     document.addEventListener("change",e=>{const t=e.target;if(t.id==="assignmentStart"&&!$("#assignmentDue").value)$("#assignmentDue").value=t.value;if(t.id==="assignmentStartTime")setTimeByDuration($$("[data-duration-min].primary")[0]?.dataset.durationMin||60)})
     const pastelPalette=["#8ecae6","#ffb5a7","#b8e0d2","#f6d186","#cdb4db","#a7c7e7","#ffd6a5","#caffbf","#bde0fe","#ffc8dd"];
@@ -536,8 +531,8 @@
     assignmentSave=function(){const a=normalizeAssignment(currentAssignmentForm());if(editingAssignmentIndex!==null){a.id=state.assignments[editingAssignmentIndex].id;a.linkedTodoId=state.assignments[editingAssignmentIndex].linkedTodoId}editingAssignmentIndex===null?state.assignments.unshift(a):state.assignments[editingAssignmentIndex]=a;syncAssignmentToTodo(editingAssignmentIndex===null?0:editingAssignmentIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,a.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,a.start||a.due);$("#assignmentModal").classList.remove("open");saveState("일정과 할일을 함께 저장했습니다.");render()}
     $("#saveAssignmentBtn").onclick=assignmentSave;
     $("#saveTodoBtn").onclick=()=>{const prev=editingTodoIndex!==null?state.todos[editingTodoIndex]:{};const t=normalizeTodo({title:$("#todoTitle").value||KR.emptyTodo,owner:$("#todoOwner").value,helpers:readHelperChecks("todoHelpers"),project:$("#todoProject").value,type:$("#todoType").value,status:$("#todoStatus").value,priority:$("#todoPriority").value,start:$("#todoStart").value||today,due:$("#todoDue").value||today,startTime:$("#todoStartTime").value||"09:00",endTime:$("#todoEndTime").value||"10:00",allDay:$("#todoAllDay").checked,repeat:$("#todoRepeat").value,location:$("#todoLocation").value,detail:$("#todoDetail").value,result:$("#todoResult").value,kakaoSharedAt:prev.kakaoSharedAt,kakaoSharedBy:prev.kakaoSharedBy});if(editingTodoIndex!==null){t.id=state.todos[editingTodoIndex].id;t.linkedAssignmentId=state.todos[editingTodoIndex].linkedAssignmentId}editingTodoIndex===null?state.todos.unshift(t):state.todos[editingTodoIndex]=t;syncTodoToAssignment(editingTodoIndex===null?0:editingTodoIndex);setCalendarMonth(els.calendarYear,els.calendarMonth,t.due);setCalendarMonth(els.assignmentCalendarYear,els.assignmentCalendarMonth,t.start||t.due);$("#todoModal").classList.remove("open");saveState("할일과 일정을 함께 저장했습니다.");render()}
-    $("#deleteAssignmentInModalBtn").onclick=()=>{if(editingAssignmentIndex!==null&&confirm("이 일정을 삭제할까요?")){deleteAssignmentAt(editingAssignmentIndex);$("#assignmentModal").classList.remove("open");deleteAndSync("일정을 삭제했습니다.");render()}}
-    $("#deleteTodoInModalBtn").onclick=()=>{if(editingTodoIndex!==null&&confirm("이 할일을 삭제할까요?")){deleteTodoAt(editingTodoIndex);$("#todoModal").classList.remove("open");deleteAndSync("할일을 삭제했습니다.");render()}}
+    $("#deleteAssignmentInModalBtn").onclick=()=>{if(editingAssignmentIndex!==null&&confirm("이 일정을 삭제할까요?")){deleteAssignmentAt(editingAssignmentIndex);$("#assignmentModal").classList.remove("open");saveState("일정을 삭제했습니다.");render()}}
+    $("#deleteTodoInModalBtn").onclick=()=>{if(editingTodoIndex!==null&&confirm("이 할일을 삭제할까요?")){deleteTodoAt(editingTodoIndex);$("#todoModal").classList.remove("open");saveState("할일을 삭제했습니다.");render()}}
     todoListHtml=function(rows){return `<div class="todo-list"><div class="todo-list-row head"><span>제목</span><span>담당</span><span>상태</span><span>우선</span><span>마감</span><span>관리</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||KR.normal)}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">등록된 할일이 없습니다.</span></div>`}</div>`}
     renderTodoBoard=function(){ensureConfigLists();ensureTaskLinks();const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=[KR.all,...state.people.map(p=>p.name)],filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter===KR.all||t.status===todoStatusFilter)&&(todoOwnerFilter===KR.all||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter===KR.all?"active":""}" data-todo-status-filter="${KR.all}">${KR.all} <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o===KR.all?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s);return`<div class="todo-column"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${rows.length?rows.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions" style="margin-top:10px"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button></div>`}).join("")}</div>`;panel.classList.remove("hidden");panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;$("#todoSearch")?.addEventListener("input",renderTodoBoard)}
     renderAssignmentPeopleChips=function(){ensureConfigLists();const people=[KR.all,...state.people.map(p=>p.name)],counts=Object.fromEntries(people.map(p=>[p,p===KR.all?state.assignments.length:state.assignments.filter(a=>taskPeople(a).includes(p)).length]));$("#assignmentPeopleChips").innerHTML=people.map(p=>`<button class="person-chip ${assignmentPersonFilter===p?"active":""}" data-assignment-person="${esc(p)}">${p===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(p))}"></span>`}${esc(p)} <strong>${counts[p]||0}</strong></button>`).join("")}
@@ -584,133 +579,75 @@
       const selected=state.construction[dashboardSelectedConstruction];
       const linked=selected?linkedByProjectName(selected.site):{todos:[],assignments:[]};
       const dateItems=dashboardDateItems(dashboardDate);
-      const con=state.construction;
-      const totalKw=Math.round(con.reduce((s,c)=>s+(Number(c.kw)||0),0)*10)/10;
-      const activeCount=con.filter(c=>c.status==="시공중").length;
-      const lateCount=con.filter(c=>c.status==="지연").length;
-      const doneCount=con.filter(c=>c.status==="완료").length;
-      const thisMonth=today.slice(0,7);
-      const thisMonthExpect=con.filter(c=>c.end&&c.end.startsWith(thisMonth)&&c.status!=="완료").length;
-      const phases=["자재입고완료","구조물시공","전기시공","완료"];
-      const phaseIdx=selected?Math.max(0,phases.indexOf(selected.phase)):0;
-      let durPct=0;
-      if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
-      const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
-      const todayD=new Date();const dayNames=["일","월","화","수","목","금","토"];
-      const todayStr=`${todayD.getFullYear()}년 ${todayD.getMonth()+1}월 ${todayD.getDate()}일 (${dayNames[todayD.getDay()]})`;
+      const progressTotal=state.construction.length;
+      const progressDone=state.construction.filter(c=>c.status==="완료"||c.phase==="완료").length;
+      const activeCount=state.construction.filter(c=>c.status==="시공중"||c.phase==="구조물시공"||c.phase==="전기시공").length;
+      const lateCount=state.construction.filter(c=>c.status==="지연").length;
       els.dashboardView.innerHTML=`
         <div class="workspace-dashboard">
-          <div class="dash-kpi-grid" style="grid-column:1/-1;margin-bottom:4px">
-            <div class="dash-section dash-kpi-card kpi-teal">
-              <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
-              <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
-            </div>
-            <div class="dash-section dash-kpi-card ${activeCount>0?"kpi-teal":""}">
-              <div class="kpi-icon">🔧</div><div class="kpi-value">${activeCount}</div>
-              <div class="kpi-label">시공중</div><div class="kpi-delta">이번달 ${thisMonthExpect}건 완료예정</div>
-            </div>
-            <div class="dash-section dash-kpi-card ${lateCount>0?"kpi-red":""}">
-              <div class="kpi-icon">⚠️</div><div class="kpi-value">${lateCount}</div>
-              <div class="kpi-label">지연</div><div class="kpi-delta">${lateCount>0?"즉시 확인 필요":"지연 없음"}</div>
-            </div>
-            <div class="dash-section dash-kpi-card kpi-blue">
-              <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
-              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">${todayStr}</div>
-            </div>
-          </div>
           <aside class="dash-column">
             <section class="dash-section">
-              <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
-              <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
-              <div class="dash-link-row" style="margin:8px 0 6px">
-                <span class="dash-pill">전체 ${rows.length}건</span>
-                ${activeCount>0?`<span class="dash-pill">시공중 ${activeCount}</span>`:""}
-                ${lateCount>0?`<span class="dash-pill" style="border-color:#fca5a5;background:#fff1f1;color:#b91c1c">지연 ${lateCount}</span>`:""}
+              <div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
+              <input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
+              <div class="dash-link-row">
+                <span class="dash-pill">전체 ${progressTotal}</span>
+                <span class="dash-pill">시공중 ${activeCount}</span>
+                <span class="dash-pill">지연 ${lateCount}</span>
               </div>
               <div class="project-list">
-                ${rows.length?rows.map(({c,i})=>{
-                  const dp=durationDays(c.start,c.end),elapsed=durationDays(c.start,today);
-                  const pct=dp>0?Math.min(100,Math.max(0,Math.round(elapsed/dp*100))):0;
-                  const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;
-                  const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#e85555">D+${-dl}</span>`):"";
-                  return `<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
-                      <span class="project-name" style="font-size:13px">${esc(c.site||"이름 없는 발전소")}</span>
-                      <span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status||"예정")}</span>
-                    </div>
-                    <span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.phase||"-")}</span>
-                    ${c.start?`<div style="margin:5px 0 3px"><div class="construction-days-bar"><div class="construction-days-fill" style="width:${pct}%"></div></div></div>
-                    <span class="project-meta">${esc(c.start)} ~ ${esc(c.end||"?")} ${dlStr}</span>`:""}
-                  </button>`;
-                }).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
+                ${rows.length?rows.map(({c,i})=>`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}">
+                  <span class="project-name">${esc(c.site||"이름 없는 발전소")}</span>
+                  <span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span>
+                  <span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span>
+                </button>`).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
               </div>
             </section>
           </aside>
           <div class="dash-main">
-            ${selected?`
-              <section class="dash-section" style="padding:0;overflow:hidden">
-                <div class="dash-site-header">
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-                    <div>
-                      <div class="site-name">${esc(selected.site)}</div>
-                      <div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div>
-                    </div>
-                    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-                      <span class="dash-site-badge">${esc(selected.status||"예정")}</span>
-                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.35);font-size:12px">수정</button>
-                    </div>
-                  </div>
-                  <div class="site-progress-bar"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
-                  <div style="font-size:11px;opacity:.75;margin-top:6px">${esc(selected.start||"-")} ~ ${esc(selected.end||"완료일 미입력")} · 진행률 ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
+            <section class="dash-section">
+              <div class="dash-title"><h2>시공관리 현황</h2>${selected?`<button class="btn" data-edit-construction="${dashboardSelectedConstruction}">수정</button>`:""}</div>
+              ${selected?`
+                <div class="detail-grid">
+                  <div class="detail-cell"><span class="label">현장</span><strong>${esc(selected.site)}</strong></div>
+                  <div class="detail-cell"><span class="label">시공사</span><strong>${esc(selected.company)}</strong></div>
+                  <div class="detail-cell"><span class="label">용량</span><strong>${esc(selected.kw||0)}kW</strong></div>
+                  <div class="detail-cell"><span class="label">상태</span><strong><span class="badge ${statusClass(selected.status)}">${esc(selected.status||"예정")}</span></strong></div>
+                  <div class="detail-cell"><span class="label">업무단계</span><strong>${esc(selected.phase||"-")}</strong></div>
+                  <div class="detail-cell"><span class="label">기간</span><strong>${esc(selected.start||"-")} ~ ${esc(selected.end||"")}</strong></div>
+                  <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
                 </div>
-                <div class="site-detail-body">
-                  <div class="phase-progress">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}">${esc(p)}</div>`).join("")}</div>
-                  <div class="detail-grid">
-                    <div class="detail-cell"><span class="label">영업자</span><strong>${esc(selected.sales||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">고객</span><strong>${esc(selected.customer||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">구조물팀</span><strong>${esc(selected.structureTeam||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">완료예정월</span><strong>${esc(completionMonth(selected.end)||"-")}</strong></div>
-                    ${selected.delayReason?`<div class="detail-cell full" style="border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연 사유</span><strong style="color:#b91c1c">${esc(selected.delayReason)}</strong></div>`:""}
-                    ${selected.issues?`<div class="detail-cell full" style="border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 시공 중 문제점</span><strong>${esc(selected.issues)}</strong></div>`:""}
-                    <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
-                  </div>
-                </div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>📝 메모</h2><button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button></div>
-                <div class="memo-list">${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="padding:8px 0">등록된 메모가 없습니다.</div>`}</div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>✅ 이 현장의 할일</h2><button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button></div>
-                <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 할일이 없습니다.</div>`}</div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>📅 이 현장의 일정</h2><button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button></div>
-                <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 일정이 없습니다.</div>`}</div>
-              </section>
-            `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
+              `:`<div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div>`}
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>메모</h2>${selected?`<button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button>`:""}</div>
+              <div class="memo-list">${selected&&Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta">등록된 메모가 없습니다.</div>`}</div>
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>할일</h2>${selected?`<button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button>`:""}</div>
+              <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 할일이 없습니다.</div>`}</div>
+            </section>
+            <section class="dash-section compact">
+              <div class="dash-title"><h2>일정</h2>${selected?`<button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button>`:""}</div>
+              <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta">이 현장과 연결된 일정이 없습니다.</div>`}</div>
+            </section>
           </div>
           <aside class="dash-side">
             <section class="dash-section">
               <div class="mini-calendar-head">
                 <button class="btn icon" data-dashboard-month="-1">‹</button>
-                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
+                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong>
                 <button class="btn icon" data-dashboard-month="1">›</button>
               </div>
               <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
             </section>
             <section class="dash-section">
-              <div class="dash-title"><h2>${esc(dashboardDate)}</h2><button class="btn" data-dashboard-today>오늘</button></div>
+              <div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div>
               <div class="today-list">
                 ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
                 ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
-                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
+                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
               </div>
             </section>
-            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #e85555">
-              <div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>
-              ${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}
-            </section>`:""}
           </aside>
         </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
@@ -749,7 +686,6 @@
       const dir=todoListSort.dir==="asc"?1:-1,key=todoListSort.key;
       return rows.sort((a,b)=>String(todoField(a.t,key)||"").localeCompare(String(todoField(b.t,key)||"","ko"),"ko",{numeric:true})*dir);
     }
-    function localDateValue(s){return s?new Date(s):new Date(NaN)}
     function todoDueBadge(t){
       if(!t?.due||t.status===KR.done||t.status===KR.cancel)return "";
       const due=localDateValue(t.due),now=localDateValue(today),days=Math.ceil((due-now)/(1000*60*60*24));
@@ -852,8 +788,7 @@
     function renderWeatherBox(){
       return `<section class="dash-section compact"><div class="dash-title"><h2>날씨 · 현재 시간</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashClock" class="value" style="font-size:22px"></div><div id="dashWeatherContent" class="meta">날씨 정보를 불러오는 중입니다.</div></section>`
     }
-    function updateClock(){const now=new Date();const el=$("#dashClock"),dateEl=$("#dashClockDate");const hms=now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"Asia/Seoul"});const days=["일","월","화","수","목","금","토"];const dateStr=now.toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",timeZone:"Asia/Seoul"})+" ("+days[now.getDay()]+")";if(el)el.textContent=hms;if(dateEl)dateEl.textContent=dateStr;}
-    if(!window._clockInterval)window._clockInterval=setInterval(updateClock,1000);
+    function updateClock(){const el=$("#dashClock");if(el)el.textContent=new Date().toLocaleString("ko-KR",{dateStyle:"medium",timeStyle:"short"})}
     async function updateWeather(){
       const box=$("#dashWeatherContent");if(!box)return;
       const render=(temp,wind,label="현재 위치")=>{box.innerHTML=`${esc(label)} 기준 · 기온 <strong>${Math.round(temp)}°C</strong> · 풍속 <strong>${Math.round(wind)}m/s</strong><div class="meta">현장 주소가 없어서 브라우저 현재 위치 또는 서울 기준으로 표시합니다.</div>`};
@@ -873,7 +808,7 @@
       const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
       els.dashboardView.innerHTML=`<div class="workspace-dashboard">
         <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
-        <div class="dash-main">${renderWeatherBox()}<section class="dash-section compact"><div class="dash-title"><h2>이번 달 지연/확인 필요</h2></div><div class="linked-list">${rows.filter(({c})=>c.status==="지연"||c.next).slice(0,8).map(({c,i})=>`<button class="linked-item" data-dashboard-construction="${i}"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.status||"-")} · ${esc(c.next||"다음 액션 없음")}</div></button>`).join("")||`<div class="meta">이번 달 특이사항이 없습니다.</div>`}</div></section></div>
+        <div class="dash-main"><section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${renderWeatherBox()}<section class="dash-section compact"><div class="dash-title"><h2>이번 달 지연/확인 필요</h2></div><div class="linked-list">${rows.filter(({c})=>c.status==="지연"||c.next).slice(0,8).map(({c,i})=>`<button class="linked-item" data-dashboard-construction="${i}"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.status||"-")} · ${esc(c.next||"다음 액션 없음")}</div></button>`).join("")||`<div class="meta">이번 달 특이사항이 없습니다.</div>`}</div></section></div>
         <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
       </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
@@ -892,204 +827,162 @@
     const renderBaseForMask=render;
     render=function(){renderBaseForMask();applyMasking()}
     const cityWeather=[
-      {name:"대구",lat:35.8714,lon:128.6014,main:true},
-      {name:"김해",lat:35.2342,lon:128.8811},
-      {name:"경주",lat:35.8562,lon:129.2247},
-      {name:"청주",lat:36.6424,lon:127.4890}
+      {name:"서울",lat:37.5665,lon:126.9780},
+      {name:"대전",lat:36.3504,lon:127.3845},
+      {name:"대구",lat:35.8714,lon:128.6014},
+      {name:"부산",lat:35.1796,lon:129.0756},
+      {name:"광주",lat:35.1595,lon:126.8526}
     ];
-    function weatherIcon(code){if(code===0)return"☀️";if(code<=2)return"🌤️";if(code===3)return"☁️";if(code<=48)return"🌫️";if(code<=57)return"🌦️";if(code<=67)return"🌧️";if(code<=77)return"❄️";if(code<=82)return"🌧️";if(code<=86)return"❄️";if(code>=95)return"⛈️";return"🌡️"}
     function renderWeatherBox(){
-      const bgImg=state.clockBgImage?`<img class="clock-bg-image" src="${state.clockBgImage}" alt="">`:"";
-      return `<div style="grid-column:1/-1;display:grid;grid-template-columns:200px 1fr auto;gap:12px;align-items:stretch">
-        <div class="weather-clock-box" id="dashClockBox">
-          ${bgImg}
-          <div class="clock-content">
-          <div style="font-size:10px;font-weight:800;letter-spacing:.5px;opacity:.75;margin-bottom:3px">한국 시간</div>
-          <div class="clock-time" id="dashClock">--:--:--</div>
-          <div class="clock-date" id="dashClockDate"></div>
-          </div>
+      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
+        <section class="dash-section compact"><div class="dash-title"><h2>날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
+        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
+      </div>`
+    }
+    async function updateWeather(){
+      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
+      box.innerHTML=`<div class="meta">날씨 정보를 불러오는 중입니다.</div>`;
+      try{
+        const results=await Promise.all(cityWeather.map(async c=>{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);const j=await r.json();return{...c,current:j.current,daily:j.daily}}));
+        box.innerHTML=results.map(r=>`<div class="weather-city"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${Math.round(r.current.temperature_2m)}°C</div><div class="meta">풍속 ${Math.round(r.current.wind_speed_10m)}m/s</div></div>`).join("");
+        const daegu=results.find(r=>r.name==="대구");
+        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>`<div class="forecast-day"><strong>${d.slice(5).replace("-","/")}</strong><div>${Math.round(daegu.daily.temperature_2m_min[i])}° / ${Math.round(daegu.daily.temperature_2m_max[i])}°</div></div>`).join("");
+      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
+    }
+    const dashboardWithWeather=renderDashboard;
+    renderDashboard=function(){
+      dashboardWithWeather();
+      const main=$(".dash-main");
+      const weatherHtml=renderWeatherBox();
+      const weatherNode=document.createElement("div");
+      weatherNode.innerHTML=weatherHtml;
+      const oldWeather=[...main.children].find(x=>x.textContent.includes("날씨"));
+      if(oldWeather)oldWeather.remove();
+      main.insertBefore(weatherNode.firstElementChild,main.firstElementChild);
+      updateClock();updateWeather();
+    }
+    function personCompletionRows(rows){
+      return state.people.map(p=>{const rel=rows.filter(({t})=>taskPeople(t).includes(p.name)),done=rel.filter(({t})=>t.status===KR.done).length,rate=rel.length?Math.round(done/rel.length*100):0;return{p,rel,done,rate}});
+    }
+    teamKpiHtml=function(rows){
+      const total=rows.length,done=rows.filter(({t})=>t.status===KR.done).length,late=rows.filter(({t})=>t.status!==KR.done&&t.due&&t.due<today).length,people=personCompletionRows(rows);
+      return `<div class="dash-section compact"><div class="dash-title"><h2>우리팀 KPI</h2><span class="dash-pill">전체 완료율 ${total?Math.round(done/total*100):0}%</span></div><div class="dash-kpi-grid small"><div><div class="label">전체</div><div class="value">${total}</div></div><div><div class="label">완료</div><div class="value">${done}</div></div><div><div class="label">지연</div><div class="value">${late}</div></div></div>${people.map(x=>smallBar(`${x.p.name} ${x.rate}%`,x.done,Math.max(1,x.rel.length),x.p.color||personColor(x.p.name))).join("")}</div>`
+    }
+    todoListHtml=function(rows){
+      const sorted=todoFilteredRows(rows);
+      const table=`<div class="todo-list"><div class="todo-list-row head"><span>${todoSortButton("title","제목")}</span><span>${todoSortButton("owner","담당")}</span><span>${todoSortButton("status","상태")}</span><span>${todoSortButton("priority","우선")}</span><span>${todoSortButton("due","마감")}</span><span>관리</span></div><div class="todo-list-row filter"><span>${todoListFilterInput("title","제목")}</span><span>${todoListFilterInput("owner","담당")}</span><span>${todoListFilterInput("status","상태")}</span><span>${todoListFilterInput("priority","우선")}</span><span>${todoListFilterInput("due","마감")}</span><span></span></div>${sorted.length?sorted.map(({t,i})=>`<div class="todo-list-row" style="border-left:5px solid ${esc(personColor(t.owner))}"><strong>${esc(t.title)}</strong><span>${esc(peopleText(t))}</span><span><span class="badge ${statusClass(t.status)}">${esc(t.status)}</span></span><span>${esc(t.priority||KR.normal)}</span><span>${esc(t.due||"")}</span><span><button class="btn icon" data-edit-todo="${i}">수정</button><button class="btn icon danger" data-delete-todo="${i}">삭제</button></span></div>`).join(""):`<div class="todo-list-row"><span class="meta">조건에 맞는 할일이 없습니다.</span></div>`}</div>`;
+      return teamKpiHtml(rows)+table;
+    }
+    document.addEventListener("click",e=>{
+      const t=e.target.closest("button")||e.target;
+      if(t.dataset.maskToggle){e.preventDefault();e.stopImmediatePropagation();maskingMode=!maskingMode;localStorage.setItem("solar-mask-mode",maskingMode?"on":"off");applyMasking();return}
+      if(t.dataset.todoView==="list"&&!adminUnlocked){if(!unlockAdmin()){todoViewMode="board";setTimeout(renderTodoBoard,0);e.preventDefault();e.stopPropagation()}}
+    },true);
+    function localDateValue(v){
+      const m=String(v||"").match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):null;
+    }
+    function overdueDays(due){
+      const d=localDateValue(due),now=localDateValue(today);
+      return d&&now?Math.max(0,Math.floor((now-d)/86400000)):0;
+    }
+    function overdueTodoRows(){
+      return state.todos.map((t,i)=>({t:normalizeTodo(t),i}))
+        .filter(({t})=>t.due&&t.status!==KR.done&&t.due<today)
+        .sort((a,b)=>overdueDays(b.t.due)-overdueDays(a.t.due));
+    }
+    function overdueWarningHtml(){
+      const rows=overdueTodoRows();
+      return `<section class="dash-section compact" style="border:2px solid #f5b800;background:#fffdf2">
+        <div class="dash-title"><h2>마감 경과 업무 경고</h2><span class="dash-pill" style="background:#fff1cc;color:#8a4b00">지연 ${rows.length}</span></div>
+        <div class="linked-list">
+          ${rows.length?rows.slice(0,10).map(({t,i})=>{
+            const days=overdueDays(t.due);
+            return `<button class="linked-item" data-edit-todo="${i}" style="border-left:5px solid #ef4444;background:#fff7f7;text-align:left">
+              <strong>${esc(t.title||"제목 없는 할일")}</strong>
+              <div class="meta">${esc(peopleText(t))} · ${esc(t.status||"-")} · 마감 ${esc(t.due)} · <b style="color:#b91c1c">${days}일 경과</b></div>
+              <div class="meta">${esc(t.project||KR.general)} · ${esc(t.priority||KR.normal)}</div>
+            </button>`
+          }).join(""):`<div class="meta">마감 지난 업무가 없습니다.</div>`}
         </div>
-        <div>
-          <div id="dashWeatherMain" class="weather-main-card">
-            <div class="weather-main-city">🌍 날씨 불러오는 중...</div>
-            <div class="weather-main-temp">--°</div>
-          </div>
-          <div class="weather-sub-grid" id="dashWeatherSub"></div>
+      </section>`;
+    }
+    function dashboardRiskRows(){
+      const base=assignmentCalendarDefaultDate();
+      const baseDate=localDateValue(base),soonLimit=new Date(baseDate);soonLimit.setDate(soonLimit.getDate()+3);
+      const makeDate=t=>localDateValue(t.due||t.end||t.start);
+      const isExpiredToday=(item,date)=>date===base&&item.endTime&&!item.allDay&&new Date(`${date}T${item.endTime}`)<new Date();
+      return state.todos.map((t,i)=>({kind:"할일",item:normalizeTodo(t),i,edit:`data-edit-todo="${i}"`}))
+        .concat(state.assignments.map((a,i)=>({kind:"일정",item:normalizeAssignment(a),i,edit:`data-open-assignment="${i}"`})))
+        .map(row=>({...row,d:makeDate(row.item)}))
+        .filter(row=>row.d&&row.item.status!==KR.done&&localDateString(row.d).slice(0,7)===base.slice(0,7))
+        .map(row=>{
+          const date=localDateString(row.d),late=row.d<baseDate||isExpiredToday(row.item,date)||String(row.item.status||"").includes("지연");
+          const soon=!late&&row.d<=soonLimit;
+          return {...row,date,level:late?"late":soon?"soon":""};
+        })
+        .filter(row=>row.level)
+        .sort((a,b)=>a.d-b.d);
+    }
+    function renderDashboardRiskHtml(){
+      const rows=dashboardRiskRows();
+      return `<section class="dash-section compact">
+        <div class="dash-title"><h2>이번 달 지연/확인 필요</h2><span class="dash-pill">확인 ${rows.length}</span></div>
+        <div class="dashboard-risk-list">
+          ${rows.length?rows.slice(0,8).map(row=>`<button class="risk-item risk-${row.level}" ${row.edit}>
+            <strong>${row.level==="late"?"지연확정":"마감 임박"} · ${esc(row.item.title||"제목 없는 항목")}</strong>
+            <div class="meta">${esc(peopleText(row.item))} · ${esc(row.item.status||"-")} · ${esc(row.date)} · ${row.kind}</div>
+            <div class="meta">${esc(row.item.project||row.item.location||KR.general)} · ${esc(row.item.priority||KR.normal)}</div>
+          </button>`).join(""):`<div class="meta">이번 달 특이사항이 없습니다.</div>`}
         </div>
-        <div style="min-width:280px">
-          <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;padding-left:2px">대구 7일 예보</div>
-          <div id="dashForecastContent" class="forecast-strip"></div>
-        </div>
+      </section>`;
+    }
+    function dashboardMemoText(){return localStorage.getItem("solar-dashboard-memo")||""}
+    function renderDashboardMemo(){
+      return `<section class="dash-section compact">
+        <div class="dash-title"><h2>메모</h2><span class="dash-pill">대시보드</span></div>
+        <textarea id="dashboardMemoText" class="dashboard-memo-box" placeholder="회의 내용, 현장 확인 사항, 전달 메모를 입력하세요.">${esc(dashboardMemoText())}</textarea>
+      </section>`;
+    }
+    function renderWeatherBox(){
+      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
+        <section class="dash-section compact"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">강수 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
+        <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
       </div>`;
     }
     async function updateWeather(){
-      const mainEl=$("#dashWeatherMain"),subEl=$("#dashWeatherSub"),forecastEl=$("#dashForecastContent");
-      if(!mainEl)return;
+      const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
+      box.innerHTML=`<div class="meta">강수 정보를 불러오는 중입니다.</div>`;
       try{
         const results=await Promise.all(cityWeather.map(async c=>{
-          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,weathercode,wind_speed_10m&daily=weathercode,precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
-          const j=await r.json();return{...c,cur:j.current,daily:j.daily};
+          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,showers,wind_speed_10m&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
+          const j=await r.json();
+          return{...c,current:j.current,daily:j.daily};
         }));
-        const main=results[0];
-        const code=main.cur?.weathercode||0,icon=weatherIcon(code),temp=Math.round(main.cur?.temperature_2m||0);
-        const prob=Math.round(main.daily?.precipitation_probability_max?.[0]||0);
-        const rain=(main.daily?.precipitation_sum?.[0]||0).toFixed(1);
-        const tMax=Math.round(main.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(main.daily?.temperature_2m_min?.[0]||temp);
-        const wind=Math.round(main.cur?.wind_speed_10m||0);
-        if(mainEl)mainEl.innerHTML=`
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div class="weather-main-city">📍 대구 (메인)</div>
-              <div style="display:flex;align-items:flex-end;gap:8px;margin:6px 0">
-                <span style="font-size:44px;line-height:1">${icon}</span>
-                <span class="weather-main-temp">${temp}°</span>
-              </div>
-              <div class="weather-main-desc">${tMin}° / ${tMax}° · 바람 ${wind}m/s</div>
-            </div>
-          </div>
-          <div class="weather-main-stats">
-            <div class="weather-stat"><div class="wlabel">강수확률</div><div class="wval">${prob}%</div></div>
-            <div class="weather-stat"><div class="wlabel">강수량</div><div class="wval">${rain}mm</div></div>
-            <div class="weather-stat"><div class="wlabel">현재강수</div><div class="wval">${(main.cur?.precipitation||0).toFixed(1)}mm</div></div>
-          </div>`;
-        if(subEl)subEl.innerHTML=results.slice(1).map(r=>{
-          const c2=r.cur?.weathercode||0,ic=weatherIcon(c2),t=Math.round(r.cur?.temperature_2m||0);
-          const p=Math.round(r.daily?.precipitation_probability_max?.[0]||0),s=(r.daily?.precipitation_sum?.[0]||0).toFixed(1);
-          const alert=p>=60||Number(s)>=5;
-          return`<div class="weather-sub-card ${alert?"rain-alert":""}"><div class="sub-city">${esc(r.name)}</div><div class="sub-icon">${ic}</div><div class="sub-temp">${t}°</div><div class="sub-stats">강수 ${p}% · ${s}mm</div></div>`;
+        box.innerHTML=results.map(r=>{
+          const p=Math.round(r.current?.precipitation||0),rain=Math.round(r.current?.rain||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1),temp=Math.round(r.current?.temperature_2m||0);
+          const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp);
+          const danger=prob>=60||Number(sum)>=5;
+          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${esc(r.name)}</strong><div class="value" style="font-size:20px">${prob}% · ${temp}℃</div><div class="meta">오늘 강수확률 · 예상 ${sum}mm</div><div class="meta">기온 ${tMin}℃~${tMax}℃ · 현재 강수 ${p}mm · 비 ${rain}mm · 풍속 ${Math.round(r.current?.wind_speed_10m||0)}m/s</div></div>`;
         }).join("");
-        if(forecastEl)forecastEl.innerHTML=(main.daily?.time||[]).slice(0,7).map((d,i)=>{
-          const fc=main.daily?.weathercode?.[i]||0,fp=Math.round(main.daily?.precipitation_probability_max?.[i]||0),fs=(main.daily?.precipitation_sum?.[i]||0).toFixed(1),fmax=Math.round(main.daily?.temperature_2m_max?.[i]||0),fmin=Math.round(main.daily?.temperature_2m_min?.[i]||0);
-          const hot=fp>=60||Number(fs)>=5;
-          const mm=d.slice(5,7),dd=d.slice(8,10);
-          return`<div class="forecast-day ${hot?"rain-day":""}"><div class="fc-date">${mm}/${dd}</div><div class="fc-icon">${weatherIcon(fc)}</div><div class="fc-rain">${fp}%</div><div class="fc-temp">${fmin}°/${fmax}°</div></div>`;
+        const daegu=results.find(r=>r.name==="대구")||results[2];
+        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
+          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0),hot=prob>=60||Number(sum)>=5;
+          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><strong>${d.slice(5).replace("-","/")}</strong><div>강수 ${prob}%</div><div>${min}℃~${max}℃</div><div>${sum}mm</div></div>`;
         }).join("");
-      }catch{if(mainEl)mainEl.innerHTML=`<div class="weather-main-city">📍 대구</div><div style="font-size:13px;opacity:.8;margin-top:10px">날씨를 불러오지 못했습니다.</div>`}
+      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
     }
     renderDashboard=function(){
       ensureConfigLists();ensureTaskLinks();
       syncViewChrome();
-      $("#kpis")?.classList.add("hidden");
-      els.dashboardView.classList.remove("hidden");
       els.dashboardView.classList.add("dashboard-workspace");
-      const rows=dashboardConstructionRows();
-      if(!rows.some(x=>x.i===dashboardSelectedConstruction))dashboardSelectedConstruction=rows.length?rows[0].i:-1;
-      const selected=state.construction[dashboardSelectedConstruction];
-      const linked=selected?linkedByProjectName(selected.site):{todos:[],assignments:[]};
-      const dateItems=dashboardDateItems(dashboardDate);
-      const con=state.construction;
-      const totalKw=Math.round(con.reduce((s,c)=>s+(Number(c.kw)||0),0)*10)/10;
-      const activeCount=con.filter(c=>c.status==="시공중").length;
-      const lateCount=con.filter(c=>c.status==="지연").length;
-      const doneCount=con.filter(c=>c.status==="완료").length;
-      const thisMonth=today.slice(0,7);
-      const thisMonthExpect=con.filter(c=>c.end&&c.end.startsWith(thisMonth)&&c.status!=="완료").length;
-      const phases=["자재입고완료","구조물시공","전기시공","완료"];
-      const phaseIdx=selected?Math.max(0,phases.indexOf(selected.phase)):0;
-      let durPct=0;
-      if(selected&&selected.start&&selected.end){const total=durationDays(selected.start,selected.end);const elapsed=durationDays(selected.start,today);durPct=total>0?Math.min(100,Math.max(0,Math.round(elapsed/total*100))):0;}
-      const daysLeft=selected&&selected.end?Math.ceil((new Date(selected.end)-new Date(today))/86400000):null;
-      els.dashboardView.innerHTML=`
-        <div class="workspace-dashboard">
-          <!-- 날씨+시계 풀width -->
-          ${renderWeatherBox()}
-          <!-- KPI 4개 풀width -->
-          <div class="dash-kpi-grid" style="grid-column:1/-1">
-            <div class="dash-section dash-kpi-card kpi-teal">
-              <div class="kpi-icon">🏗️</div><div class="kpi-value">${con.length}</div>
-              <div class="kpi-label">전체 현장</div><div class="kpi-delta">완료 ${doneCount}건</div>
-            </div>
-            <div class="dash-section dash-kpi-card ${activeCount>0?"kpi-teal":""}">
-              <div class="kpi-icon">🔧</div><div class="kpi-value">${activeCount}</div>
-              <div class="kpi-label">시공중</div><div class="kpi-delta">이번달 ${thisMonthExpect}건 완료예정</div>
-            </div>
-            <div class="dash-section dash-kpi-card ${lateCount>0?"kpi-red":""}">
-              <div class="kpi-icon">⚠️</div><div class="kpi-value">${lateCount}</div>
-              <div class="kpi-label">지연</div><div class="kpi-delta">${lateCount>0?"즉시 확인 필요":"지연 없음 ✓"}</div>
-            </div>
-            <div class="dash-section dash-kpi-card kpi-blue">
-              <div class="kpi-icon">⚡</div><div class="kpi-value">${totalKw}<small>kW</small></div>
-              <div class="kpi-label">총 시공 물량</div><div class="kpi-delta">평균 ${doneCount?Math.round(con.filter(c=>c.status==="완료").reduce((s,c)=>s+durationDays(c.start,c.end),0)/doneCount):0}일 소요</div>
-            </div>
-          </div>
-          <!-- 왼쪽: 현장 목록 -->
-          <aside class="dash-column">
-            <section class="dash-section">
-              <div class="dash-title"><h2>시공 현장 목록</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div>
-              <input class="project-search" id="dashboardProjectSearch" placeholder="현장·시공사·담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}">
-              <div class="dash-link-row" style="margin:8px 0 6px">
-                <span class="dash-pill">전체 ${rows.length}건</span>
-                ${activeCount>0?`<span class="dash-pill">시공중 ${activeCount}</span>`:""}
-                ${lateCount>0?`<span class="dash-pill" style="border-color:#fca5a5;background:#fff1f1;color:#b91c1c">지연 ${lateCount}</span>`:""}
-              </div>
-              <div class="project-list">
-                ${rows.length?rows.map(({c,i})=>{const dp=durationDays(c.start,c.end),elapsed=durationDays(c.start,today);const pct=dp>0?Math.min(100,Math.max(0,Math.round(elapsed/dp*100))):0;const dl=c.end?Math.ceil((new Date(c.end)-new Date(today))/86400000):null;const dlStr=dl!==null?(dl>=0?`D-${dl}`:`<span style="color:#e85555">D+${-dl}</span>`):"";return`<button class="project-item ${i===dashboardSelectedConstruction?"active":""}" data-dashboard-construction="${i}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><span class="project-name" style="font-size:13px">${esc(c.site||"이름 없는 발전소")}</span><span class="badge ${statusClass(c.status)}" style="font-size:10px;flex-shrink:0">${esc(c.status||"예정")}</span></div><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.phase||"-")}</span>${c.start?`<div style="margin:5px 0 3px"><div class="construction-days-bar"><div class="construction-days-fill" style="width:${pct}%"></div></div></div><span class="project-meta">${esc(c.start)} ~ ${esc(c.end||"?")} ${dlStr}</span>`:""}</button>`;}).join(""):`<div class="dash-empty">등록된 시공일정이 없습니다.</div>`}
-              </div>
-            </section>
-          </aside>
-          <!-- 중앙: 선택 현장 상세 -->
-          <div class="dash-main">
-            ${selected?`
-              <section class="dash-section" style="padding:0;overflow:hidden">
-                <div class="dash-site-header">
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-                    <div><div class="site-name">${esc(selected.site)}</div><div class="site-meta">${esc(selected.company||"-")} · ${esc(selected.kw||0)}kW · 담당 ${esc(selected.owner||"-")}</div></div>
-                    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-                      <span class="dash-site-badge">${esc(selected.status||"예정")}</span>
-                      <button class="btn" data-edit-construction="${dashboardSelectedConstruction}" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.35);font-size:12px">수정</button>
-                    </div>
-                  </div>
-                  <div class="site-progress-bar"><div class="site-progress-fill" style="width:${durPct}%"></div></div>
-                  <div style="font-size:11px;opacity:.75;margin-top:6px">${esc(selected.start||"-")} ~ ${esc(selected.end||"완료일 미입력")} · 진행률 ${durPct}% · ${daysLeft!==null?daysLeft>=0?`D-${daysLeft}`:`지연 ${-daysLeft}일`:"완료일 미입력"}</div>
-                </div>
-                <div class="site-detail-body">
-                  <div class="phase-progress">${phases.map((p,pi)=>`<div class="phase-step ${pi<phaseIdx?"done":pi===phaseIdx?"active":""}">${esc(p)}</div>`).join("")}</div>
-                  <div class="detail-grid">
-                    <div class="detail-cell"><span class="label">영업자</span><strong>${esc(selected.sales||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">고객</span><strong>${esc(selected.customer||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">구조물팀</span><strong>${esc(selected.structureTeam||"-")}</strong></div>
-                    <div class="detail-cell"><span class="label">완료예정월</span><strong>${esc(completionMonth(selected.end)||"-")}</strong></div>
-                    ${selected.delayReason?`<div class="detail-cell full" style="border-color:#fca5a5;background:#fff1f1"><span class="label">⚠️ 지연 사유</span><strong style="color:#b91c1c">${esc(selected.delayReason)}</strong></div>`:""}
-                    ${selected.issues?`<div class="detail-cell full" style="border-color:#fed7aa;background:#fff7ed"><span class="label">🔎 시공 중 문제점</span><strong>${esc(selected.issues)}</strong></div>`:""}
-                    <div class="detail-cell full"><span class="label">다음 액션</span><strong>${esc(selected.next||"등록된 다음 액션이 없습니다.")}</strong></div>
-                  </div>
-                </div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>📝 메모</h2><button class="btn" data-dashboard-add-memo="${dashboardSelectedConstruction}">메모 추가</button></div>
-                <div class="memo-list">${Array.isArray(selected.memos)&&selected.memos.length?selected.memos.map((m,mi)=>`<div class="memo-item"><div>${esc(m.text||m)}</div><div class="meta">${esc(m.date||"")}</div><button class="btn icon danger" data-dashboard-delete-memo="${dashboardSelectedConstruction}" data-memo-index="${mi}">×</button></div>`).join(""):`<div class="meta" style="padding:8px 0">등록된 메모가 없습니다.</div>`}</div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>✅ 이 현장의 할일</h2><button class="btn primary" data-dashboard-add-todo="${dashboardSelectedConstruction}">할일 추가</button></div>
-                <div class="linked-list">${linked.todos.length?linked.todos.map(({t,i})=>`<button class="linked-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · ${esc(t.due)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 할일이 없습니다.</div>`}</div>
-              </section>
-              <section class="dash-section compact">
-                <div class="dash-title"><h2>📅 이 현장의 일정</h2><button class="btn primary" data-dashboard-add-assignment="${dashboardSelectedConstruction}">일정 등록</button></div>
-                <div class="linked-list">${linked.assignments.length?linked.assignments.map(({a,i})=>`<button class="linked-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.start)} ~ ${esc(a.due)} · ${esc(a.status)}</div></button>`).join(""):`<div class="meta" style="padding:8px 0">이 현장과 연결된 일정이 없습니다.</div>`}</div>
-              </section>
-            `:`<div class="dash-section"><div class="dash-empty">왼쪽에서 시공일정을 선택하거나 새로 추가하세요.</div></div>`}
-          </div>
-          <!-- 우측: 달력 + 오늘 할일 -->
-          <aside class="dash-side">
-            <section class="dash-section">
-              <div class="mini-calendar-head">
-                <button class="btn icon" data-dashboard-month="-1">‹</button>
-                <strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${Number(els.calendarMonth.value||today.slice(5,7))}월</strong>
-                <button class="btn icon" data-dashboard-month="1">›</button>
-              </div>
-              <div class="mini-calendar">${renderDashboardMiniCalendar()}</div>
-            </section>
-            <section class="dash-section">
-              <div class="dash-title"><h2>${esc(dashboardDate)}</h2><button class="btn" data-dashboard-today>오늘</button></div>
-              <div class="today-list">
-                ${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}
-                ${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}
-                ${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta" style="padding:8px 0">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}
-              </div>
-            </section>
-            ${lateCount>0?`<section class="dash-section compact" style="border-left:4px solid #ef4444"><div class="dash-title" style="margin-bottom:8px"><h2 style="color:#b91c1c">⚠️ 지연 현황</h2></div>${con.filter(c=>c.status==="지연").map(c=>`<div class="today-item" style="border-color:#fca5a5;background:#fff8f8;margin-bottom:8px"><strong>${esc(c.site)}</strong><div class="meta">${esc(c.company||"-")} · ${esc(c.delayReason||"사유 미입력")}</div></div>`).join("")}</section>`:""}
-          </aside>
-        </div>`;
+      const rows=constructionMonthRows(),q=($("#dashboardProjectSearch")?.value||"").toLowerCase(),shown=rows.filter(({c})=>[c.site,c.company,c.customer,c.phase,c.status,c.owner].join(" ").toLowerCase().includes(q));
+      const dateItems=dashboardDateItems(dashboardDate),ym=monthValue();
+      els.dashboardView.innerHTML=`<div class="workspace-dashboard">
+        <aside class="dash-column"><section class="dash-section"><div class="dash-title"><h2>시공일정</h2><button class="btn primary" data-dashboard-add-construction>추가</button></div><input class="project-search" id="dashboardProjectSearch" placeholder="현장, 시공사, 담당 검색" value="${esc($("#dashboardProjectSearch")?.value||"")}"><div class="dash-link-row"><span class="dash-pill">${ym}</span><span class="dash-pill">월 공사 ${rows.length}</span><span class="dash-pill">지연 ${statusCount(rows,"지연")}</span></div><div class="project-list">${shown.length?shown.map(({c,i})=>`<button class="project-item" data-dashboard-construction="${i}"><span class="project-name">${esc(c.site||"이름 없는 발전소")}</span><span class="project-meta">${esc(c.company||"-")} · ${esc(c.kw||0)}kW · ${esc(c.status||"예정")}</span><span class="project-meta">${esc(c.phase||"-")} · ${esc(c.start||"-")} ~ ${esc(c.end||"")}</span></button>`).join(""):`<div class="dash-empty">${ym} 공사가 없습니다.</div>`}</div></section></aside>
+        <div class="dash-main"><section class="dash-section"><div class="dash-title"><h2>${ym} 시공관리 현황</h2><button class="btn" data-dashboard-go-construction>시공일정 보기</button></div>${renderDashboardKpi(rows)}</section>${renderWeatherBox()}${renderDashboardRiskHtml()}${renderDashboardMemo()}</div>
+        <aside class="dash-side"><section class="dash-section"><div class="mini-calendar-head"><button class="btn icon" data-dashboard-month="-1">‹</button><strong>${esc(els.calendarYear.value||today.slice(0,4))}년 ${esc(els.calendarMonth.value||today.slice(5,7))}월</strong><button class="btn icon" data-dashboard-month="1">›</button></div><div class="mini-calendar">${renderDashboardMiniCalendar()}</div></section><section class="dash-section"><div class="dash-title"><h2>${esc(dashboardDate)} 할일</h2><button class="btn" data-dashboard-today>오늘</button></div><div class="today-list">${dateItems.todos.map(({t,i})=>`<button class="today-item" data-edit-todo="${i}"><strong>${esc(t.title)}</strong><div class="meta">${esc(peopleText(t))} · ${esc(t.status)} · 할일</div></button>`).join("")}${dateItems.assignments.map(({a,i})=>`<button class="today-item" data-open-assignment="${i}"><strong>${esc(a.title)}</strong><div class="meta">${esc(peopleText(a))} · ${esc(a.status)} · 일정</div></button>`).join("")}${dateItems.todos.length+dateItems.assignments.length===0?`<div class="meta">선택한 날짜에 등록된 항목이 없습니다.</div>`:""}</div></section></aside>
+      </div>`;
       $("#dashboardProjectSearch")?.addEventListener("input",renderDashboard);
       updateClock();updateWeather();applyMasking();
     }
@@ -1355,8 +1248,6 @@
         }
       }
       function ensureDriveNav(){
-        /* hiddenNavLabels에 있으면 강제 추가 안 함 (사용자가 삭제한 경우 존중) */
-        if(isNavHidden("프로젝트 파일"))return;
         if(!state.nav.some(n=>n.label==="프로젝트 파일")){
           const adminIndex=state.nav.findIndex(n=>n.label.includes("관리자"));
           state.nav.splice(adminIndex>=0?adminIndex:state.nav.length,0,{icon:"▤",label:"프로젝트 파일"});
@@ -1614,92 +1505,11 @@
       syncViewChrome=function(){baseSyncViewChromeForDb();if(currentView==="db"){els.pageTitle.textContent="DB";els.pageSub.textContent="엑셀 DB 파일을 공유 저장하고 보고서/시공일정 자동입력에 사용합니다.";$("#addProjectBtn").textContent="DB 업로드"}};
       const baseGoToViewForDb=goToView;
       goToView=function(view,label=""){baseGoToViewForDb(view,label);if(view==="db"){syncViewChrome();renderDbView();applyMasking()}};
-      let kiwoomDbTab="db",kiwoomStations=[],kiwoomQuery="",kiwoomLoaded=false,kiwoomSelectedRow=null;
-        async function loadKiwoomStations(){
-          if(kiwoomLoaded)return;
-          try{
-            const hdr={apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY};
-            const meta=await(await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_meta",{headers:hdr})).json();
-            if(meta[0]&&meta[0].data&&meta[0].data.chunks){
-              const n=meta[0].data.chunks;
-              const ids=[];for(let i=0;i<n;i++)ids.push("kiwoom_sync_"+i);
-              const results=await Promise.all(ids.map(function(id){return fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq."+id,{headers:hdr}).then(function(r){return r.json();});}));
-              kiwoomStations=[];
-              results.forEach(function(r){if(r[0]&&r[0].data)kiwoomStations=kiwoomStations.concat(r[0].data);});
-            } else {
-              const r=await fetch(SUPABASE_URL+"/rest/v1/app_state?id=eq.kiwoom_sync",{headers:hdr});
-              const j=await r.json();
-              kiwoomStations=(j[0]&&j[0].data)||[];
-            }
-            kiwoomLoaded=true;
-          }catch(e){}
-        }
-        window.kiwoomData={get stations(){return kiwoomStations},get loaded(){return kiwoomLoaded},load:loadKiwoomStations};
-        function renderKiwoomDetail(s){
-          if(!s)return "";
-          const keys=Object.keys(s);
-          let rows="";
-          keys.forEach(function(k){
-            const v=s[k]!=null?String(s[k]):"";
-            if(v)rows+="<tr><td style='padding:5px 8px;border:1px solid #e2e8f0;background:#f8fafc;white-space:nowrap;font-weight:600;color:#475569;font-size:11px'>"+k+"</td><td style='padding:5px 8px;border:1px solid #e2e8f0;font-size:12px'>"+v.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</td></tr>";
-          });
-          return "<div style='margin-top:12px;border:2px solid #3b82f6;border-radius:8px;overflow:hidden'>"
-            +"<div style='background:#3b82f6;color:#fff;padding:8px 12px;font-weight:bold;font-size:13px'>"+esc(s["발전소명"]||s["site"]||"")+" 상세정보 ("+keys.length+"개 항목)</div>"
-            +"<div style='overflow-y:auto;max-height:400px'><table style='width:100%;border-collapse:collapse'><tbody>"+rows+"</tbody></table></div></div>";
-        }
-        function renderKiwoomTab(){
-          const q=kiwoomQuery.toLowerCase().trim();
-          const filtered=q?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(q);}):kiwoomStations;
-          const fixedCols=["sales_seq","계약법인","발전소명","발전_허가용량","영업담당자","연락처","현장주소","진행상태","건립종류","비고"];
-          const fixedHeaders=["영업순번","계약법인","발전소명","용량(kW)","담당자","연락처","주소","진행상태","건립종류","비고"];
-          let rows="";
-          const shown=filtered.slice(0,200);
-          for(let i=0;i<shown.length;i++){
-            const s=shown[i];
-            const isSelected=kiwoomSelectedRow===i;
-            rows+='<tr style="cursor:pointer;background:'+(isSelected?"#eff6ff":"")+';" data-idx="'+i+'" class="kiwoom-row">';
-            for(let k=0;k<fixedCols.length;k++){
-              const v=s[fixedCols[k]]!=null?String(s[fixedCols[k]]):"";
-              rows+='<td style="padding:7px 8px;border:1px solid #e2e8f0;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+v.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</td>";
-            }
-            rows+="</tr>";
-          }
-          let ths="";
-          for(let i=0;i<fixedHeaders.length;i++) ths+='<th style="padding:8px;border:1px solid #e2e8f0;background:#f1f5f9;white-space:nowrap">'+fixedHeaders[i]+"</th>";
-          const detailHtml=kiwoomSelectedRow!=null?renderKiwoomDetail(filtered[kiwoomSelectedRow]):"<div style='color:#94a3b8;font-size:12px;margin-top:8px;padding:8px'>행을 클릭하면 전체 컬럼 상세정보가 표시됩니다.</div>";
-          return '<div style="padding:16px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
-            +'<input class="search" id="kiwoomSearchInput" placeholder="발전소명, 회사, 주소, 담당자 등 전체 검색" value="'+esc(kiwoomQuery)+'" style="flex:1">'
-            +'<button class="btn primary" id="kiwoomResyncBtn">&#128260; 재동기화</button>'
-            +'<span class="badge green">'+kiwoomStations.length+'개 발전소</span></div>'
-            +'<div class="meta" style="margin-bottom:10px">검색결과 '+filtered.length+'건'+( filtered.length>200?" (200건 표시)":"")+'</div>'
-            +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
-            +'<thead><tr>'+ths+'</tr></thead><tbody id="kiwoomTbody">'+rows+'</tbody></table></div>'
-            +detailHtml+'</div>';
-        }
-        function renderDbView(){
-          injectDbChrome();
-          const tabHtml='<div style="display:flex;gap:8px;margin-bottom:12px">'
-            +'<button class="btn '+(kiwoomDbTab==="db"?"primary":"")+'" id="dbTabBtn">&#128193; DB 파일</button>'
-            +'<button class="btn '+(kiwoomDbTab==="kiwoom"?"primary":"")+'" id="kiwoomTabBtn">&#9728; 키움PMS 발전소'+(kiwoomStations.length?" ("+kiwoomStations.length+")":"")+'</button>'
-            +'</div>';
-          if(kiwoomDbTab==="kiwoom"){
-            els.dbView.innerHTML="<div>"+tabHtml+renderKiwoomTab()+"</div>";
-            const si=$("#kiwoomSearchInput");
-            if(si){
-              let _composing=false;
-              si.addEventListener("compositionstart",function(){_composing=true;});
-              si.addEventListener("compositionend",function(e){_composing=false;kiwoomQuery=e.target.value;renderDbView();});
-              si.addEventListener("input",function(e){if(!_composing){kiwoomQuery=e.target.value;renderDbView();}});
-            }
-            $("#kiwoomResyncBtn")&&$("#kiwoomResyncBtn").addEventListener("click",function(){kiwoomLoaded=false;kiwoomSelectedRow=null;loadKiwoomStations().then(function(){renderDbView();});});
-            $("#dbTabBtn")&&$("#dbTabBtn").addEventListener("click",function(){kiwoomDbTab="db";renderDbView();});
-            const tbody=$("#kiwoomTbody");
-            if(tbody){tbody.addEventListener("click",function(e){const tr=e.target.closest(".kiwoom-row");if(tr){const idx=parseInt(tr.getAttribute("data-idx"));const q=kiwoomQuery.toLowerCase().trim();const filtered=q?kiwoomStations.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(q);}):kiwoomStations;kiwoomSelectedRow=(kiwoomSelectedRow===idx)?null:idx;renderDbView();}});}
-            return;
-          }
-          const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
-          const hasQuery=!!dbQuery.trim(),previewRows=hasQuery?results.map(function(x){return x.row;}):rows.slice(0,200),showing=hasQuery?results.length:Math.min(rows.length,200);
-          els.dbView.innerHTML=tabHtml+`<div class="db-shell">
+      function renderDbView(){
+        injectDbChrome();
+        const db=loadDb(),rows=dbRows(),cols=dbColumns(),results=searchDb(dbQuery,12);
+        const hasQuery=!!dbQuery.trim(),previewRows=hasQuery?results.map(x=>x.row):rows.slice(0,200),showing=hasQuery?results.length:Math.min(rows.length,200);
+        els.dbView.innerHTML=`<div class="db-shell">
           <aside class="db-card">
             <div class="panel-title"><h2>DB 파일</h2><span class="badge ${rows.length?"green":"amber"}">${rows.length?`${rows.length}건`:"비어 있음"}</span></div>
             <label class="db-drop" id="dbDropZone">엑셀(.xlsx) 또는 CSV 파일을<br>여기에 드래그하거나 클릭해서 업로드하세요.<input id="dbFileInput" type="file" accept=".xlsx,.xls,.csv" hidden></label>
@@ -1714,8 +1524,7 @@
             <div class="db-preview">${rows.length?`<table><thead><tr>${cols.slice(0,10).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(r=>`<tr>${cols.slice(0,10).map(c=>`<td>${esc(r[c]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`:""}</div>
           </section>
         </div>`;
-          $("#kiwoomTabBtn")&&$("#kiwoomTabBtn").addEventListener("click",function(){kiwoomDbTab="kiwoom";loadKiwoomStations().then(function(){renderDbView();});});
-          const dbInput=$("#dbSearchInput");
+        const dbInput=$("#dbSearchInput");
         function refreshDbSearchInput(){
           renderDbView();
           const next=$("#dbSearchInput");
@@ -1878,10 +1687,10 @@
             .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid #d8d8d8}.as-photo-cell{border-right:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;min-height:178px;display:grid;grid-template-rows:26px 1fr}.as-photo-cell:nth-child(3n){border-right:0}
             .as-photo-label{text-align:center;font-weight:900;font-size:13px;padding-top:4px}.as-photo-cell img{width:100%;height:150px;object-fit:cover;display:block}.as-photo-empty{display:grid;place-items:center;color:#aaa;font-size:12px;background:#fafafa}
             .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #d8d8d8}.as-sign-row>div{height:64px;border-right:1px solid #d8d8d8;text-align:center;font-weight:900;padding-top:8px}.as-sign-row>div:last-child{border-right:0}
-            .monthly-report-shell{display:grid;grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start}.monthly-report-controls{display:grid;gap:10px;width:100%;max-width:380px;overflow:hidden}.monthly-rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:100%}.monthly-a4{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.monthly-a4 h2{text-align:center;margin:0 0 8px;font-size:24px}.monthly-a4 .subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.monthly-kpi{border:1px solid #d8d8d8;padding:9px;text-align:center}.monthly-kpi strong{display:block;font-size:18px}.monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;margin-top:10px}.monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:6px 5px;text-align:right;vertical-align:middle}.monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}.monthly-table td:first-child,.monthly-table td:nth-child(2){text-align:left}.monthly-note{margin-top:12px;border:1px solid #d8d8d8;padding:10px;font-size:12px;line-height:1.6}.monthly-stamp{margin-top:18px;text-align:right;font-size:13px;font-weight:900}.monthly-detail{font-size:11px;color:#444;line-height:1.45}.monthly-empty{text-align:center;color:#777;padding:22px!important}.clean-monthly{padding:30px 34px}.monthly-title-block{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.clean-monthly h2{font-size:22px}.monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}.monthly-kpi em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:#17834d;font-weight:900}.monthly-table.summary th,.monthly-table.summary td{font-size:12px}.monthly-table.cost td:nth-child(4),.monthly-table.detail td:nth-child(2){text-align:left}.monthly-profit{color:#118447}.monthly-loss{color:#c0392b}.monthly-input{display:grid;gap:5px;min-width:0}.monthly-input span{font-size:12px;font-weight:900;color:#34444b;white-space:normal;line-height:1.3}.monthly-input .field{width:100%;min-width:0;box-sizing:border-box}.monthly-input small{font-size:11px;line-height:1.35;color:var(--muted);min-height:30px}.monthly-rate-grid.single{grid-template-columns:minmax(0,1fr)}.monthly-rate-summary{display:grid;gap:4px;border:1px solid #d7e7df;background:#f7fffb;border-radius:8px;padding:10px;font-size:13px}.monthly-rate-summary span{color:#118447;font-weight:900}.clean-monthly .monthly-table th,.clean-monthly .monthly-table td{line-height:1.35;white-space:normal;word-break:keep-all}.clean-monthly .monthly-table.summary td:nth-child(n+3),.clean-monthly .monthly-table.summary th:nth-child(n+3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.cost td:nth-child(2),.clean-monthly .monthly-table.cost td:nth-child(3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(3),.clean-monthly .monthly-table.detail td:nth-child(4),.clean-monthly .monthly-table.detail td:nth-child(5){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-            .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}.generic-sheet{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.generic-sheet h2{text-align:center;margin:0 0 8px;font-size:23px}.generic-subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.generic-section-title{margin-top:12px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:7px 10px;font-weight:900}.generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:8px 9px;vertical-align:top;white-space:pre-wrap;word-break:keep-all;line-height:1.55}.generic-table th{width:118px;background:#f1f6f8;text-align:center;font-weight:900}.generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.generic-photo-grid img{width:100%;height:205px;object-fit:cover;border:1px solid #cfd8dc}.generic-photo-caption{text-align:center;font-size:12px;color:#555;margin-top:3px}.generic-photo-drop{border:2px dashed #b8c8cf;border-radius:8px;background:#fbfdfe;min-height:116px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:900;padding:12px;cursor:pointer}.generic-photo-drop.dragover{border-color:var(--teal);background:#e8f8fa;color:var(--ink)}.generic-report-form .report-form-grid{grid-template-columns:1fr 1fr}.generic-report-form textarea.field{min-height:86px}.generic-report-form .wide-textarea{min-height:120px}
+            .monthly-report-shell{display:grid;grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start}.monthly-report-controls{display:grid;gap:10px;width:100%;max-width:380px;overflow:hidden}.monthly-rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:100%}.monthly-a4{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.monthly-a4 h2{text-align:center;margin:0 0 8px;font-size:24px}.monthly-a4 .subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.monthly-kpi{border:1px solid #d8d8d8;padding:9px;text-align:center}.monthly-kpi strong{display:block;font-size:18px}.monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;margin-top:10px}.monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:6px 5px;text-align:right;vertical-align:middle}.monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}.monthly-table td:first-child,.monthly-table td:nth-child(2){text-align:left}.monthly-note{margin-top:12px;border:1px solid #d8d8d8;padding:10px;font-size:12px;line-height:1.6}.monthly-stamp{margin-top:18px;text-align:right;font-size:13px;font-weight:900}.monthly-detail{font-size:11px;color:#444;line-height:1.45}.monthly-empty{text-align:center;color:#777;padding:22px!important}.clean-monthly{padding:30px 34px}.monthly-title-block{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.clean-monthly h2{font-size:22px}.monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}.monthly-kpi em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:#17834d;font-weight:900}.monthly-table.summary th,.monthly-table.summary td{font-size:12px}.monthly-table.cost td:nth-child(4),.monthly-table.detail td:nth-child(2){text-align:left}.monthly-profit{color:#118447}.monthly-loss{color:#c0392b}.monthly-input{display:grid;gap:5px;min-width:0}.monthly-input span{font-size:12px;font-weight:900;color:#34444b;white-space:normal;line-height:1.3}.monthly-input .field{width:100%;min-width:0;box-sizing:border-box}.monthly-input small{font-size:11px;line-height:1.35;color:var(--muted);min-height:30px}.monthly-rate-grid.single{grid-template-columns:minmax(0,1fr)}.monthly-rate-summary{display:grid;gap:4px;border:1px solid #d7e7df;background:#f7fffb;border-radius:8px;padding:10px;font-size:13px}.monthly-rate-summary span{color:#118447;font-weight:900}.clean-monthly .monthly-table th,.clean-monthly .monthly-table td{line-height:1.35;white-space:normal;word-break:keep-all}.clean-monthly .monthly-table.summary td:nth-child(n+3),.clean-monthly .monthly-table.summary th:nth-child(n+3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.cost td:nth-child(2),.clean-monthly .monthly-table.cost td:nth-child(3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(3),.clean-monthly .monthly-table.detail td:nth-child(4),.clean-monthly .monthly-table.detail td:nth-child(5){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(2){max-width:0;overflow:hidden;text-overflow:ellipsis}
+            .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}.generic-sheet{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.generic-sheet h2{text-align:center;margin:0 0 8px;font-size:23px}.generic-subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.generic-section-title{margin-top:12px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:7px 10px;font-weight:900}.generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:8px 9px;vertical-align:top;white-space:pre-wrap;word-break:keep-all;line-height:1.55}.generic-table th{width:118px;background:#f1f6f8;text-align:center;font-weight:900}.generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.generic-photo-grid img{width:100%;height:205px;object-fit:cover;border:1px solid #cfd8dc}.generic-photo-caption{text-align:center;font-size:12px;color:#555;margin-top:3px}.generic-photo-drop{border:2px dashed #b8c8cf;border-radius:8px;background:#fbfdfe;min-height:116px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:900;padding:12px;cursor:pointer}.generic-photo-drop.dragover{border-color:var(--teal);background:#e8f8fa;color:var(--ink)}.generic-report-form .report-form-grid{grid-template-columns:1fr 1fr}.generic-report-form textarea.field{min-height:86px}.generic-report-form .wide-textarea{min-height:120px}
             body.report-page #sharedNotice{display:none!important}
-            @media(max-width:1050px){.report-shell,.monthly-report-shell{grid-template-columns:1fr}.as-sheet,.monthly-a4{width:100%}}@media print{@page{size:A4;margin:10mm}body>*{display:none!important}body>.print-root{display:block!important}.print-root{display:block!important;margin:0;padding:0}.as-sheet{border:0!important;width:100%!important;min-height:auto!important;box-shadow:none!important}.monthly-a4{border:0!important;width:100%!important;min-height:auto!important;padding:20px!important;box-shadow:none!important}.generic-sheet{border:0!important;width:100%!important;min-height:auto!important;padding:20px!important;box-shadow:none!important}.monthly-table{font-size:11px}.as-photo-cell img{max-height:160px;object-fit:cover}.monthly-report-shell{display:block!important}.monthly-report-controls{display:none!important}}
+            @media(max-width:1050px){.report-shell,.monthly-report-shell{grid-template-columns:1fr}.as-sheet,.monthly-a4{width:100%}}@media print{@page{size:A4;margin:10mm}body>*:not(.print-root){display:none!important}.print-root{display:block!important}.as-sheet{border:0;width:100%}.monthly-a4{border:0;width:100%;min-height:auto;padding:0}.monthly-table{font-size:11px}}
           #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
         }
       }
@@ -1927,7 +1736,7 @@
           els.pageTitle.textContent="보고서";
           els.pageSub.textContent="A/S, 시공월별보고서, 기타 보고서를 작성하고 출력합니다.";
           const top=$("#addProjectBtn");
-          if(top){top.textContent="A4 출력";top.disabled=false;top.classList.toggle("primary",true)}
+          if(top){top.textContent=reportTab==="A/S"?"보고서 인쇄":reportTab==="시공월별보고서"?"A4 출력":reportTab==="기타"?"A4 출력":"양식 준비 중";top.disabled=false;top.classList.toggle("primary",true)}
         }
       };
       const baseGoToViewForReports=goToView;
@@ -2060,7 +1869,7 @@
       function restoreGenericDraft(){const data=readGenericDraft();genericFieldIds.forEach(id=>{const el=$("#"+id);if(el&&data[id]!==undefined)el.value=data[id]});$(".report-preview").innerHTML=renderGenericSheet()}
       function refreshGenericReport(){saveGenericDraft();$(".report-preview").innerHTML=renderGenericSheet()}
       function addGenericPhotos(files){const picked=[...files].filter(f=>f.type.startsWith("image/")).slice(0,6-genericPhotos.length);if(!picked.length){toast("사진은 최대 6장까지 넣을 수 있습니다.");return}Promise.all(picked.map(file=>new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(file)}))).then(urls=>{genericPhotos=[...genericPhotos,...urls].slice(0,6);refreshGenericReport();renderReportView();toast(`사진 ${urls.length}장을 첨부했습니다.`)})}
-      function printGenericReport(){doPrint(renderGenericSheet(),"A4 출력")}
+      function printGenericReport(){const button=$("#addProjectBtn");if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}const root=document.createElement("div");root.className="print-root";root.innerHTML=renderGenericSheet();document.body.appendChild(root);window.print();setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="A4 출력"}},500)}
       function readAsDraft(){try{return JSON.parse(localStorage.getItem(asDraftKey)||"{}")}catch{return{}}}
       function saveAsDraft(){const data={};asFieldIds.forEach(id=>{const el=$("#"+id);if(el)data[id]=el.value||""});localStorage.setItem(asDraftKey,JSON.stringify(data))}
       function restoreAsDraft(){const data=readAsDraft();asFieldIds.forEach(id=>{const el=$("#"+id);if(el&&data[id]!==undefined)el.value=data[id]});$(".report-preview").innerHTML=renderAsSheet()}
@@ -2138,85 +1947,27 @@
           $(".report-preview").innerHTML=renderAsSheet();updatePhotoCounts();toast(`${kind==="before"?"작업 전":"작업 후"} 사진 ${urls.length}장을 넣었습니다.`);
         });
       }
-      /* ── 공통 인쇄 함수: 새 창 A4 전용 출력 ── */
-      function doPrint(htmlContent,btnLabel){
+      function printAsReport(){
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        /* ── A4: 210mm × 297mm
-             @page margin:0 → 브라우저 머리글/바닥글(날짜·URL·페이지번호) 완전 제거
-             body padding으로 실제 여백 확보 ── */
-        const css=`
-          @page{size:A4 portrait;margin:0}
-          *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          html{margin:0;padding:0;background:#fff}
-          body{margin:0;padding:13mm 14mm 10mm 14mm;background:#fff;color:#000;
-            font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",Arial,sans-serif;
-            font-size:9pt;width:210mm;
-            -webkit-font-smoothing:antialiased;
-            text-rendering:optimizeLegibility;
-            zoom:100%}
-          /* ─── A/S 보고서 ─── */
-          .as-sheet{width:100%}
-          .as-sheet h2{text-align:center;font-size:14pt;margin:8px 0 10px;font-weight:900}
-          .as-section-title{font-weight:900;font-size:9pt;border-top:1.5px solid #888;border-bottom:1px solid #ddd;padding:4px 8px;background:#f8f8f8;margin-top:2px}
-          .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5pt}
-          .as-table th,.as-table td{border-bottom:1px solid #ddd;border-right:1px solid #ddd;padding:4px 6px;vertical-align:middle;height:auto;min-height:20px}
-          .as-table th{width:70px;text-align:center;background:#f8f8f8;font-weight:900;white-space:nowrap}
-          .as-table td:last-child,.as-table th:last-child{border-right:0}
-          .as-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #ddd;page-break-inside:avoid}
-          .as-photo-cell{border-right:1px solid #ddd;border-bottom:1px solid #ddd;display:grid;grid-template-rows:18px 1fr}
-          .as-photo-cell:nth-child(3n){border-right:0}
-          .as-photo-label{text-align:center;font-weight:900;font-size:8pt;padding-top:2px}
-          .as-photo-cell img{width:100%;height:90px;object-fit:cover;display:block}
-          .as-photo-empty{height:90px;display:grid;place-items:center;color:#bbb;font-size:8pt;background:#fafafa}
-          .as-sign-row{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #ddd;page-break-inside:avoid}
-          .as-sign-row>div{height:44px;border-right:1px solid #ddd;text-align:center;font-weight:900;padding-top:6px;font-size:8.5pt}
-          .as-sign-row>div:last-child{border-right:0}
-          /* ─── 시공월별 보고서 ─── */
-          .monthly-a4,.clean-monthly{width:100%;padding:0}
-          .monthly-a4 h2,.clean-monthly h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 4px}
-          .monthly-title-block{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px}
-          .subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:8px}
-          .monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0}
-          .monthly-kpi{border:1px solid #d0d0d0;padding:5px 4px;text-align:center}
-          .monthly-kpi span{font-size:7.5pt;display:block;color:#555}
-          .monthly-kpi strong{display:block;font-size:10pt;font-weight:900;margin-top:2px}
-          .monthly-kpi em{display:block;font-style:normal;font-size:7pt;color:#17834d;font-weight:900;margin-top:1px}
-          .monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}
-          .monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;margin-top:6px}
-          .monthly-table th,.monthly-table td{border:1px solid #ccc;padding:3px 4px;vertical-align:middle}
-          .monthly-table th{background:#f0f4f6;text-align:center;font-weight:900;white-space:nowrap}
-          .monthly-table td{text-align:right}
-          .monthly-table td:first-child{text-align:left}
-          .monthly-table td:nth-child(2){text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-          .monthly-table.cost td:nth-child(4){text-align:left}
-          .monthly-note{margin-top:6px;border:1px solid #ddd;padding:6px 8px;font-size:7.5pt;line-height:1.5;background:#fafafa}
-          .monthly-stamp{margin-top:10px;text-align:right;font-size:8.5pt;font-weight:900}
-          .monthly-detail{font-size:7.5pt;color:#555;line-height:1.35;margin-top:1px}
-          .monthly-empty{text-align:center;color:#999;padding:10px;font-size:8pt}
-          .monthly-profit{color:#118447;font-weight:900}.monthly-loss{color:#c0392b;font-weight:900}
-          /* ─── 기타 보고서 ─── */
-          .generic-sheet{width:100%;padding:0}
-          .generic-sheet h2{text-align:center;font-size:14pt;font-weight:900;margin:0 0 4px}
-          .generic-subtitle{text-align:center;color:#555;font-size:8pt;margin-bottom:10px}
-          .generic-section-title{margin-top:8px;border-top:2px solid #222;border-bottom:1px solid #c8d4d8;background:#f4f8fa;padding:4px 8px;font-weight:900;font-size:8.5pt}
-          .generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5pt}
-          .generic-table th,.generic-table td{border:1px solid #ccc;padding:5px 7px;vertical-align:top;word-break:keep-all;line-height:1.5;white-space:pre-wrap}
-          .generic-table th{width:80px;background:#f0f4f6;text-align:center;font-weight:900;white-space:nowrap}
-          .generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
-          .generic-photo-grid img{width:100%;height:150px;object-fit:cover;border:1px solid #ccc}
-          .monthly-stamp{margin-top:10px;text-align:right;font-size:8.5pt;font-weight:900}
-        `;
-        const w=window.open('','_blank','width=860,height=1120');
-        if(!w){toast("팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해주세요.");if(button){button.classList.remove("report-printing");button.textContent=btnLabel}return}
-        w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>보고서 인쇄</title><style>${css}</style></head><body>${htmlContent}</body></html>`);
-        w.document.close();
-        w.focus();
-        setTimeout(()=>{w.print();setTimeout(()=>{w.close();if(button){button.classList.remove("report-printing");button.textContent=btnLabel}},600)},500);
+        const html=renderAsSheet();
+        const root=document.createElement("div");
+        root.className="print-root";
+        root.innerHTML=html;
+        document.body.appendChild(root);
+        window.print();
+        setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="보고서 인쇄"}},500);
       }
-      function printAsReport(){doPrint(renderAsSheet(),"A4 출력")}
-      function printMonthlyReport(){doPrint(renderMonthlyReportSheet(),"A4 출력")}
-
+      function printMonthlyReport(){
+        const button=$("#addProjectBtn");
+        if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
+        const root=document.createElement("div");
+        root.className="print-root";
+        root.innerHTML=renderMonthlyReportSheet();
+        document.body.appendChild(root);
+        window.print();
+        setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="A4 출력"}},500);
+      }
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
         if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else if(reportTab==="시공월별보고서")printMonthlyReport();else if(reportTab==="기타")printGenericReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
@@ -2296,16 +2047,13 @@
         close?.insertAdjacentHTML("beforebegin",`<div class="construction-db-search"><input class="field" id="constructionDbSearch" placeholder="DB 검색"><div class="construction-db-results hidden" id="constructionDbResults"></div></div>`);
       }
       const baseOpenConstructionForDb=openConstructionModal;
-      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden");if(!window.kiwoomData?.loaded)window.kiwoomData?.load().then(function(){if($("#constructionDbSearch")&&$("#constructionDbSearch").value.trim())renderConstructionDbResults();});};
+      openConstructionModal=function(...args){baseOpenConstructionForDb(...args);ensureConstructionDbSearch();$("#constructionDbSearch").value="";$("#constructionDbResults").classList.add("hidden")};
       function renderConstructionDbResults(){
         const box=$("#constructionDbResults"),q=$("#constructionDbSearch")?.value||"";
-        if(!box)return;
-        const dbRows=(window.solarDb&&window.solarDb.search)?window.solarDb.search(q,12):[];
-        const kq=q.toLowerCase().trim();
-        const _ks=window.kiwoomData?.stations||[];const kRows=kq&&_ks.length?_ks.filter(function(s){return Object.values(s).join(" ").toLowerCase().includes(kq);}).slice(0,12).map(function(s,i){return{row:{발전소명:s["발전소명"]||s.site||"",사업주:s["영업담당자"]||s.owner||"",현장주소:s["현장주소"]||s.address||"",공사용량:s["발전_허가용량"]||s.kw||""},i:"k"+i,_kiwoom:s};}):[];
-        const rows=[...dbRows,...kRows].slice(0,12);
+        if(!box||!window.solarDb)return;
+        const rows=window.solarDb.search(q,12);
         window.__constructionDbMatches=rows;
-        box.classList.toggle("hidden",!q.trim()||!rows.length);
+        box.classList.toggle("hidden",!q.trim());
         box.innerHTML=rows.length?`<div class="construction-db-pickbar"><span>체크한 호기를 한 시공일정으로 취합</span><button class="btn primary" type="button" id="applySelectedConstructionDbRows">선택 호기 취합</button></div>`+rows.map((x,i)=>{const info=dbRowInfo(x.row,x.i),sub=[info.customer,info.address].filter(Boolean).join(" · ");return `<label class="construction-db-result"><input type="checkbox" data-construction-db-check="${i}"><span><strong>${esc(info.site)}${info.kw?` · ${esc(info.kw)}kW`:""}</strong>${sub?`<small>${esc(sub)}</small>`:""}</span><button class="btn construction-db-apply-one" type="button" data-construction-db-row="${x.i}">단일 입력</button></label>`}).join(""):`<div class="construction-db-empty">검색 결과가 없습니다.</div>`;
       }
       function setSelectIfExists(id,value){
@@ -2372,8 +2120,8 @@
         const label=items.length>1?groupLabel(items):items[0].site,kw=Math.round(items.reduce((s,x)=>s+x.kw,0)*100)/100;
         applyDbGroupToConstruction({items,label,kw});
       }
-      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch"){if(!window.kiwoomData?.loaded){window.kiwoomData?.load().then(renderConstructionDbResults);}else{renderConstructionDbResults();}}},true);
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="applySelectedConstructionDbRows"){e.preventDefault();e.stopImmediatePropagation();applySelectedDbRowsToConstruction();return}if(t.dataset.constructionDbRow!==undefined){e.preventDefault();e.stopImmediatePropagation();const idx=t.dataset.constructionDbRow;let row;if(String(idx).startsWith("k")){const match=window.__constructionDbMatches?.find(x=>x.i===idx);row=match?._kiwoom||match?.row;}else{row=window.solarDb?.rows()[Number(idx)];}if(row)applyDbRowToConstruction(row)}},true);
+      document.addEventListener("input",e=>{if(e.target?.id==="constructionDbSearch")renderConstructionDbResults()},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="applySelectedConstructionDbRows"){e.preventDefault();e.stopImmediatePropagation();applySelectedDbRowsToConstruction();return}if(t.dataset.constructionDbRow!==undefined){e.preventDefault();e.stopImmediatePropagation();const row=window.solarDb?.rows()[Number(t.dataset.constructionDbRow)];if(row)applyDbRowToConstruction(row)}},true);
     })();
     (function setupFieldworkView(){
       function ensureFieldworkChrome(){
@@ -2455,7 +2203,7 @@
         const exportBtn=adminUnlocked?`<button class="btn primary" id="fieldworkExportBtn">엑셀 내보내기</button>`:"";
         els.fieldworkView.innerHTML=`<div class="fieldwork-shell"><div class="fieldwork-top"><div class="meta">하루 기록은 날짜별 데이터베이스로 계속 저장됩니다. 시간 데이터는 관리자 엑셀 내보내기에만 포함됩니다.</div><div class="row-actions">${exportBtn}</div></div><div class="fieldwork-kpis"><div class="fieldwork-kpi"><div class="label">등록 직원</div><div class="value">${k.total}</div></div><div class="fieldwork-kpi"><div class="label">오늘 기록</div><div class="value">${k.checkin}</div></div><div class="fieldwork-kpi"><div class="label">이동중</div><div class="value">${k.move}</div></div><div class="fieldwork-kpi"><div class="label">현장 작업</div><div class="value">${k.work}</div></div><div class="fieldwork-kpi"><div class="label">퇴근</div><div class="value">${k.off}</div></div></div><section class="fieldwork-board">${cards||`<div class="dash-empty">직원을 먼저 등록하면 외근 현황을 기록할 수 있습니다.</div>`}</section><section class="fieldwork-log"><div class="fieldwork-row head ${canSeeTime?"":"no-time"}"><span>직원</span><span>상태</span><span>발전소/현장</span><span>지역/메모</span>${timeHead}${deleteHead}</div>${logs.length?logs.map(x=>`<div class="fieldwork-row ${canSeeTime?"":"no-time"} ${adminUnlocked?"admin-delete":""}"><strong>${esc(x.person)}</strong><span><span class="badge ${fieldworkStatusClass(x.status)}">${esc(x.status)}</span></span><span>${esc(x.site||"-")}</span><span>${esc([x.region,x.memo].filter(Boolean).join(" · ")||"-")}</span>${canSeeTime?`<span>${esc(fieldworkWhen(x))}</span>`:""}${adminUnlocked?`<span><button class="btn icon danger" data-delete-fieldwork="${esc(x.id)}">삭제</button></span>`:""}</div>`).join(""):`<div class="fieldwork-row no-time"><span class="meta">오늘 외근 기록이 없습니다.</span></div>`}</section></div>`;
       }
-      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.deleteFieldwork){if(!adminUnlocked&&!unlockAdmin())return;const id=t.dataset.deleteFieldwork;if(confirm("이 외근 기록을 삭제할까요?")){const fw=(state.fieldworkLogs||[]).find(x=>x.id===id);softDelete("fieldworkLogs",id,fw);state.fieldworkLogs=(state.fieldworkLogs||[]).filter(x=>x.id!==id);deleteAndSync("외근 기록을 삭제했습니다.");render()}return}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
+      document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.id==="exportBtn"){if(currentView==="fieldwork"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel();return}if(!adminUnlocked&&!unlockAdmin()){e.preventDefault();e.stopImmediatePropagation();return}}if(currentView==="fieldwork"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(adminUnlocked)exportFieldworkExcel();else toast("현황은 직원 카드의 상태 버튼으로 기록합니다.")}if(t.id==="fieldworkExportBtn"){e.preventDefault();e.stopImmediatePropagation();exportFieldworkExcel()}if(t.dataset.deleteFieldwork){if(!adminUnlocked&&!unlockAdmin())return;const id=t.dataset.deleteFieldwork;if(confirm("이 외근 기록을 삭제할까요?")){state.fieldworkLogs=(state.fieldworkLogs||[]).filter(x=>x.id!==id);saveState("외근 기록을 삭제했습니다.");render()}return}if(t.dataset.fieldworkStatus){const person=state.people[Number(t.dataset.person)];if(!person)return;const status=t.dataset.fieldworkStatus;let site="",region="",memo="";if(status!=="출근"&&status!=="퇴근"){site=prompt("발전소명 또는 현장명을 입력하세요.",latestFieldworkByPerson(person.name)?.site||"")||"";region=prompt("지역을 입력하세요. 예: 경남 남해",latestFieldworkByPerson(person.name)?.region||"")||""}memo=prompt("메모가 있으면 입력하세요.","")||"";const stamp=localFieldworkStamp();state.fieldworkLogs.unshift({id:uid("fieldwork"),person:person.name,status,site,region,memo,date:stamp.slice(0,10),time:stamp,savedAt:new Date().toISOString()});saveState(`${person.name} ${status} 기록을 저장했습니다.`);render()}},true);
       ensureFieldworkChrome();ensureFieldworkState();
     })();
     (function improveFieldworkWorkflow(){
@@ -2707,26 +2455,17 @@
       stripScheduleCategory();
     })();
     (function keepDeletedNavHidden(){
-      /* 절대 숨겨지면 안 되는 시스템 필수 nav 항목 */
-      const PROTECTED_NAV=["구조물 검수"];
       const baseNormalizeForHiddenNav=normalizeState;
-      normalizeState=function(){
-        /* 보호 항목은 hiddenNavLabels에서 항상 제거 */
-        PROTECTED_NAV.forEach(label=>showNavLabel(label));
-        baseNormalizeForHiddenNav();
-        state.nav=(state.nav||[]).filter(n=>!isNavHidden(n.label)||PROTECTED_NAV.includes(n.label));
-      };
+      normalizeState=function(){baseNormalizeForHiddenNav();state.nav=(state.nav||[]).filter(n=>!isNavHidden(n.label))};
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
         if(t.dataset?.deleteAdminNav!==undefined){
           e.preventDefault();e.stopImmediatePropagation();
           const i=Number(t.dataset.deleteAdminNav),item=state.nav[i];
           if(!item)return;
-          /* 보호 항목은 삭제 불가 */
-          if(PROTECTED_NAV.includes(item.label)){toast("이 카테고리는 삭제할 수 없습니다.");return;}
           hideNavLabel(item.label);
           state.nav.splice(i,1);
-          deleteAndSync("카테고리를 삭제했습니다.");
+          saveState("카테고리를 삭제했습니다.");
           render();
           return;
         }
@@ -2976,7 +2715,7 @@
       }
       function openMeetingModal(m=null){$("#projectModal")?.classList.remove("open");fillMeetingModal(m||blankMeeting());$("#meetingModal").classList.add("open");setTimeout(()=>$("#meetingTitle")?.focus(),0)}
       function saveMeetingFromModal(){try{ensureMeetings();disableMeetingSamples();const m=readMeetingModal(),i=state.meetings.findIndex(x=>x.id===m.id);i>=0?state.meetings[i]=m:state.meetings.unshift(m);selectedMeetingId=m.id;$("#meetingModal").classList.remove("open");renderMeetingView();renderNav();updateTopButtons();saveStateAfterPaint("회의록을 저장했습니다.")}catch(err){console.error(err);toast(`회의록 저장 오류: ${err?.message||"확인 필요"}`)}}
-      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();const m=state.meetings.find(x=>x.id===id);softDelete("meetings",id,m);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");deleteAndSync("회의록을 삭제했습니다.");render()}
+      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");saveState("회의록을 삭제했습니다.");render()}
       function renderMeetingView(){
         ensureMeetings();
         let view=$("#meetingView");
@@ -2993,7 +2732,7 @@
       renderCurrentContent=function(){if(currentView==="meetings"){syncViewChrome();renderMeetingView();return}baseRenderCurrentForMeetings()}
       const baseSyncForMeetings=syncViewChrome;
       syncViewChrome=function(){baseSyncForMeetings();if(currentView==="meetings"){els.pageTitle.textContent="회의록";els.pageSub.textContent="회의 내용과 결정사항을 기록합니다.";$("#addProjectBtn").textContent="회의록 추가"}}
-      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();const m=state.meetings.find(x=>x.id===id);softDelete("meetings",id,m);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";deleteAndSync("회의록을 삭제했습니다.");render()}
+      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";saveState("회의록을 삭제했습니다.");render()}
       document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.meetingId){e.preventDefault();e.stopImmediatePropagation();selectedMeetingId=t.dataset.meetingId;renderMeetingView();return}if(t.dataset.deleteMeeting){e.preventDefault();e.stopImmediatePropagation();deleteMeetingById(t.dataset.deleteMeeting);return}if(t.id==="exportMeetingsExcelBtn"){e.preventDefault();e.stopImmediatePropagation();exportMeetingsExcel();return}if(t.id==="printMeetingA4Btn"){e.preventDefault();e.stopImmediatePropagation();printSelectedMeetingA4();return}if(t.id==="addMeetingBtn"||t.id==="addMeetingBtnSide"||currentView==="meetings"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openMeetingModal();return}if(t.dataset.editMeeting){e.preventDefault();e.stopImmediatePropagation();const m=state.meetings.find(x=>x.id===t.dataset.editMeeting);if(m)openMeetingModal(m);return}if(t.id==="toggleMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiPanel")?.classList.toggle("hidden");return}if(t.id==="applyMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();applyMeetingAiText();return}if(t.id==="clearMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiText").value="";$("#meetingAiText").focus();return}if(t.id==="saveMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();saveMeetingFromModal();return}if(t.id==="deleteMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();deleteMeetingFromModal();return}if(t.dataset.closeMeetingModal!==undefined||e.target?.id==="meetingModal"){e.preventDefault();e.stopImmediatePropagation();$("#meetingModal")?.classList.remove("open");return}},true);
     })();
     function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
@@ -3007,19 +2746,7 @@
     const baseNormalizeForPermissions=normalizeState;
     normalizeState=function(){baseNormalizeForPermissions();normalizePermissionState()}
     const baseRenderNavForPermissions=renderNav;
-    renderNav=function(){
-      /* 권한 renderNav: 구조물 검수 강제 확보 + undefined label 방어 */
-      const _REQUIRED_LABELS=["구조물 검수"];
-      _REQUIRED_LABELS.forEach(lbl=>{
-        showNavLabel(lbl);
-        if(!state.nav.some(n=>n.label===lbl)){
-          const ai=state.nav.findIndex(n=>String(n.label||"").includes("관리자"));
-          state.nav.splice(ai>=0?ai:state.nav.length,0,{icon:"🔍",label:lbl});
-        }
-      });
-      normalizePermissionState();
-      els.nav.innerHTML=state.nav.map((n,i)=>(n&&n.label&&canAccessNav(n))?`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`:"").join("")
-    }
+    renderNav=function(){normalizePermissionState();els.nav.innerHTML=state.nav.map((n,i)=>canAccessNav(n)?`<button class="nav-btn ${isActive(n.label)?"active":""}" data-nav="${i}"><span>${esc(n.icon)}</span><span>${esc(n.label)}</span></button>`:"").join("")}
     const baseGoToViewForPermissions=goToView;
     goToView=function(view,label=""){const n=state.nav.find(x=>x.label===label)||state.nav.find(x=>viewForLabel(x.label)===view);if(n&&!canAccessNav(n)){toast("관리자 권한이 필요한 카테고리입니다.");return}baseGoToViewForPermissions(view,label)}
     unlockAdmin=function(){if(isCurrentAdminUser()){adminUnlocked=true;sessionStorage.setItem(adminUnlockKey,"true");sessionStorage.setItem(adminOwnerKey,loginName());updateTopButtons();return true}adminUnlocked=false;sessionStorage.removeItem(adminUnlockKey);sessionStorage.removeItem(adminOwnerKey);toast("관리자로 지정된 직원만 접근할 수 있습니다.");return false}
@@ -3115,7 +2842,7 @@
       staffLogin();
     },true);
     (function lockPreferredNavOrder(){
-      const preferredNavOrder=["대시보드","할일관리","외근현황","메세지","보고서","회의록","시공일정","DB","프로젝트 파일","MW","관리자"];
+      const preferredNavOrder=["대시보드","할일관리","외근현황","메세지","보고서","회의록","시공일정","DB","프로젝트 파일","MW","구조물 검수","관리자"];
       const preferredNavDefaults={
         "대시보드":{icon:"⌂",label:"대시보드",access:"member"},
         "할일관리":{icon:"☑",label:"할일관리",access:"member"},
@@ -3126,6 +2853,7 @@
         "DB":{icon:"▦",label:"DB",access:"admin"},
         "프로젝트 파일":{icon:"▤",label:"프로젝트 파일",access:"admin"},
         "MW":{icon:"▣",label:"MW",access:"admin",accessRole:"admin",adminOnly:true},
+        "구조물 검수":{icon:"◉",label:"구조물 검수",access:"member"},
         "관리자":{icon:"⚙",label:"관리자",access:"admin"}
       };
       function preferredNavLabel(label){
@@ -3135,17 +2863,9 @@
       }
       function applyPreferredNavOrder(){
         if(!Array.isArray(state.nav))state.nav=[];
-        /* hiddenNavLabels는 건드리지 않음 — 사용자가 삭제한 항목 유지 */
-        const _hidden=Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels:[];
+        state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels.filter(x=>!preferredNavOrder.includes(preferredNavLabel(x))):[];
         const current=state.nav.map(n=>({...n,label:preferredNavLabel(n.label)}));
-        /* 사용자 지정 순서 유지 — 숨김 항목만 제거하고, 누락된 항목은 끝에 추가 */
-        state.nav=current.filter(n=>n.label&&!_hidden.includes(n.label));
-        preferredNavOrder.filter(label=>!_hidden.includes(label)).forEach(label=>{
-          if(!state.nav.find(n=>n.label===label)){
-            const def=preferredNavDefaults[label];
-            if(def)state.nav.push({...def});
-          }
-        });
+        state.nav=preferredNavOrder.map(label=>current.find(n=>n.label===label)||{...preferredNavDefaults[label]});
         normalizePermissionState?.();
         if(currentView==="projects"||currentView==="assignments"){
           currentView="todos";
@@ -3965,16 +3685,7 @@
           start:$("#constructionStart")?.value||today,
           end:$("#constructionEnd")?.value||"",
           status,
-          next:withConstructionStatusLine($("#constructionNext")?.value||"",status),
-          structurePlannedDays:Number($("#structurePlannedDays")?.value)||0,
-          structureStart:$("#structureStart")?.value||"",
-          structureEnd:$("#structureEnd")?.value||"",
-          electricPlannedDays:Number($("#electricPlannedDays")?.value)||0,
-          electricStart:$("#electricStart")?.value||"",
-          electricEnd:$("#electricEnd")?.value||"",
-          delayReason:$("#constructionDelayReason")?.value||"",
-          earlyReason:$("#constructionEarlyReason")?.value||"",
-          issues:$("#constructionIssues")?.value||""
+          next:withConstructionStatusLine($("#constructionNext")?.value||"",status)
         };
       }
       const saveConstructionBtn=$("#saveConstructionBtn");
@@ -4000,14 +3711,13 @@
           e?.preventDefault?.();
           e?.stopImmediatePropagation?.();
           if(editingConstructionIndex===null||!confirm("이 시공일정을 삭제할까요?"))return;
-          const c=state.construction[editingConstructionIndex];if(c)softDelete("construction",c.id,c);
           state.construction.splice(editingConstructionIndex,1);
           editingConstructionIndex=null;
           currentView="construction";
           localStorage.setItem(viewStorageKey,currentView);
           $("#constructionModal")?.classList.remove("open");
           render();
-          deleteAndSync("시공일정을 삭제했습니다.");
+          saveStateAfterPaint("시공일정을 삭제했습니다.");
         };
       }
       const baseFinalSetSyncNotice=setSyncNotice;
@@ -4035,7 +3745,6 @@
         if(!target)return false;
         if(ask&&!confirm(`'${target.title||"회의록"}' 회의록을 삭제할까요?`))return false;
         if(typeof disableMeetingSamples==="function")disableMeetingSamples();
-        softDelete("meetings",String(id),target);
         state.meetings=state.meetings.filter(m=>String(m.id)!==String(id));
         selectedMeetingId=state.meetings[0]?.id||"";
         $("#meetingModal")?.classList.remove("open");
@@ -4043,7 +3752,7 @@
         render?.();
         renderNav?.();
         updateTopButtons?.();
-        deleteAndSync("회의록을 삭제했습니다.");
+        saveStateAfterPaint("회의록을 삭제했습니다.");
         return true;
       }
       document.addEventListener("pointerdown",e=>{
@@ -4461,529 +4170,720 @@
       /* 화면 크기 변경 시 재주입 */
       window.addEventListener("resize",injectMobileStyle,{passive:true});
     })();
-    (function setupGoogleCalendarSync(){
-      const CAL_API="https://www.googleapis.com/calendar/v3";
-      const SCOPE="https://www.googleapis.com/auth/calendar";
-      const TOKEN_STORE="gcal_token_v1";
-      let accessToken=null,tokenExpiresAt=0,tokenClient=null;
-      function clientId(){return state.gcalClientId||""}
-      function calendarId(){return state.gcalCalendarId||"primary"}
-      function syncColor(){return state.gcalSyncColor||""}
-      const GCAL_COLORS={"":"전체 (색상 무관)","9":"🟢 바질 (초록)","7":"🔵 공작새 (파랑)","1":"🪻 라벤더 (연보라)","2":"🌿 세이지 (연두)","3":"🍇 포도 (보라)","4":"🦩 플라밍고 (분홍)","5":"🍌 바나나 (노랑)","6":"🍊 귤 (주황)","8":"🫐 블루베리 (남색)","10":"🍅 토마토 (빨강)"};
-      function isConnected(){return !!accessToken&&Date.now()<tokenExpiresAt}
-      /* 토큰 복원 */
-      (function(){try{const d=JSON.parse(localStorage.getItem(TOKEN_STORE)||"{}");if(d.t&&d.e>Date.now()+5000){accessToken=d.t;tokenExpiresAt=d.e}}catch(e){}}());
-      function saveToken(t,expiresIn){accessToken=t;tokenExpiresAt=Date.now()+(expiresIn-60)*1000;localStorage.setItem(TOKEN_STORE,JSON.stringify({t:accessToken,e:tokenExpiresAt}))}
-      function clearToken(){accessToken=null;tokenExpiresAt=0;localStorage.removeItem(TOKEN_STORE)}
-      /* 직접 OAuth 팝업 방식 */
-      const REDIRECT_URI="https://sisun1666-droid.github.io/http-127.0.0.1-7001-/";
-      async function requestToken(){
-        if(!clientId()){toast("관리자 설정에서 Google Client ID를 먼저 등록해주세요.");return false}
-        if(isConnected())return true;
-        return new Promise(resolve=>{
-          const authUrl="https://accounts.google.com/o/oauth2/v2/auth"+
-            "?client_id="+encodeURIComponent(clientId())+
-            "&redirect_uri="+encodeURIComponent(REDIRECT_URI)+
-            "&response_type=token"+
-            "&scope="+encodeURIComponent(SCOPE)+
-            "&prompt=select_account";
-          const popup=window.open(authUrl,"gcalOAuth","width=520,height=620,left=200,top=100");
-          if(!popup){toast("팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.");resolve(false);return}
-          const timer=setInterval(()=>{
-            try{
-              if(popup.closed){clearInterval(timer);resolve(false);return}
-              const url=popup.location.href;
-              if(url.startsWith(REDIRECT_URI)||url.startsWith("https://sisun1666-droid.github.io")){
-                const hash=popup.location.hash.slice(1);
-                const params=new URLSearchParams(hash);
-                const token=params.get("access_token");
-                const exp=parseInt(params.get("expires_in")||"3600");
-                popup.close();clearInterval(timer);
-                if(token){saveToken(token,exp);updateGcalBtn();resolve(true)}
-                else{resolve(false)}
-              }
-            }catch(e){}
-          },400);
-        });
-      }
-      function disconnect(){clearToken();updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
-      /* 페이지 로드 시 만료된 토큰 조용히 정리 */
-      if(accessToken&&!isConnected()){clearToken();}
-      /* 1분마다 토큰 만료 확인 → 만료 시 토큰 정리 + 배너 갱신 */
-      setInterval(()=>{
-        if(accessToken&&!isConnected()){clearToken();updateGcalBtn();renderGcalBanner();}
-      },60*1000);
-      /* Todo → Calendar 이벤트 변환 */
-      function todoToEvent(t){const start=t.start||t.due||today,end=t.due||start;const colorMap={"긴급":"11","높음":"6","완료":"2","진행중":"7","취소":"8","백로그":"8"};const colorId=colorMap[t.priority]==="11"?"11":colorMap[t.status];const body={summary:t.title||"할일",description:[t.detail,t.result?`✅ 결과: ${t.result}`:""].filter(Boolean).join("\n\n"),extendedProperties:{private:{kiwoomTodoId:t.id||"",kiwoomStatus:t.status||"",kiwoomOwner:t.owner||""}}};if(colorId)body.colorId=colorId;if(t.location)body.location=t.location;if(t.allDay!==false){const endD=new Date(end);endD.setDate(endD.getDate()+1);body.start={date:start};body.end={date:endD.toISOString().slice(0,10)}}else{const st=t.startTime||"09:00",et=t.endTime||"10:00";body.start={dateTime:`${start}T${st}:00`,timeZone:"Asia/Seoul"};body.end={dateTime:`${end}T${et}:00`,timeZone:"Asia/Seoul"}}return body}
-      /* Calendar API 호출 */
-      async function gcalFetch(path,opts={}){const r=await fetch(CAL_API+path,{...opts,headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json",...(opts.headers||{})}});if(r.status===204)return null;if(!r.ok)throw new Error(await r.text());return r.json()}
-      async function gcalCreate(t){const ev=await gcalFetch("/calendars/"+encodeURIComponent(calendarId())+"/events",{method:"POST",body:JSON.stringify(todoToEvent(t))});return ev?.id}
-      async function gcalUpdate(gcalId,t){await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events/${gcalId}`,{method:"PUT",body:JSON.stringify(todoToEvent(t))})}
-      async function gcalDelete(gcalId){await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events/${gcalId}`,{method:"DELETE"})}
-      /* Todo 동기화 */
-      async function syncTodoToGcal(t){if(!isConnected()||!t)return;try{if(t.gcalEventId){await gcalUpdate(t.gcalEventId,t)}else{const id=await gcalCreate(t);if(id){t.gcalEventId=id;saveStateAfterPaint()}}}catch(e){console.warn("gcal sync:",e)}}
-      async function removeTodoFromGcal(gcalId){if(!isConnected()||!gcalId)return;try{await gcalDelete(gcalId)}catch(e){}}
-      /* 구글 → 앱 가져오기 */
-      function todayStartISO(){return new Date(today+"T00:00:00+09:00").toISOString()}
-      async function pullFromGcal(){
-        if(!await requestToken())return;
-        const colorNote=syncColor()?` (색상필터: ${GCAL_COLORS[syncColor()]||syncColor()})`:"";
-        toast("구글 캘린더에서 가져오는 중..."+colorNote);
-        try{
-          const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${todayStartISO()}&maxResults=300&singleEvents=true&orderBy=startTime&showDeleted=false`);
-          const events=data?.items||[];
-          let added=0;
-          events.forEach(ev=>{
-            if(ev.status==="cancelled")return;
-            if(calendarId()==="primary"&&syncColor()&&(ev.colorId||"")!==syncColor())return;
-            if(isGcalDeleted(ev.id))return; /* 사용자가 삭제한 이벤트 재추가 차단 */
-            if(state.todos.some(t=>t.gcalEventId===ev.id))return;
-            const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
-            const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
-            state.todos.unshift(normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date}));
-            added++;
-          });
-          if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 가져왔습니다.`);render()}
-          toast(added>0?`${added}건을 할일로 가져왔습니다.`:`새로운 일정이 없습니다.${calendarId()==="primary"&&syncColor()?" (색상 필터 적용중)":""}`);
-        }catch(e){toast("가져오기 실패: "+e.message)}
-      }
-      /* 전체 할일 → 구글 캘린더 업로드 */
-      async function pushAllToGcal(){if(!await requestToken())return;const todos=state.todos.filter(t=>t.status!=="취소");toast(`${todos.length}건 구글 캘린더에 업로드 중...`);let ok=0;for(const t of todos){try{await syncTodoToGcal(t);ok++}catch(e){}}saveStateAfterPaint();toast(`${ok}건 업로드 완료`)}
-      /* 사용자가 삭제한 gcal 이벤트 ID 차단 목록 */
-      const GCAL_DEL_KEY="gcalDeletedIds";
-      function gcalDeletedIds(){try{return JSON.parse(localStorage.getItem(GCAL_DEL_KEY)||"[]")}catch{return[]}}
-      window.addGcalDeleted=function(id){if(!id)return;const ids=gcalDeletedIds();if(!ids.includes(id)){ids.push(id);localStorage.setItem(GCAL_DEL_KEY,JSON.stringify(ids))}};
-      function addGcalDeleted(id){window.addGcalDeleted(id)}
-      function isGcalDeleted(id){return id&&gcalDeletedIds().includes(id)}
 
-      /* 자동 pull (연결된 경우에만, 특정 캘린더 선택된 경우에만) */
-      async function autoPullFromGcal(){
-        if(!isConnected())return;
-        if(!state.gcalCalendarId)return; /* 캘린더 미선택 시 pull 안함 */
-        try{
-          /* 오늘 00:00부터 가져와야 오늘 등록한 이벤트도 포함됨 */
-          const data=await gcalFetch(`/calendars/${encodeURIComponent(calendarId())}/events?timeMin=${todayStartISO()}&maxResults=300&singleEvents=true&orderBy=startTime&showDeleted=false`);
-          const events=data?.items||[];
-          let added=0;
-          events.forEach(ev=>{
-            if(ev.status==="cancelled")return;
-            if(calendarId()==="primary"&&syncColor()&&(ev.colorId||"")!==syncColor())return; /* 색상 필터: primary 캘린더에서만 적용 */
-            if(isGcalDeleted(ev.id))return; /* 사용자가 삭제한 이벤트 재추가 차단 */
-            if(state.todos.some(t=>t.gcalEventId===ev.id))return;
-            const start=ev.start?.date||ev.start?.dateTime?.slice(0,10)||today;
-            const end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start;
-            const newTodo=normalizeTodo({title:ev.summary||"구글 캘린더 일정",detail:ev.description||"",location:ev.location||"",start,due:end,status:"할 일",gcalEventId:ev.id,allDay:!!ev.start?.date});
-            state.todos.unshift(newTodo);added++;
-          });
-          if(added>0){saveStateAfterPaint(`구글 캘린더에서 ${added}건 자동 가져왔습니다.`);render();toast(`📅 구글 캘린더에서 ${added}건 자동 가져왔습니다.`)}
-        }catch(e){console.warn("gcal auto-pull:",e)}
-      }
-      /* 자동 pull - 색상 필터 적용, 30초 후 첫 실행, 이후 5분마다 */
-      setTimeout(autoPullFromGcal,30000);
-      setInterval(autoPullFromGcal,5*60*1000);
-      /* UI 버튼 + 배너 상태 갱신 */
-      function updateGcalBtn(){
-        const btn=$("#gcalConnectBtn");
-        if(!btn)return;
-        if(!clientId()){btn.textContent="☁ 구글 캘린더 (Client ID 미설정)";btn.style.cssText="font-size:12px";btn.className="btn";return}
-        if(isConnected()){btn.textContent="☁ 구글 연결됨 ✓";btn.style.cssText="font-size:12px;background:#0d9488;border-color:#0d9488;color:#fff";btn.className="btn"}
-        else{btn.textContent="☁ 구글 재연결 필요";btn.style.cssText="font-size:12px;background:#ef4444;border-color:#ef4444;color:#fff;font-weight:700";btn.className="btn"}
-        renderGcalBanner();
-      }
-      function renderGcalBanner(){
-        const panel=$("#todoBoardPanel");if(!panel||currentView!=="todos")return;
-        let banner=$("#gcalDisconnectBanner");
-        if(isConnected()||!clientId()){if(banner)banner.remove();return;}
-        if(!banner){
-          panel.insertAdjacentHTML("afterbegin",`<div id="gcalDisconnectBanner" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:13px;font-weight:600;color:#b91c1c">⚠️ 구글 캘린더 연결이 끊어졌습니다. 토큰이 만료됐어요. (1시간마다 재연결 필요)</span><button id="gcalReconnectBannerBtn" style="background:#ef4444;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔗 재연결</button></div>`);
-          $("#gcalReconnectBannerBtn").onclick=async()=>{
-            if(await requestToken()){toast("✅ 구글 캘린더 재연결됐습니다.");updateGcalBtn();autoPullFromGcal();}
-          };
-        }
-      }
-      /* 할일 툴바에 구글 캘린더 버튼 주입 */
-      function injectGcalButtons(){if(currentView!=="todos")return;const toolbar=$("#todoBoardPanel .todo-toolbar");if(!toolbar||toolbar.querySelector("#gcalConnectBtn"))return;toolbar.insertAdjacentHTML("beforeend",`<span id="gcalBtnGroup" style="margin-left:auto;display:flex;gap:4px"><button id="gcalConnectBtn" class="btn" style="font-size:12px">☁ 구글 캘린더 연동</button><button id="gcalPullBtn" class="btn" style="font-size:12px" title="구글 캘린더 → 할일 가져오기">↓ 가져오기</button><button id="gcalPushBtn" class="btn" style="font-size:12px" title="모든 할일 → 구글 캘린더 업로드">↑ 전체 업로드</button></span>`);updateGcalBtn()}
-      /* renderTodoBoard 래핑: 버튼 자동 주입 + 배너 갱신 */
-      const baseRenderTodoBoardForGcal=renderTodoBoard;
-      renderTodoBoard=function(){baseRenderTodoBoardForGcal();setTimeout(()=>{injectGcalButtons();renderGcalBanner();},0)};
-      /* saveTodoBtn 래핑: 저장 후 구글 동기화 */
-      const prevSaveTodo=$("#saveTodoBtn")?.onclick;
-      if(prevSaveTodo){$("#saveTodoBtn").onclick=function(){const wasEditing=editingTodoIndex;prevSaveTodo.call(this);if(!isConnected())return;const saved=wasEditing===null?state.todos[0]:state.todos[wasEditing];if(saved)syncTodoToGcal(saved)}}
-      /* deleteTodoAt 래핑: 삭제 전 구글에서도 제거 */
-      const baseDeleteTodoAtForGcal=deleteTodoAt;
-      deleteTodoAt=function(i){const t=state.todos[i];if(t?.gcalEventId)removeTodoFromGcal(t.gcalEventId);return baseDeleteTodoAtForGcal(i)};
-      /* normalizeState: gcalClientId 초기값 */
-      const baseNormalizeForGcal=normalizeState;
-      normalizeState=function(){
-        baseNormalizeForGcal();
-        if(state.gcalClientId===undefined)state.gcalClientId="";
-        if(state.gcalCalendarId===undefined)state.gcalCalendarId="";
-        if(state.gcalSyncColor===undefined)state.gcalSyncColor="";
-        /* 한번만 실행: 잘못 가져온 gcal 항목 자동 정리 (localStorage 사용 → Supabase 재로드에도 안 날아감) */
-        if(!localStorage.getItem("gcalCleaned_v2")&&state.todos){
-          const before=state.todos.length;
-          state.todos=state.todos.filter(t=>!t.gcalEventId);
-          localStorage.setItem("gcalCleaned_v2","1");
-          if(state.todos.length<before){
-            setTimeout(()=>{if(typeof persistState==="function"){persistState();toast("구글 캘린더 잘못 가져온 항목 "+(before-state.todos.length)+"건 자동 정리됐습니다.")}},500);
-          }
-        }
-      };
-      /* renderAdmin: Google Client ID 설정 카드 추가 */
-      const baseRenderAdminForGcal=renderAdmin;
-      async function loadCalendarList(){
-        if(!isConnected())return[];
-        try{const d=await gcalFetch("/users/me/calendarList?maxResults=50");return d?.items||[];}catch(e){return[];}
-      }
-      renderAdmin=function(){baseRenderAdminForGcal();if($("#gcalAdminCard"))return;const grid=$("#adminView .admin-grid");if(!grid)return;const colorOpts=Object.entries(GCAL_COLORS).map(([v,l])=>`<option value="${v}"${syncColor()===v?" selected":""}>${l}</option>`).join("");const calSel=isConnected()?`<label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">동기화할 캘린더</label><select class="field" id="gcalCalendarSelect"><option value="primary">기본 캘린더 (primary)</option></select><button class="btn" id="gcalRefreshCalsBtn" style="margin-top:4px;font-size:12px">캘린더 목록 새로고침</button><label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">📥 가져올 이벤트 색상 (이 색상만 앱으로 가져옴)</label><select class="field" id="gcalColorSelect">${colorOpts}</select>`:"";grid.insertAdjacentHTML("beforeend",`<div class="card" id="gcalAdminCard"><div class="panel-title"><h2>Google 캘린더 연동</h2></div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">OAuth 2.0 클라이언트 ID</label><input class="field" id="gcalClientIdInput" placeholder="123456789-xxx.apps.googleusercontent.com" value="${esc(state.gcalClientId||"")}"><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" id="gcalSaveClientIdBtn">저장</button>${isConnected()?`<button class="btn danger" id="gcalDisconnectAdminBtn">연결 해제</button>`:""}</div>${calSel}<p class="meta" style="margin-top:8px">현재 상태: ${isConnected()?"<strong style='color:#16a34a'>연결됨</strong>":"<span style='color:#94a3b8'>미연결</span>"}</p></div>`);
-        $("#gcalSaveClientIdBtn").onclick=()=>{state.gcalClientId=$("#gcalClientIdInput").value.trim();tokenClient=null;saveState("Google Client ID를 저장했습니다.");toast("저장됐습니다. 할일관리 탭에서 연동 버튼을 누르세요.")};
-        const discBtn=$("#gcalDisconnectAdminBtn");if(discBtn)discBtn.onclick=()=>{disconnect();renderAdmin()};
-        const sel=$("#gcalCalendarSelect");
-        if(sel){
-          (async()=>{
-            const cals=await loadCalendarList();
-            cals.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.summary+(c.primary?" (기본)":"");if(c.id===(state.gcalCalendarId||"primary")||(!state.gcalCalendarId&&c.primary))o.selected=true;sel.appendChild(o)});
-          })();
-          sel.onchange=()=>{state.gcalCalendarId=sel.value;saveState();toast(`캘린더 변경: ${sel.options[sel.selectedIndex].text}`)};
-        }
-        const refBtn=$("#gcalRefreshCalsBtn");
-        if(refBtn)refBtn.onclick=()=>{const card=$("#gcalAdminCard");if(card)card.remove();renderAdmin()};
-        const colorSel=$("#gcalColorSelect");
-        if(colorSel)colorSel.onchange=()=>{state.gcalSyncColor=colorSel.value;saveState();toast(`색상 필터: ${GCAL_COLORS[colorSel.value]||"전체"}`)};
-        /* 대시보드 시계 이미지 카드 (gcal 카드 바로 뒤에 추가) */
-        if(!$("#clockImgAdminCard")){
-          const previewHtml=state.clockBgImage?`<img src="${state.clockBgImage}" style="width:100%;height:100px;object-fit:cover;border-radius:10px;margin-top:10px;display:block" id="clockImgPreview">`:`<div id="clockImgPreview" style="margin-top:10px;height:80px;border:2px dashed #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px">이미지 없음</div>`;
-          grid.insertAdjacentHTML("beforeend",`<div class="card" id="clockImgAdminCard"><div class="panel-title"><h2>🖼️ 대시보드 시계 배경 이미지</h2></div><p class="meta" style="margin-bottom:10px">시계 위젯에 배경 이미지를 설정합니다. 고해상도(500px 이상) 이미지를 권장합니다.</p><input type="file" id="clockImgFileInput" accept="image/*" style="display:none"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="clockImgUploadBtn">이미지 선택</button>${state.clockBgImage?`<button class="btn danger" id="clockImgRemoveBtn">이미지 제거</button>`:""}</div>${previewHtml}</div>`);
-          document.getElementById("clockImgUploadBtn").onclick=()=>document.getElementById("clockImgFileInput").click();
-          document.getElementById("clockImgFileInput").onchange=function(){
-            const file=this.files[0];if(!file)return;
-            if(file.size>5*1024*1024){toast("파일이 너무 큽니다. 5MB 이하 이미지를 사용해주세요.");return}
-            const reader=new FileReader();
-            reader.onload=e=>{
-              state.clockBgImage=e.target.result;
-              saveState("시계 배경 이미지를 저장했습니다.");
-              toast("이미지가 저장됐습니다. 대시보드를 확인해보세요!");
-              const card=$("#clockImgAdminCard");if(card)card.remove();
-              renderAdmin();
-            };
-            reader.readAsDataURL(file);
-          };
-          const removeBtn=document.getElementById("clockImgRemoveBtn");
-          if(removeBtn)removeBtn.onclick=()=>{state.clockBgImage="";saveState("시계 배경 이미지를 제거했습니다.");toast("이미지가 제거됐습니다.");const card=$("#clockImgAdminCard");if(card)card.remove();renderAdmin()};
-        }
-      };
-      /* 버튼 클릭 이벤트 */
-      document.addEventListener("click",async e=>{const t=e.target.closest("button")||e.target;if(t.id==="gcalConnectBtn"){e.preventDefault();e.stopImmediatePropagation();if(isConnected()){if(confirm("Google 캘린더 연결을 해제할까요?"))disconnect()}else{if(await requestToken())toast("Google 캘린더에 연결됐습니다.");updateGcalBtn()}return}if(t.id==="gcalPullBtn"){e.preventDefault();e.stopImmediatePropagation();pullFromGcal();return}if(t.id==="gcalPushBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm(`할일 전체(${state.todos.filter(x=>x.status!=="취소").length}건)를 구글 캘린더에 업로드할까요?`))pushAllToGcal();return}},true);
-      /* 스타일 */
-      document.head.insertAdjacentHTML("beforeend",`<style id="gcalStyle">#gcalBtnGroup{flex-shrink:0}@media(max-width:600px){#gcalBtnGroup{display:none!important}}</style>`);
-    })();
-
-    /* ══════════════════════════════════════════
-       구조물 검수 관리 모듈
-    ══════════════════════════════════════════ */
-    (function(){
-      const CHECKLIST_TEMPLATE=[
-        {no:1,category:"기존 지붕 사전확인",item:"지붕재 상태",detail:"기존 지붕재(샌드위치판넬/칼라강판) 파손·부식·변형 여부 확인"},
-        {no:2,category:"기존 지붕 사전확인",item:"지붕 하부구조",detail:"기존 트러스/C형강/퍼린 간격·규격 확인, 브라켓 고정점이 하부구조 위에 위치하는지 확인"},
-        {no:3,category:"기존 지붕 사전확인",item:"지붕 경사도",detail:"설계 경사도와 실측 경사도 일치 여부 (±1° 이내)"},
-        {no:4,category:"기존 지붕 사전확인",item:"누수 이력 확인",detail:"기존 누수 흔적 확인, 관통 시공 부위 사전 협의 기록 확인"},
-        {no:5,category:"알루미늄 레일 설치",item:"레일 규격 확인",detail:"가로레일/세로레일 단면 규격 설계도면 일치 확인, 자재 성적서 보유 여부"},
-        {no:6,category:"알루미늄 레일 설치",item:"레일 직선도",detail:"레일 직선도 확인 — 3m당 편차 3mm 이내"},
-        {no:7,category:"알루미늄 레일 설치",item:"레일 간격",detail:"레일 간격 설계도면 일치 (±5mm)"},
-        {no:8,category:"알루미늄 레일 설치",item:"레일 이음부(스플라이스)",detail:"이음 연결부 볼트 체결 확인, 이음부 유격 없음"},
-        {no:9,category:"베이스·고정부",item:"관통 브라켓 체결",detail:"볼트 체결 토크값 확인, 와셔·스프링와셔·너트 누락 없음"},
-        {no:10,category:"베이스·고정부",item:"베이스-퍼린 정합",detail:"브라켓이 기존 하부구조(퍼린/C형강) 위에 정확히 위치하는지 확인"},
-        {no:11,category:"베이스·고정부",item:"방수 처리 (관통부) ★",detail:"관통부위 방수실리콘 처리 확인, 실리콘 도포 균일성·빈틈 없음 ★입금보류 1순위"},
-        {no:12,category:"베이스·고정부",item:"베이스",detail:"베이스 규격·재질·두께 도면 일치, 체결 볼트 규격 확인"},
-        {no:13,category:"베이스·고정부",item:"비관통 클램프",detail:"비관통 방식 적용 구간: 클램프 물림 깊이·간격 확인"},
-        {no:14,category:"베이스·고정부",item:"지붕재 변형 확인",detail:"볼트 체결 시 지붕재 과도한 눌림·변형·찢어짐 없음"},
-        {no:15,category:"구조물 전체 형상",item:"설계도면 일치",detail:"구조물 전체 배열이 설계 배치도와 일치하는지 확인 (열 수, 행 수, 방향)"},
-        {no:16,category:"구조물 전체 형상",item:"수평·경사 정렬",detail:"레일 수평도 확인 — 전체 구간 레벨 편차 ±3mm 이내, 모듈 설치 경사각 설계값 일치(±1°)"},
-        {no:17,category:"구조물 전체 형상",item:"구조물 견고성",detail:"구조물 흔들림 테스트 — 상부에서 수평 방향 힘 가했을 때 과도한 흔들림·유격 없을 것"},
-        {no:18,category:"구조물 전체 형상",item:"처짐 확인",detail:"구조물 자중에 의한 처짐 육안 확인 (이상 처짐 없을 것)"},
-        {no:19,category:"구조물 전체 형상",item:"부재 간 간섭",detail:"구조물 부재가 기존 시설물(환풍기, 배관, 천창 등)과 간섭 없음"},
-        {no:20,category:"안전·마감·현장정리",item:"볼트 돌출 처리",detail:"돌출 볼트 보호캡 설치 또는 절단 후 면취 처리"},
-        {no:21,category:"안전·마감·현장정리",item:"절단면 버 제거",detail:"레일·브라켓 절단면의 날카로운 버(burr) 전수 제거"},
-        {no:22,category:"안전·마감·현장정리",item:"잔재물 수거",detail:"절단 칩·나사·포장재·케이블타이 잔재 전량 수거, 지붕 위 청소 완료"},
-        {no:23,category:"안전·마감·현장정리",item:"지붕재 손상 보수",detail:"시공 중 발생한 지붕재 스크래치·찍힘 터치업 페인트 보수"},
-        {no:24,category:"안전·마감·현장정리",item:"안전표지판",detail:"고압위험·감전주의·추락주의 표지판 부착 여부"},
+    /* ══════════════════════════════════════════════════════
+       구조물 외주 시공 검수 관리  (setupStructureInspectionView)
+       엑셀 5시트 기반: 검수현황·체크리스트·하자관리·입금승인·가이드
+    ══════════════════════════════════════════════════════ */
+    (function setupStructureInspectionView(){
+      const CHECKLIST_TMPL=[
+        {cat:"기존 지붕 사전확인",item:"지붕재 상태",detail:"기존 지붕재(샌드위치판넬/칼라강판) 파손·부식·변형 여부 확인\n→ 구조물 하중 지지 가능 여부 판단"},
+        {cat:"기존 지붕 사전확인",item:"지붕 하부구조",detail:"기존 트러스/C형강/퍼린 간격·규격 확인\n구조물 브라켓 고정점이 하부구조(퍼린) 위에 위치하는지 확인"},
+        {cat:"기존 지붕 사전확인",item:"지붕 경사도",detail:"설계 경사도와 실측 경사도 일치 여부 (±1° 이내)\n경사 방향(앞/뒤물매) 확인"},
+        {cat:"기존 지붕 사전확인",item:"누수 이력 확인",detail:"기존 누수 흔적 확인, 관통 시공 부위 사전 협의 기록 확인"},
+        {cat:"알루미늄 레일 설치",item:"레일 규격 확인",detail:"가로레일/세로레일 단면 규격(폭×높이×두께) 설계도면 일치 확인\n자재 성적서 보유 여부"},
+        {cat:"알루미늄 레일 설치",item:"레일 직선도",detail:"레일 직선도 확인 — 3m당 편차 3mm 이내\n레벨기 또는 실(줄) 대어 육안 확인"},
+        {cat:"알루미늄 레일 설치",item:"레일 간격",detail:"레일 간격(모듈 사이즈 기준) 설계도면 일치 (±5mm)\n가로레일: 모듈 세로 길이 기준, 세로레일: 모듈 가로 기준"},
+        {cat:"알루미늄 레일 설치",item:"레일 이음부(스플라이스)",detail:"이음 연결부 볼트 체결 확인, 이음부 유격 없음\n이음부 위치가 브라켓 바로 위 또는 인접부에 있을 것"},
+        {cat:"베이스·고정부",item:"관통 브라켓 체결",detail:"볼트 체결 토크값 확인\n와셔·스프링와셔·너트 누락 없음"},
+        {cat:"베이스·고정부",item:"베이스-퍼린 정합",detail:"브라켓이 기존 하부구조(퍼린/C형강) 위에 정확히 위치하는지 확인\n지붕재만 관통하고 퍼린 미체결 구간 없을 것"},
+        {cat:"베이스·고정부",item:"방수 처리 (관통부) ★",detail:"관통부위 방수실리콘 처리 확인\n실리콘 도포 균일성, 빈틈 없음 ★ 입금 보류 1순위"},
+        {cat:"베이스·고정부",item:"베이스",detail:"베이스 규격·재질·두께 도면 일치\n체결 볼트 규격(M10/M12 등) 확인"},
+        {cat:"베이스·고정부",item:"비관통 클램프",detail:"비관통 방식 적용 구간: 클램프 물림 깊이·간격 확인"},
+        {cat:"베이스·고정부",item:"지붕재 변형 확인",detail:"볼트 체결 시 지붕재 과도한 눌림·변형·찢어짐 없음\n판넬 접합부(조인트) 부위 체결 회피 여부"},
+        {cat:"구조물 전체 형상",item:"설계도면 일치",detail:"구조물 전체 배열이 설계 배치도와 일치하는지 확인\n열 수, 행 수, 방향(남향 등)"},
+        {cat:"구조물 전체 형상",item:"수평·경사 정렬",detail:"레일 수평도 확인 — 전체 구간 레벨 편차 ±3mm 이내\n모듈 설치 경사각 설계값 일치 (±1°)"},
+        {cat:"구조물 전체 형상",item:"구조물 견고성",detail:"구조물 흔들림 테스트 — 상부에서 수평 방향 힘 가했을 때\n과도한 흔들림·유격 없을 것"},
+        {cat:"구조물 전체 형상",item:"처짐 확인",detail:"구조물 자중에 의한 처짐 육안 확인\n(모듈 미설치 상태 기준, 이상 처짐 없을 것)"},
+        {cat:"구조물 전체 형상",item:"부재 간 간섭",detail:"구조물 부재가 기존 시설물(환풍기, 배관, 천창 등)과 간섭 없음"},
+        {cat:"안전·마감·현장정리",item:"볼트 돌출 처리",detail:"돌출 볼트 보호캡 설치 또는 절단 후 면취 처리\n작업자 안전사고 방지"},
+        {cat:"안전·마감·현장정리",item:"절단면 버 제거",detail:"레일·브라켓 절단면의 날카로운 버(burr) 전수 제거\n장갑 착용 상태에서 긁힘 테스트"},
+        {cat:"안전·마감·현장정리",item:"잔재물 수거",detail:"절단 칩·나사·포장재·케이블타이 잔재 전량 수거\n지붕 위 청소 완료 확인"},
+        {cat:"안전·마감·현장정리",item:"지붕재 손상 보수",detail:"시공 중 발생한 지붕재 스크래치·찍힘 터치업 페인트 보수\n보수 안 된 손상 부위 기록"},
+        {cat:"안전·마감·현장정리",item:"안전표지판",detail:"고압위험·감전주의·추락주의 표지판 부착 여부\n(발전소 운영 시 필요, 구조물 단계에서 부착 가능한 것)"}
       ];
 
-      function newChecklist(){return CHECKLIST_TEMPLATE.map(t=>({...t,result:"",defectNote:""}))}
-      function normalizeInspection(r){
-        if(!r.id)r.id=uid("insp");
-        if(!r.site)r.site="";if(!r.address)r.address="";if(!r.roofType)r.roofType="공장 지붕";
-        if(!r.capacity)r.capacity="";if(!r.contractor)r.contractor="";if(!r.contractAmount)r.contractAmount="";
-        if(!r.date)r.date=today;if(!r.inspector)r.inspector="";
-        if(!r.checklist||!r.checklist.length)r.checklist=newChecklist();
-        // 체크리스트 항목이 24개보다 적으면 나머지 추가
-        CHECKLIST_TEMPLATE.forEach(t=>{if(!r.checklist.some(c=>c.no===t.no))r.checklist.push({...t,result:"",defectNote:""})});
-        if(!r.defects)r.defects=[];
-        if(!r.paymentApproved)r.paymentApproved="";
-        return r;
+      function blankChecklist(){return CHECKLIST_TMPL.map((t,i)=>({no:i+1,cat:t.cat,item:t.item,detail:t.detail,verdict:"",defect:"",deadline:""}))}
+      function blankInsp(){
+        return{id:uid("insp"),plantName:"",location:"",roofType:"공장 지붕",capacity:0,contractor:"",contractAmount:0,
+          inspectionDate:today,inspector:loginName?.()||"",fieldSupervisor:"",workTeam:"",completionNoticeDate:"",
+          checklistItems:blankChecklist(),defects:[],result:"미검수",passItems:0,failItems:0,naItems:0,totalEval:0,passRate:0,
+          defectCount:0,defectComplete:0,paymentApproval:"대기",paymentAmount:0,paymentDate:"",paymentNote:"",paymentReason:"",
+          createdAt:new Date().toISOString(),savedAt:new Date().toISOString()};
       }
+
       function calcResult(insp){
-        const cl=insp.checklist||[];
-        const answered=cl.filter(c=>c.result==="적합"||c.result==="부적합"||c.result==="해당없음");
-        const ok=cl.filter(c=>c.result==="적합"||c.result==="해당없음").length;
-        const rated=cl.filter(c=>c.result==="적합"||c.result==="부적합").length;
-        const pct=rated>0?Math.round(ok/rated*100):null;
-        const defTotal=insp.defects.length;
-        const defDone=insp.defects.filter(d=>d.status==="완료").length;
-        const defOpen=defTotal-defDone;
-        let verdict="미검수";
-        if(pct!==null){if(pct===100&&defOpen===0)verdict="적합";else if(pct>=95)verdict="조건부적합";else verdict="부적합";}
-        return{pct,defTotal,defDone,defOpen,verdict,ok,rated};
-      }
-      function resultBadge(verdict){
-        if(verdict==="적합")return`<span class="badge green">적합</span>`;
-        if(verdict==="조건부적합")return`<span class="badge amber">조건부적합</span>`;
-        if(verdict==="부적합")return`<span class="badge red">부적합</span>`;
-        return`<span class="badge" style="background:#f1f5f9;color:#64748b">미검수</span>`;
+        const items=insp.checklistItems||[];
+        const pass=items.filter(x=>x.verdict==="적합").length;
+        const fail=items.filter(x=>x.verdict==="부적합").length;
+        const na=items.filter(x=>x.verdict==="해당없음").length;
+        const total=pass+fail;
+        const rate=total>0?Math.round(pass/total*100):0;
+        insp.passItems=pass;insp.failItems=fail;insp.naItems=na;insp.totalEval=total;insp.passRate=rate;
+        if(total===0)insp.result="미검수";
+        else if(rate===100)insp.result="적합";
+        else if(rate>=95)insp.result="조건부적합";
+        else insp.result="부적합";
+        insp.defectCount=(insp.defects||[]).length;
+        insp.defectComplete=(insp.defects||[]).filter(x=>x.status==="완료").length;
+        return insp;
       }
 
-      function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+      function rCls(r){return r==="적합"?"green":r==="조건부적합"?"amber":r==="부적합"?"red":""}
 
-      window.renderInspectionView=function(){
-        const v=els.inspectionView;
-        if(!v)return;
-        if(!state.inspections)state.inspections=[];
-        state.inspections.forEach(r=>normalizeInspection(r));
-        v.innerHTML=`
-          <div class="panel-title">
-            <h2>🔍 구조물 외주 시공 검수 관리</h2>
-            <div class="row-actions">
-              <button class="btn primary" id="addInspectionBtn">+ 새 검수 등록</button>
+      function ensureInspState(){
+        if(!Array.isArray(state.structureInspections))state.structureInspections=[];
+        state.structureInspections.forEach(x=>{
+          if(!x.id)x.id=uid("insp");
+          if(!x.checklistItems||x.checklistItems.length<24)x.checklistItems=blankChecklist();
+          if(!x.defects)x.defects=[];
+          calcResult(x);
+        });
+      }
+
+      const baseNormInsp=normalizeState;
+      normalizeState=function(){baseNormInsp();ensureInspState()};
+
+      const baseVFLInsp=viewForLabel;
+      viewForLabel=function(lbl){return String(lbl||"").replace(/\s/g,"").includes("구조물검수")?"structureInspect":baseVFLInsp(lbl)};
+
+      const baseIsActInsp=isActive;
+      isActive=function(lbl){return currentView==="structureInspect"?String(lbl||"").replace(/\s/g,"")==="구조물검수":baseIsActInsp(lbl)};
+
+      function ensureInspChrome(){
+        if(!document.getElementById("inspectionView")){
+          const anchor=document.getElementById("meetingView")||document.getElementById("epcView")||els.fieldworkView||els.dbView||els.adminView;
+          anchor.insertAdjacentHTML("afterend",`<section class="panel hidden" id="inspectionView"></section>`);
+        }
+        if(document.getElementById("inspStyle"))return;
+        document.head.insertAdjacentHTML("beforeend",`<style id="inspStyle">
+          #inspectionView{box-shadow:none;background:transparent;border:0;padding:0}
+          .insp-shell{display:grid;gap:14px}
+          .insp-kpis{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:10px}
+          .insp-kpi{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;box-shadow:var(--shadow);text-align:center}
+          .insp-kpi .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+          .insp-kpi .value{font-size:30px;font-weight:900;line-height:1}
+          .insp-kpi .value.green{color:#177245}.insp-kpi .value.amber{color:#a15c00}.insp-kpi .value.red{color:#c93728}
+          .insp-card{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+          .insp-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+          .insp-card-head h2{font-size:15px;margin:0}
+          .insp-tbl{width:100%;border-collapse:collapse;font-size:13px}
+          .insp-tbl th{background:#f8fbfc;font-weight:900;font-size:12px;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--line);text-align:left;white-space:nowrap}
+          .insp-tbl td{padding:9px 10px;border-bottom:1px solid #f0f4f6;vertical-align:middle}
+          .insp-tbl tr:last-child td{border-bottom:0}
+          .insp-tbl tr:hover td{background:#f7fbfc}
+          .insp-plant-btn{background:none;border:none;cursor:pointer;font-weight:900;color:var(--teal);font-size:13px;padding:0;text-align:left;text-decoration:underline;text-decoration-color:transparent}
+          .insp-plant-btn:hover{text-decoration-color:var(--teal)}
+          .insp-empty-row{text-align:center;padding:40px!important;color:var(--muted);font-size:14px}
+          /* ── 검수 모달 ── */
+          #inspModal{max-width:980px;width:97vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+          #inspModal .modal-head{flex-shrink:0}
+          .insp-tabs{display:flex;border-bottom:2px solid var(--line);background:#f8fbfc;flex-shrink:0}
+          .insp-tab{padding:11px 20px;font-size:13px;font-weight:900;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .12s}
+          .insp-tab.active{color:var(--teal);border-bottom-color:var(--teal);background:#fff}
+          .insp-pane{padding:16px;display:none;overflow:auto;flex:1}
+          .insp-pane.active{display:block}
+          /* ── 기본정보 그리드 ── */
+          .insp-form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+          .insp-form-grid label{font-size:11px;color:var(--muted);font-weight:900;display:block;margin-bottom:3px}
+          .insp-form-grid input,.insp-form-grid select{width:100%;min-height:34px;padding:0 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;box-sizing:border-box}
+          .insp-form-grid .span2{grid-column:span 2}
+          /* ── 결과 바 ── */
+          .insp-result-bar{background:#f8fbfc;border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+          .insp-rs{text-align:center;min-width:64px}
+          .insp-rs .v{font-size:22px;font-weight:900;line-height:1.1}
+          .insp-rs .l{font-size:11px;color:var(--muted);margin-top:3px}
+          .insp-verdict-badge{font-size:15px;font-weight:900;padding:6px 16px;border-radius:8px;border:2px solid currentColor;margin-left:8px}
+          .insp-verdict-badge.green{color:#177245;border-color:#177245;background:#f0fbf5}
+          .insp-verdict-badge.amber{color:#a15c00;border-color:#f0d9a8;background:#fff8ea}
+          .insp-verdict-badge.red{color:#c93728;border-color:#ffd2cc;background:#fff4f2}
+          .insp-verdict-badge.grey{color:#71828b;border-color:#d9e0e4;background:#f6f8f9}
+          .insp-result-hint{font-size:11px;color:var(--muted);margin-left:auto}
+          /* ── 체크리스트 ── */
+          .insp-section-hd{background:linear-gradient(90deg,#eaf8f6,#f8fbfd);padding:8px 12px;font-weight:900;font-size:12px;color:#07877e;border-radius:6px;margin:10px 0 4px;letter-spacing:.03em}
+          .insp-row{display:grid;grid-template-columns:30px 180px minmax(0,1.4fr) 140px minmax(0,1fr);gap:8px;align-items:start;padding:8px;border-bottom:1px solid #f0f4f6;font-size:12px}
+          .insp-row:last-child{border-bottom:0}
+          .insp-no{color:var(--muted);font-weight:900;padding-top:5px;text-align:center}
+          .insp-item-name{font-weight:900;line-height:1.4;padding-top:4px}
+          .insp-item-detail{color:#71828b;font-size:11px;line-height:1.45;padding-top:4px;white-space:pre-line}
+          .insp-btns{display:flex;gap:4px;flex-wrap:wrap;padding-top:2px}
+          .insp-vbtn{padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;font-size:11px;font-weight:900;line-height:1;transition:all .12s}
+          .insp-vbtn.p.on{background:#177245;border-color:#177245;color:#fff}
+          .insp-vbtn.f.on{background:#c93728;border-color:#c93728;color:#fff}
+          .insp-vbtn.n.on{background:#71828b;border-color:#71828b;color:#fff}
+          .insp-defect-in{width:100%;border:1px solid var(--line);border-radius:5px;padding:4px 7px;font-size:11px;min-height:30px;box-sizing:border-box}
+          /* ── 하자관리 ── */
+          .insp-add-form{background:#f8fbfc;border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
+          .insp-add-form strong{font-size:13px;display:block;margin-bottom:10px}
+          .insp-add-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+          .insp-add-grid label{font-size:11px;color:var(--muted);font-weight:900;display:block;margin-bottom:3px}
+          .insp-add-grid input,.insp-add-grid select{width:100%;min-height:30px;border:1px solid var(--line);border-radius:5px;padding:0 7px;font-size:12px;box-sizing:border-box}
+          .insp-add-grid .sp2{grid-column:span 2}
+          .insp-defect-summary{background:#fff8ea;border:1px solid #f0d9a8;border-radius:8px;padding:10px 14px;display:flex;gap:20px;margin-bottom:12px;font-size:13px;flex-wrap:wrap}
+          .insp-dtbl{width:100%;border-collapse:collapse;font-size:12px}
+          .insp-dtbl th{background:#f8fbfc;font-weight:900;font-size:11px;color:var(--muted);padding:7px 8px;border-bottom:2px solid var(--line);white-space:nowrap;text-align:left}
+          .insp-dtbl td{padding:7px 8px;border-bottom:1px solid #f0f4f6;vertical-align:middle}
+          .insp-dtbl tr:last-child td{border-bottom:0}
+          .insp-status-sel{border:1px solid var(--line);border-radius:5px;padding:2px 5px;font-size:11px;background:#fff;cursor:pointer}
+          /* ── 입금승인 ── */
+          .insp-pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+          .insp-pay-sec{background:#f8fbfc;border:1px solid var(--line);border-radius:8px;padding:14px}
+          .insp-pay-sec h3{font-size:13px;margin:0 0 12px;color:var(--teal);font-weight:900}
+          .insp-pay-row{display:grid;grid-template-columns:130px 1fr;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+          .insp-pay-row label{color:var(--muted);font-weight:900}
+          .insp-pay-row input,.insp-pay-row select{width:100%;border:1px solid var(--line);border-radius:5px;padding:4px 8px;font-size:12px;min-height:30px;box-sizing:border-box}
+          .insp-sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px;text-align:center}
+          .insp-sign-box{border:1px solid var(--line);border-radius:8px;padding:12px}
+          .insp-sign-box .lbl{color:var(--muted);font-size:11px;margin-bottom:10px}
+          .insp-sign-box .name{font-weight:900;font-size:14px}
+          /* ── 인쇄 ── */
+          /* 구조물 검수 화면 활성 시 다른 패널 강제 숨김 */
+          body.view-structureInspect #mainGrid{display:none!important}
+          body.view-structureInspect #kpis{display:none!important}
+          body.view-structureInspect #dashboardView{display:none!important}
+          body.view-structureInspect #adminView{display:none!important}
+          body.view-structureInspect #fieldworkView{display:none!important}
+          body.view-structureInspect #meetingView{display:none!important}
+          body.view-structureInspect #messageView{display:none!important}
+          body.view-structureInspect #reportView{display:none!important}
+          body.view-structureInspect #dbView{display:none!important}
+          body.view-structureInspect #epcView{display:none!important}
+          body.view-structureInspect #sharedNotice{display:none!important}
+          body.view-structureInspect #inspectionView{display:block!important}
+          @media print{
+            body>*:not(#inspPrintRoot){display:none!important}
+            #inspPrintRoot{display:block!important;padding:24px;font-family:Arial,sans-serif}
+          }
+          @media(max-width:960px){
+            .insp-kpis{grid-template-columns:repeat(3,1fr)}
+            .insp-pay-grid{grid-template-columns:1fr}
+            .insp-form-grid{grid-template-columns:repeat(2,1fr)}
+          }
+          @media(max-width:680px){
+            .insp-kpis{grid-template-columns:repeat(2,1fr)}
+            .insp-form-grid{grid-template-columns:1fr}
+            .insp-row{grid-template-columns:24px 1fr 120px;grid-template-rows:auto auto}
+            .insp-item-detail{display:none}
+            .insp-add-grid{grid-template-columns:repeat(2,1fr)}
+          }
+        </style>`);
+      }
+
+      /* ── 뷰 렌더링 ── */
+      function renderInspView(){
+        ensureInspChrome();ensureInspState();
+        const el=document.getElementById("inspectionView");
+        if(!el)return;
+        const list=state.structureInspections||[];
+        const total=list.length,pass=list.filter(x=>x.result==="적합").length,cond=list.filter(x=>x.result==="조건부적합").length,fail=list.filter(x=>x.result==="부적합").length,none=list.filter(x=>x.result==="미검수").length;
+        const rows=list.map((ins,i)=>`<tr>
+          <td>${i+1}</td>
+          <td><button class="insp-plant-btn" data-open-insp="${i}" type="button">${esc(ins.plantName||"-")}</button></td>
+          <td>${esc(ins.location||"-")}</td>
+          <td>${esc(ins.roofType||"-")}</td>
+          <td style="text-align:right">${ins.capacity?Number(ins.capacity).toLocaleString():"–"}</td>
+          <td>${esc(ins.contractor||"-")}</td>
+          <td>${esc(ins.inspectionDate||"-")}</td>
+          <td><span class="badge ${rCls(ins.result)}">${esc(ins.result||"미검수")}</span></td>
+          <td style="text-align:center">${ins.defectCount||0}</td>
+          <td style="text-align:center">${ins.defectComplete||0}</td>
+          <td><span class="badge ${ins.paymentApproval==="승인"?"green":ins.paymentApproval==="보류"?"red":""}">${esc(ins.paymentApproval||"대기")}</span></td>
+          <td><button class="btn icon" data-edit-insp="${i}" type="button" title="수정">✎</button> <button class="btn icon danger" data-delete-insp="${i}" type="button" title="삭제">×</button></td>
+        </tr>`).join("");
+        el.innerHTML=`<div class="insp-shell">
+          <div class="insp-kpis">
+            <div class="insp-kpi"><div class="label">전체</div><div class="value">${total}</div></div>
+            <div class="insp-kpi"><div class="label">적합</div><div class="value green">${pass}</div></div>
+            <div class="insp-kpi"><div class="label">조건부적합</div><div class="value amber">${cond}</div></div>
+            <div class="insp-kpi"><div class="label">부적합</div><div class="value red">${fail}</div></div>
+            <div class="insp-kpi"><div class="label">미검수</div><div class="value">${none}</div></div>
+          </div>
+          <div class="insp-card">
+            <div class="insp-card-head">
+              <h2>🔍 구조물 외주 시공 검수 관리</h2>
+              <div class="row-actions"><button class="btn primary" id="newInspBtn" type="button">+ 새 검수 등록</button></div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="insp-tbl">
+                <thead><tr>
+                  <th>NO</th><th>발전소명</th><th>소재지</th><th>지붕유형</th><th>용량(kW)</th>
+                  <th>외주업체</th><th>검수일자</th><th>결과</th><th>하자</th><th>보완완료</th><th>입금승인</th><th>관리</th>
+                </tr></thead>
+                <tbody>${rows||`<tr><td colspan="12" class="insp-empty-row">등록된 검수 내역이 없습니다.<br><span style="font-size:12px">+ 새 검수 등록 버튼을 눌러 추가하세요.</span></td></tr>`}</tbody>
+              </table>
             </div>
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-            ${[
-              {label:"전체",color:"#3b82f6"},
-              {label:"적합",color:"#10b981"},
-              {label:"조건부적합",color:"#f59e0b"},
-              {label:"부적합",color:"#ef4444"},
-              {label:"미검수",color:"#94a3b8"},
-            ].map(({label,color})=>{
-              const cnt=label==="전체"?state.inspections.length:state.inspections.filter(r=>{normalizeInspection(r);return calcResult(r).verdict===label}).length;
-              return`<div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);min-width:90px;text-align:center"><div style="font-size:20px;font-weight:800;color:${color}">${cnt}</div><div style="font-size:11px;color:#64748b;margin-top:2px">${label}</div></div>`;
-            }).join("")}
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
-              <thead>
-                <tr style="background:#f8fafc">
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">No</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">발전소명</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">소재지</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">지붕유형</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">용량(kW)</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">외주업체</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">검수일자</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">결과</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">하자</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">보완완료</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">입금승인</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:700">관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${state.inspections.length===0?`<tr><td colspan="12" style="padding:40px;text-align:center;color:#94a3b8">등록된 검수 내역이 없습니다.<br><span style="font-size:12px">+ 새 검수 등록 버튼을 눌러 추가하세요.</span></td></tr>`
-                :state.inspections.map((r,i)=>{
-                  const res=calcResult(r);
-                  const payBadge=r.paymentApproved==="승인"?`<span class="badge green">승인</span>`:r.paymentApproved==="보류"?`<span class="badge red">보류</span>`:r.paymentApproved==="대기"?`<span class="badge amber">대기</span>`:"-";
-                  return`<tr style="border-top:1px solid #f1f5f9;cursor:pointer" data-insp-row="${i}">
-                    <td style="padding:10px 12px;color:#94a3b8">${i+1}</td>
-                    <td style="padding:10px 12px;font-weight:600">${esc(r.site)}</td>
-                    <td style="padding:10px 12px;color:#64748b;font-size:12px">${esc(r.address)}</td>
-                    <td style="padding:10px 12px;color:#64748b">${esc(r.roofType)}</td>
-                    <td style="padding:10px 12px;text-align:center">${r.capacity||"-"}</td>
-                    <td style="padding:10px 12px">${esc(r.contractor)}</td>
-                    <td style="padding:10px 12px;text-align:center;color:#64748b;font-size:12px">${r.date||"-"}</td>
-                    <td style="padding:10px 12px;text-align:center">${resultBadge(res.verdict)}${res.pct!==null?`<div style="font-size:10px;color:#94a3b8;margin-top:2px">${res.pct}%</div>`:""}</td>
-                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:${res.defTotal>0?"#ef4444":"#10b981"}">${res.defTotal}</td>
-                    <td style="padding:10px 12px;text-align:center">${res.defTotal>0?`<span style="font-size:12px;color:${res.defOpen===0?"#10b981":"#f59e0b"}">${res.defDone}/${res.defTotal}</span>`:"-"}</td>
-                    <td style="padding:10px 12px;text-align:center">${payBadge}</td>
-                    <td style="padding:10px 12px;text-align:center"><button class="btn icon" data-insp-edit="${i}">✎</button></td>
-                  </tr>`;
-                }).join("")}
-              </tbody>
-            </table>
-          </div>
-        `;
-        document.getElementById("addInspectionBtn")?.addEventListener("click",()=>window.openInspectionModal(-1));
-        v.querySelectorAll("[data-insp-row]").forEach(tr=>{
-          tr.addEventListener("click",e=>{if(e.target.closest("[data-insp-edit]"))return;window.openInspectionModal(Number(tr.dataset.inspRow))});
-        });
-        v.querySelectorAll("[data-insp-edit]").forEach(btn=>{
-          btn.addEventListener("click",e=>{e.stopPropagation();window.openInspectionModal(Number(btn.dataset.inspEdit))});
-        });
-      };
+        </div>`;
+      }
 
-      let editingInspIndex=-1;
-
-      function renderChecklistInModal(r){
-        const tbody=document.getElementById("inspChecklistBody");if(!tbody)return;
-        const categories=[...new Set(r.checklist.map(c=>c.category))];
-        tbody.innerHTML=categories.map(cat=>{
-          const items=r.checklist.filter(c=>c.category===cat);
-          return items.map((c,ci)=>{
-            const isFirst=ci===0;
-            return`<tr style="border-top:1px solid #f1f5f9;${c.result==="부적합"?"background:#fff5f5":""}">
-              ${isFirst?`<td style="padding:6px 8px;white-space:nowrap;background:#f8fafc;font-size:11px;font-weight:700;color:#475569;vertical-align:top;border-right:1px solid #e8edf4" rowspan="${items.length}">${esc(cat)}</td>`:""}
-              <td style="padding:6px 8px;font-size:12px">${c.no}. ${esc(c.item)}</td>
-              <td style="padding:6px 8px;text-align:center">
-                <select data-cl-idx="${r.checklist.indexOf(c)}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:6px;background:${c.result==="적합"?"#f0fdf4":c.result==="부적합"?"#fef2f2":c.result==="해당없음"?"#f8fafc":"#fff"}">
-                  <option value="" ${!c.result?"selected":""}>-</option>
-                  <option value="적합" ${c.result==="적합"?"selected":""}>✅ 적합</option>
-                  <option value="부적합" ${c.result==="부적합"?"selected":""}>❌ 부적합</option>
-                  <option value="해당없음" ${c.result==="해당없음"?"selected":""}>➖ 해당없음</option>
-                </select>
-              </td>
-              <td style="padding:6px 8px"><input type="text" data-cl-note="${r.checklist.indexOf(c)}" value="${esc(c.defectNote||"")}" placeholder="하자내용" style="width:100%;font-size:11px;border:1px solid #e2e8f0;border-radius:6px;padding:3px 6px;${c.result==="부적합"?"border-color:#fca5a5":""}"></td>
-            </tr>`;
-          }).join("");
+      /* ── 체크리스트 HTML ── */
+      function buildChecklistHtml(insp){
+        const cats=[...new Set(CHECKLIST_TMPL.map(t=>t.cat))];
+        const items=insp.checklistItems||blankChecklist();
+        return cats.map(cat=>{
+          const catItems=items.filter(x=>x.cat===cat);
+          return `<div class="insp-section-hd">${esc(cat)}</div>`+catItems.map(item=>`
+            <div class="insp-row">
+              <div class="insp-no">${item.no}</div>
+              <div><div class="insp-item-name">${esc(item.item)}</div></div>
+              <div class="insp-item-detail">${esc(item.detail||"")}</div>
+              <div class="insp-btns">
+                <button class="insp-vbtn p${item.verdict==="적합"?" on":""}" data-iv="${item.no}" data-val="적합" type="button">적합</button>
+                <button class="insp-vbtn f${item.verdict==="부적합"?" on":""}" data-iv="${item.no}" data-val="부적합" type="button">부적합</button>
+                <button class="insp-vbtn n${item.verdict==="해당없음"?" on":""}" data-iv="${item.no}" data-val="해당없음" type="button">해당없음</button>
+              </div>
+              <div><input class="insp-defect-in" data-id="${item.no}" placeholder="하자내용 기록" value="${esc(item.defect||"")}"></div>
+            </div>`).join("");
         }).join("");
-
-        tbody.querySelectorAll("select[data-cl-idx]").forEach(sel=>{
-          sel.addEventListener("change",()=>{
-            const idx=Number(sel.dataset.clIdx);
-            r.checklist[idx].result=sel.value;
-            renderChecklistInModal(r);
-            renderSummaryBar(r);
-          });
-        });
-        tbody.querySelectorAll("input[data-cl-note]").forEach(inp=>{
-          inp.addEventListener("input",()=>{r.checklist[Number(inp.dataset.clNote)].defectNote=inp.value});
-        });
       }
 
-      function renderDefectsInModal(r){
-        const tbody=document.getElementById("inspDefectsBody");if(!tbody)return;
-        tbody.innerHTML=r.defects.map((d,i)=>`
-          <tr style="border-top:1px solid #f1f5f9;${d.status==="완료"?"opacity:.6":""}">
-            <td style="padding:4px 6px;color:#94a3b8;font-size:11px">${i+1}</td>
-            <td style="padding:4px 6px"><input type="text" value="${esc(d.category||"")}" data-def-cat="${i}" placeholder="구분" style="width:80px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px"><input type="text" value="${esc(d.content||"")}" data-def-content="${i}" placeholder="하자내용" style="width:140px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px">
-              <select data-def-sev="${i}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px">
-                ${["경","중","중대"].map(s=>`<option ${d.severity===s?"selected":""}>${s}</option>`).join("")}
-              </select>
-            </td>
-            <td style="padding:4px 6px"><input type="date" value="${d.foundDate||""}" data-def-found="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px"><input type="date" value="${d.deadline||""}" data-def-deadline="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px"><input type="text" value="${esc(d.action||"")}" data-def-action="${i}" placeholder="조치내용" style="width:120px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px"><input type="date" value="${d.completedDate||""}" data-def-completed="${i}" style="font-size:11px;border:1px solid #e2e8f0;border-radius:4px;padding:2px 4px"></td>
-            <td style="padding:4px 6px">
-              <select data-def-status="${i}" style="font-size:11px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;background:${d.status==="완료"?"#f0fdf4":d.status==="진행중"?"#eff6ff":"#fff"}">
-                ${["미조치","진행중","완료"].map(s=>`<option ${d.status===s?"selected":""}>${s}</option>`).join("")}
-              </select>
-            </td>
-            <td style="padding:4px 6px"><button type="button" data-def-del="${i}" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px">✕</button></td>
-          </tr>
-        `).join("")||`<tr><td colspan="10" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">하자 없음</td></tr>`;
-
-        // 이벤트 바인딩
-        const bind=(sel,key)=>tbody.querySelectorAll(sel).forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset[key.replace("def-","def").replace("-","").replace(/[A-Z]/g,m=>m.toLowerCase())])][key.split("-")[1]]=el.value;renderSummaryBar(r)}));
-        tbody.querySelectorAll("[data-def-cat]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defCat)].category=el.value}));
-        tbody.querySelectorAll("[data-def-content]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defContent)].content=el.value}));
-        tbody.querySelectorAll("[data-def-sev]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defSev)].severity=el.value}));
-        tbody.querySelectorAll("[data-def-found]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defFound)].foundDate=el.value}));
-        tbody.querySelectorAll("[data-def-deadline]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defDeadline)].deadline=el.value}));
-        tbody.querySelectorAll("[data-def-action]").forEach(el=>el.addEventListener("input",()=>{r.defects[Number(el.dataset.defAction)].action=el.value}));
-        tbody.querySelectorAll("[data-def-completed]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defCompleted)].completedDate=el.value}));
-        tbody.querySelectorAll("[data-def-status]").forEach(el=>el.addEventListener("change",()=>{r.defects[Number(el.dataset.defStatus)].status=el.value;renderDefectsInModal(r);renderSummaryBar(r)}));
-        tbody.querySelectorAll("[data-def-del]").forEach(el=>el.addEventListener("click",()=>{r.defects.splice(Number(el.dataset.defDel),1);renderDefectsInModal(r);renderSummaryBar(r)}));
+      /* ── 결과 바 HTML ── */
+      function buildResultBarHtml(insp){
+        const tmp=calcResult(Object.assign({},insp,{checklistItems:insp.checklistItems?.map(x=>({...x}))||[],defects:insp.defects||[]}));
+        const cls=rCls(tmp.result)||"grey";
+        return `<div class="insp-result-bar" id="inspResultBar">
+          <div class="insp-rs"><div class="v">${tmp.totalEval}</div><div class="l">평가항목</div></div>
+          <div class="insp-rs"><div class="v" style="color:#177245">${tmp.passItems}</div><div class="l">적합</div></div>
+          <div class="insp-rs"><div class="v" style="color:#c93728">${tmp.failItems}</div><div class="l">부적합</div></div>
+          <div class="insp-rs"><div class="v">${tmp.naItems}</div><div class="l">해당없음</div></div>
+          <div class="insp-rs"><div class="v">${tmp.passRate}%</div><div class="l">적합률</div></div>
+          <span class="insp-verdict-badge ${cls}">${esc(tmp.result)}</span>
+          <span class="insp-result-hint">100%→적합 | 95%이상→조건부 | 미만→부적합</span>
+        </div>`;
       }
 
-      function renderSummaryBar(r){
-        const bar=document.getElementById("inspSummaryBar");if(!bar)return;
-        const res=calcResult(r);
-        const pctText=res.pct!==null?`${res.pct}%`:"-";
-        const verdictColor=res.verdict==="적합"?"#10b981":res.verdict==="조건부적합"?"#f59e0b":res.verdict==="부적합"?"#ef4444":"#94a3b8";
-        bar.innerHTML=`
-          <div><span style="font-size:11px;color:#94a3b8">적합 항목</span><br><strong>${res.ok}/${res.rated}</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">적합률</span><br><strong>${pctText}</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">하자 건수</span><br><strong style="color:${res.defTotal>0?"#ef4444":"#10b981"}">${res.defTotal}건</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">보완완료</span><br><strong>${res.defDone}/${res.defTotal}</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">미조치</span><br><strong style="color:${res.defOpen>0?"#ef4444":"#10b981"}">${res.defOpen}건</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">종합판정</span><br><strong style="color:${verdictColor}">${res.verdict}</strong></div>
-          <div><span style="font-size:11px;color:#94a3b8">입금승인</span><br>
-            <select id="inspPaymentApproval" style="font-size:12px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:6px">
-              ${["","승인","대기","보류"].map(s=>`<option value="${s}" ${(r.paymentApproved||"")=== s?"selected":""}>${s||"-"}</option>`).join("")}
-            </select>
+      /* ── 하자 탭 HTML ── */
+      function buildDefectHtml(insp){
+        const defs=insp.defects||[];
+        const rows=defs.map((d,i)=>`<tr>
+          <td>${i+1}</td>
+          <td>${esc(d.category||"-")}</td>
+          <td>${esc(d.defect||"-")}</td>
+          <td><span class="badge ${d.severity==="상"?"red":d.severity==="중"?"amber":""}">${esc(d.severity||"경")}</span></td>
+          <td>${esc(d.foundDate||"-")}</td>
+          <td>${esc(d.deadlineDate||"-")}</td>
+          <td>${esc(d.action||"-")}</td>
+          <td>${esc(d.completionDate||"-")}</td>
+          <td>${esc(d.confirmer||"-")}</td>
+          <td><select class="insp-status-sel" data-defect-status="${i}">
+            ${["미조치","진행중","완료"].map(s=>`<option${d.status===s?" selected":""}>${esc(s)}</option>`).join("")}
+          </select></td>
+          <td>${esc(d.note||"")}</td>
+          <td><button class="btn icon danger" data-del-defect="${i}" type="button">×</button></td>
+        </tr>`).join("");
+        const uninsp=defs.filter(x=>!x.status||x.status==="미조치").length;
+        const inprog=defs.filter(x=>x.status==="진행중").length;
+        const done=defs.filter(x=>x.status==="완료").length;
+        return `<div class="insp-add-form">
+          <strong>하자 수기 추가</strong>
+          <div class="insp-add-grid">
+            <div><label>검수구분</label><input id="dCat" placeholder="예: 레일설치"></div>
+            <div class="sp2"><label>하자내용 *</label><input id="dContent" placeholder="하자 내용 입력"></div>
+            <div><label>심각도</label><select id="dSev"><option>경</option><option>중</option><option>상</option></select></div>
+            <div><label>발견일</label><input id="dFound" type="date" value="${today}"></div>
+            <div><label>보완요구기한</label><input id="dDeadline" type="date"></div>
+            <div class="sp2"><label>조치내용</label><input id="dAction" placeholder="조치 내용"></div>
+            <div><label>조치완료일</label><input id="dDone" type="date"></div>
+            <div><label>확인자</label><input id="dConfirmer"></div>
           </div>
-        `;
-        document.getElementById("inspPaymentApproval")?.addEventListener("change",e=>{r.paymentApproved=e.target.value});
+          <div style="margin-top:10px;text-align:right"><button class="btn primary" id="addDefectBtn" type="button">+ 하자 추가</button></div>
+        </div>
+        <div class="insp-defect-summary">
+          <span>전체 <strong>${defs.length}건</strong></span>
+          <span style="color:#c93728">미조치 <strong>${uninsp}건</strong></span>
+          <span style="color:#a15c00">진행중 <strong>${inprog}건</strong></span>
+          <span style="color:#177245">완료 <strong>${done}건</strong></span>
+          ${uninsp===0&&defs.length>0?`<span style="color:#177245;font-weight:900">✅ 입금 가능 (미조치 0건)</span>`:`<span style="color:#c93728">⚠ 미조치 ${uninsp}건 잔여</span>`}
+        </div>
+        <div style="overflow-x:auto">
+          <table class="insp-dtbl">
+            <thead><tr><th>#</th><th>검수구분</th><th>하자내용</th><th>심각도</th><th>발견일</th><th>보완기한</th><th>조치내용</th><th>조치완료일</th><th>확인자</th><th>상태</th><th>비고</th><th>삭제</th></tr></thead>
+            <tbody>${rows||`<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--muted)">등록된 하자가 없습니다.</td></tr>`}</tbody>
+          </table>
+        </div>`;
       }
 
-      // 하자 추가 버튼
-      document.addEventListener("click",e=>{
-        if(e.target.id==="addInspDefectBtn"){
-          const idx=editingInspIndex;
-          const r=idx<0?null:state.inspections[idx];
-          // 모달 내 임시 객체에서 작업
-          const tbody=document.getElementById("inspDefectsBody");
-          if(!tbody)return;
-          // 현재 편집 중인 검수 찾기
-          const insp=idx<0?window._tempInspection:state.inspections[idx];
-          if(!insp)return;
-          insp.defects.push({category:"",content:"",severity:"경",foundDate:today,deadline:"",action:"",completedDate:"",confirmer:"",status:"미조치",note:""});
-          renderDefectsInModal(insp);
-          renderSummaryBar(insp);
-        }
-        if(e.target.id==="deleteInspectionBtn"){
-          if(!confirm("이 검수 내역을 삭제할까요?"))return;
-          const idx=editingInspIndex;
-          if(idx>=0){state.inspections.splice(idx,1);saveState("검수 내역 삭제");renderInspectionView();document.getElementById("inspectionModal").classList.remove("open");toast("삭제됐습니다.")}
-        }
-      });
+      /* ── 입금승인 탭 HTML ── */
+      function buildPaymentHtml(insp){
+        const tmp=calcResult(Object.assign({},insp,{checklistItems:insp.checklistItems?.map(x=>({...x}))||[],defects:insp.defects||[]}));
+        const uninsp=(insp.defects||[]).filter(x=>!x.status||x.status==="미조치").length;
+        return `<div class="insp-pay-grid">
+          <div class="insp-pay-sec">
+            <h3>1. 공사 개요</h3>
+            <div class="insp-pay-row"><label>발전소명</label><input id="payPN" value="${esc(insp.plantName||"")}"></div>
+            <div class="insp-pay-row"><label>소재지</label><input id="payLoc" value="${esc(insp.location||"")}"></div>
+            <div class="insp-pay-row"><label>지붕유형</label><input id="payRoof" value="${esc(insp.roofType||"")}"></div>
+            <div class="insp-pay-row"><label>시공용량(kW)</label><input id="payCap" type="number" value="${insp.capacity||""}"></div>
+            <div class="insp-pay-row"><label>시공완료 통보일</label><input id="payComp" type="date" value="${esc(insp.completionNoticeDate||"")}"></div>
+            <div class="insp-pay-row"><label>외주업체명</label><input id="payContr" value="${esc(insp.contractor||"")}"></div>
+          </div>
+          <div class="insp-pay-sec">
+            <h3>2. 검수 결과 (자동 산정)</h3>
+            <div class="insp-pay-row"><label>검수일자</label><span>${esc(insp.inspectionDate||"-")}</span></div>
+            <div class="insp-pay-row"><label>검수자</label><span>${esc(insp.inspector||"-")}</span></div>
+            <div class="insp-pay-row"><label>총 검수항목 수</label><span>${tmp.totalEval}</span></div>
+            <div class="insp-pay-row"><label>적합 항목 수</label><span style="color:#177245;font-weight:900">${tmp.passItems}</span></div>
+            <div class="insp-pay-row"><label>부적합 항목 수</label><span style="color:#c93728;font-weight:900">${tmp.failItems}</span></div>
+            <div class="insp-pay-row"><label>적합률(%)</label><span style="font-weight:900">${tmp.passRate}%</span></div>
+            <div class="insp-pay-row"><label>하자 잔여(미조치)</label><span style="color:${uninsp>0?"#c93728":"#177245"};font-weight:900">${uninsp}건</span></div>
+            <div class="insp-pay-row"><label>종합판정</label><span class="badge ${rCls(tmp.result)}">${esc(tmp.result)}</span></div>
+          </div>
+          <div class="insp-pay-sec">
+            <h3>3. 입금 판단</h3>
+            <div class="insp-pay-row"><label>입금 승인 여부</label>
+              <select id="payApproval">
+                ${["대기","승인","보류"].map(s=>`<option${insp.paymentApproval===s?" selected":""}>${s}</option>`).join("")}
+              </select>
+            </div>
+            <div class="insp-pay-row"><label>판단 사유</label><input id="payReason" value="${esc(insp.paymentReason||"")}"></div>
+            <div class="insp-pay-row"><label>입금 금액(원)</label><input id="payAmt" type="number" value="${insp.paymentAmount||""}"></div>
+            <div class="insp-pay-row"><label>입금 예정일</label><input id="payDate" type="date" value="${esc(insp.paymentDate||"")}"></div>
+            <div class="insp-pay-row"><label>특이사항</label><input id="payNote" value="${esc(insp.paymentNote||"")}"></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:6px">※ 하자 잔여 건수가 0건일 때만 '승인(전액입금)' 선택 가능</div>
+          </div>
+          <div class="insp-pay-sec">
+            <h3>4. 결재</h3>
+            <div class="insp-sign-grid">
+              <div class="insp-sign-box"><div class="lbl">담당(검수자)</div><div class="name">${esc(insp.inspector||"–")}</div><div style="font-size:11px;color:var(--muted);margin-top:8px">일자: ${esc(insp.inspectionDate||"")}</div></div>
+              <div class="insp-sign-box"><div class="lbl">팀장</div><div class="name" style="height:28px"></div><div style="font-size:11px;color:var(--muted);margin-top:8px">일자:</div></div>
+              <div class="insp-sign-box"><div class="lbl">부서장/대표</div><div class="name" style="height:28px"></div><div style="font-size:11px;color:var(--muted);margin-top:8px">일자:</div></div>
+            </div>
+            <div style="margin-top:14px;text-align:right">
+              <button class="btn" id="printPayBtn" type="button">🖨 확인서 인쇄</button>
+            </div>
+          </div>
+        </div>`;
+      }
 
-      // 검수 모달 열기
-      window.openInspectionModal=function(idx){
-        editingInspIndex=idx;
-        const isNew=idx<0;
-        const r=isNew?(window._tempInspection=normalizeInspection({})):state.inspections[idx];
-        document.getElementById("inspectionModalTitle").textContent=isNew?"검수 등록":r.site+" 검수";
-        document.getElementById("inspSite").value=r.site||"";
-        document.getElementById("inspAddress").value=r.address||"";
-        document.getElementById("inspRoofType").value=r.roofType||"공장 지붕";
-        document.getElementById("inspCapacity").value=r.capacity||"";
-        document.getElementById("inspContractor").value=r.contractor||"";
-        document.getElementById("inspContractAmount").value=r.contractAmount||"";
-        document.getElementById("inspDate").value=r.date||today;
-        document.getElementById("inspInspector").value=r.inspector||"";
-        renderChecklistInModal(r);
-        renderDefectsInModal(r);
-        renderSummaryBar(r);
-        document.getElementById("deleteInspectionBtn").classList.toggle("hidden",isNew);
-        document.getElementById("inspectionModal").classList.add("open");
+      let _inspIdx=null,_inspTab="checklist";
+      function getEditInsp(){return window.__editInsp}
+      function setEditInsp(v){window.__editInsp=v}
+
+      /* ── 모달 열기 ── */
+      function openInspModal(idx){
+        _inspIdx=idx;_inspTab="checklist";
+        const insp=idx!==null?JSON.parse(JSON.stringify(state.structureInspections[idx])):blankInsp();
+        setEditInsp(insp);
+        let modal=document.getElementById("inspModalOverlay");
+        if(!modal){
+          document.body.insertAdjacentHTML("beforeend",`
+            <div class="overlay" id="inspModalOverlay">
+              <div class="modal" id="inspModal">
+                <div class="modal-head">
+                  <h2 id="inspModalTitle">검수 등록</h2>
+                  <div class="row-actions">
+                    <button class="btn primary" id="saveInspBtn" type="button">저장</button>
+                    <button class="btn icon" id="closeInspModalBtn" type="button">×</button>
+                  </div>
+                </div>
+                <div id="inspModalBody" style="display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0">
+                  <div class="insp-tabs" id="inspTabs"></div>
+                  <div id="inspPanes" style="overflow:auto;flex:1;padding:0"></div>
+                </div>
+              </div>
+            </div>`);
+        }
+        document.getElementById("inspModalTitle").textContent=idx!==null?`검수 수정 — ${insp.plantName||""}` : "새 검수 등록";
+        renderInspModalContent();
+        document.getElementById("inspModalOverlay").classList.add("open");
+      }
+
+      function renderInspModalContent(){
+        const insp=getEditInsp();if(!insp)return;
+        const tabDefs=[{id:"checklist",label:"체크리스트"},{id:"defect",label:"하자관리"},{id:"payment",label:"입금승인"}];
+        document.getElementById("inspTabs").innerHTML=tabDefs.map(t=>`<button class="insp-tab${_inspTab===t.id?" active":""}" data-itab="${t.id}" type="button">${esc(t.label)}</button>`).join("");
+        const panes=document.getElementById("inspPanes");
+        if(_inspTab==="checklist"){
+          panes.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">
+            <div class="insp-form-grid">
+              <div><label>발전소명 *</label><input id="iPN" value="${esc(insp.plantName||"")}"></div>
+              <div class="span2"><label>소재지</label><input id="iLoc" value="${esc(insp.location||"")}"></div>
+              <div><label>지붕유형</label>
+                <select id="iRoof">${["공장 지붕","축사 지붕","창고 지붕","기타"].map(x=>`<option${insp.roofType===x?" selected":""}>${esc(x)}</option>`).join("")}</select>
+              </div>
+              <div><label>용량(kW)</label><input id="iCap" type="number" step="0.01" value="${insp.capacity||""}"></div>
+              <div><label>외주업체</label><input id="iContr" value="${esc(insp.contractor||"")}"></div>
+              <div><label>계약금액(원)</label><input id="iAmt" type="number" value="${insp.contractAmount||""}"></div>
+              <div><label>검수일자</label><input id="iDate" type="date" value="${esc(insp.inspectionDate||today)}"></div>
+              <div><label>검수자</label><input id="iInsp" value="${esc(insp.inspector||loginName?.()||"")}"></div>
+              <div><label>담당 입회자</label><input id="iSup" value="${esc(insp.fieldSupervisor||"")}"></div>
+              <div><label>작업업체</label><input id="iWork" value="${esc(insp.workTeam||"")}"></div>
+              <div><label>시공완료 통보일</label><input id="iComp" type="date" value="${esc(insp.completionNoticeDate||"")}"></div>
+            </div>
+            ${buildResultBarHtml(insp)}
+            ${buildChecklistHtml(insp)}
+          </div>`;
+        }else if(_inspTab==="defect"){
+          panes.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+        }else{
+          panes.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildPaymentHtml(insp)}</div>`;
+        }
+      }
+
+      function syncFormToInsp(){
+        const insp=getEditInsp();if(!insp)return;
+        if(_inspTab==="checklist"){
+          insp.plantName=document.getElementById("iPN")?.value.trim()||insp.plantName;
+          insp.location=document.getElementById("iLoc")?.value.trim()||insp.location;
+          insp.roofType=document.getElementById("iRoof")?.value||insp.roofType;
+          insp.capacity=Number(document.getElementById("iCap")?.value)||insp.capacity;
+          insp.contractor=document.getElementById("iContr")?.value.trim()||insp.contractor;
+          insp.contractAmount=Number(document.getElementById("iAmt")?.value)||insp.contractAmount;
+          insp.inspectionDate=document.getElementById("iDate")?.value||insp.inspectionDate;
+          insp.inspector=document.getElementById("iInsp")?.value.trim()||insp.inspector;
+          insp.fieldSupervisor=document.getElementById("iSup")?.value.trim()||insp.fieldSupervisor;
+          insp.workTeam=document.getElementById("iWork")?.value.trim()||insp.workTeam;
+          insp.completionNoticeDate=document.getElementById("iComp")?.value||insp.completionNoticeDate;
+          document.querySelectorAll("[data-id]").forEach(el=>{
+            const no=Number(el.dataset.id),item=insp.checklistItems.find(x=>x.no===no);
+            if(item)item.defect=el.value;
+          });
+        }else if(_inspTab==="payment"){
+          const pa=document.getElementById("payApproval");if(pa)insp.paymentApproval=pa.value;
+          const pr=document.getElementById("payReason");if(pr)insp.paymentReason=pr.value;
+          const pamt=document.getElementById("payAmt");if(pamt)insp.paymentAmount=Number(pamt.value)||0;
+          const pd=document.getElementById("payDate");if(pd)insp.paymentDate=pd.value;
+          const pn=document.getElementById("payNote");if(pn)insp.paymentNote=pn.value;
+          const pPN=document.getElementById("payPN");if(pPN)insp.plantName=pPN.value.trim()||insp.plantName;
+          const pLoc=document.getElementById("payLoc");if(pLoc)insp.location=pLoc.value.trim()||insp.location;
+          const pComp=document.getElementById("payComp");if(pComp)insp.completionNoticeDate=pComp.value;
+        }
+        calcResult(insp);
+      }
+
+      function saveInspFromModal(){
+        syncFormToInsp();
+        const insp=getEditInsp();if(!insp)return;
+        if(!insp.plantName){toast("발전소명을 입력해주세요.");return}
+        insp.savedAt=new Date().toISOString();
+        if(_inspIdx!==null)state.structureInspections[_inspIdx]=insp;
+        else state.structureInspections.unshift(insp);
+        document.getElementById("inspModalOverlay")?.classList.remove("open");
+        saveState("검수를 저장했습니다.");
+        if(currentView==="structureInspect")renderInspView();
+      }
+
+      function printPayment(){
+        syncFormToInsp();
+        const insp=getEditInsp();if(!insp)return;
+        const tmp=calcResult(Object.assign({},insp,{checklistItems:insp.checklistItems?.map(x=>({...x}))||[],defects:insp.defects||[]}));
+        const uninsp=(insp.defects||[]).filter(x=>!x.status||x.status==="미조치").length;
+        const html=`<div id="inspPrintRoot" style="max-width:720px;margin:auto;font-family:Arial,sans-serif;font-size:13px;line-height:1.6">
+          <h2 style="text-align:center;font-size:20px;margin:0 0 6px">구조물 시공 완료 검수 및 입금승인 확인서</h2>
+          <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">발행일: ${today} · 기술지원팀</div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+            <tr><th colspan="4" style="background:#eef8fa;padding:7px;border:1px solid #ccc;text-align:left">1. 공사 개요</th></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:22%;font-weight:bold">발전소명</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.plantName)}</td><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:22%;font-weight:bold">소재지</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.location)}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">지붕유형</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.roofType)}</td><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">시공용량(kW)</td><td style="border:1px solid #ccc;padding:5px 8px">${insp.capacity||"–"}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">시공완료 통보일</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.completionNoticeDate||"–")}</td><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">외주업체명</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.contractor||"–")}</td></tr>
+          </table>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+            <tr><th colspan="2" style="background:#eef8fa;padding:7px;border:1px solid #ccc;text-align:left">2. 검수 결과</th></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:44%;font-weight:bold">검수일자</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.inspectionDate||"–")}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">검수자</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.inspector||"–")}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">총 검수항목 수</td><td style="border:1px solid #ccc;padding:5px 8px">${tmp.totalEval}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">적합 항목 수</td><td style="border:1px solid #ccc;padding:5px 8px">${tmp.passItems}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">부적합 항목 수</td><td style="border:1px solid #ccc;padding:5px 8px">${tmp.failItems}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">적합률(%)</td><td style="border:1px solid #ccc;padding:5px 8px">${tmp.passRate}%</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">하자 잔여 건수(미조치)</td><td style="border:1px solid #ccc;padding:5px 8px">${uninsp}건</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">종합판정</td><td style="border:1px solid #ccc;padding:5px 8px;font-weight:bold;color:${tmp.result==="적합"?"#177245":tmp.result==="조건부적합"?"#a15c00":"#c93728"}">${esc(tmp.result)}</td></tr>
+          </table>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+            <tr><th colspan="2" style="background:#eef8fa;padding:7px;border:1px solid #ccc;text-align:left">3. 입금 판단</th></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:44%;font-weight:bold">입금 승인 여부</td><td style="border:1px solid #ccc;padding:5px 8px;font-weight:bold">${esc(insp.paymentApproval||"대기")}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">판단 사유</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.paymentReason||"–")}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">입금 금액(원)</td><td style="border:1px solid #ccc;padding:5px 8px">${insp.paymentAmount?Number(insp.paymentAmount).toLocaleString()+"원":"–"}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">입금 예정일</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.paymentDate||"–")}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;font-weight:bold">특이사항</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.paymentNote||"–")}</td></tr>
+          </table>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+            <tr><th colspan="3" style="background:#eef8fa;padding:7px;border:1px solid #ccc;text-align:left">4. 결재</th></tr>
+            <tr>
+              <th style="border:1px solid #ccc;padding:10px;text-align:center;background:#f8f8f8;width:33%">담당(검수자)</th>
+              <th style="border:1px solid #ccc;padding:10px;text-align:center;background:#f8f8f8;width:33%">팀장</th>
+              <th style="border:1px solid #ccc;padding:10px;text-align:center;background:#f8f8f8;width:33%">부서장/대표</th>
+            </tr>
+            <tr>
+              <td style="border:1px solid #ccc;padding:34px 10px;text-align:center">${esc(insp.inspector||"")}</td>
+              <td style="border:1px solid #ccc;padding:34px 10px"></td>
+              <td style="border:1px solid #ccc;padding:34px 10px"></td>
+            </tr>
+            <tr>
+              <td style="border:1px solid #ccc;padding:5px;text-align:center;font-size:11px">일자: ${esc(insp.inspectionDate||"")}</td>
+              <td style="border:1px solid #ccc;padding:5px;text-align:center;font-size:11px">일자: </td>
+              <td style="border:1px solid #ccc;padding:5px;text-align:center;font-size:11px">일자: </td>
+            </tr>
+          </table>
+        </div>`;
+        document.getElementById("inspPrintRoot")?.remove();
+        document.body.insertAdjacentHTML("beforeend",html);
+        window.print();
+        setTimeout(()=>document.getElementById("inspPrintRoot")?.remove(),3000);
+      }
+
+      /* ── 렌더링 훅 ── */
+      const baseRV_insp=renderView;
+      renderView=function(){
+        if(currentView==="structureInspect"){
+          ensureInspChrome();
+          renderInspView();
+          document.getElementById("inspectionView")?.classList.remove("hidden");
+          /* inline !important 로 체인 내부의 toggle("hidden",false) 를 덮어씀 */
+          const toHide=[
+            els.mainGrid,
+            els.dashboardView,
+            els.adminView,
+            $("#kpis"),
+            ...(["fieldworkView","meetingView","messageView","reportView","dbView","epcView"]
+                .map(id=>document.getElementById(id))),
+            $("#sharedNotice")
+          ];
+          toHide.forEach(el=>{if(el)el.style.setProperty("display","none","important")});
+          document.body.className=document.body.className.replace(/\bview-\S+/g,"").trim();
+          document.body.classList.add("view-structureInspect");
+          renderNav?.();
+          updateTopButtons?.();
+          syncViewChrome?.();
+          return;
+        }
+        /* 다른 뷰로 나올 때 inline style 제거 */
+        [els.mainGrid,els.dashboardView,els.adminView,
+         ...(["fieldworkView","meetingView","messageView","reportView","dbView","epcView"]
+             .map(id=>document.getElementById(id))),
+         $("#sharedNotice")
+        ].forEach(el=>{if(el)el.style.removeProperty("display")});
+        document.getElementById("inspectionView")?.classList.add("hidden");
+        baseRV_insp();
       };
 
-      // saveInspectionBtn에서 isNew일 때 _tempInspection 사용
+      const baseRC_insp=renderCurrentContent;
+      renderCurrentContent=function(){
+        if(currentView==="structureInspect"){syncViewChrome();renderInspView();return}
+        baseRC_insp();
+      };
+
+      const baseSVC_insp=syncViewChrome;
+      syncViewChrome=function(){
+        baseSVC_insp();
+        if(currentView==="structureInspect"){
+          els.pageTitle.textContent="구조물 검수";
+          els.pageSub.textContent="구조물 외주 시공 검수 체크리스트·하자보완·입금승인 관리";
+          document.getElementById("addProjectBtn").textContent="+ 새 검수 등록";
+        }
+      };
+
+      /* ── 이벤트 ── */
       document.addEventListener("click",e=>{
-        if(e.target.id==="saveInspectionBtn"){
-          const idx=editingInspIndex;
-          const isNew=idx<0;
-          const r=isNew?window._tempInspection:state.inspections[idx];
-          if(!r)return;
-          r.site=document.getElementById("inspSite").value.trim();
-          if(!r.site){toast("발전소명을 입력해주세요.");return;}
-          r.address=document.getElementById("inspAddress").value.trim();
-          r.roofType=document.getElementById("inspRoofType").value;
-          r.capacity=document.getElementById("inspCapacity").value;
-          r.contractor=document.getElementById("inspContractor").value.trim();
-          r.contractAmount=document.getElementById("inspContractAmount").value.trim();
-          r.date=document.getElementById("inspDate").value;
-          r.inspector=document.getElementById("inspInspector").value.trim();
-          r.paymentApproved=document.getElementById("inspPaymentApproval")?.value||"";
-          normalizeInspection(r);
-          if(isNew){if(!state.inspections)state.inspections=[];state.inspections.unshift(r);window._tempInspection=null;}
-          saveState("검수 내역이 저장됐습니다.");
-          document.getElementById("inspectionModal").classList.remove("open");
-          renderInspectionView();
-          toast("✅ 검수 내역이 저장됐습니다.");
+        const t=e.target.closest("button")||e.target;
+
+        if(t.id==="newInspBtn"||(currentView==="structureInspect"&&t.id==="addProjectBtn")){
+          e.preventDefault();e.stopImmediatePropagation();openInspModal(null);return;
+        }
+        if(t.dataset.openInsp!==undefined){e.preventDefault();e.stopImmediatePropagation();openInspModal(Number(t.dataset.openInsp));return;}
+        if(t.dataset.editInsp!==undefined){e.preventDefault();e.stopImmediatePropagation();openInspModal(Number(t.dataset.editInsp));return;}
+        if(t.dataset.deleteInsp!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          if(!confirm("이 검수 내역을 삭제할까요?"))return;
+          state.structureInspections.splice(Number(t.dataset.deleteInsp),1);
+          saveState("검수를 삭제했습니다.");renderInspView();return;
+        }
+        if(t.id==="closeInspModalBtn"||e.target.id==="inspModalOverlay"){
+          document.getElementById("inspModalOverlay")?.classList.remove("open");return;
+        }
+        if(t.id==="saveInspBtn"){e.preventDefault();e.stopImmediatePropagation();saveInspFromModal();return;}
+
+        /* 탭 전환 */
+        if(t.dataset.itab){
+          e.preventDefault();e.stopImmediatePropagation();
+          syncFormToInsp();
+          _inspTab=t.dataset.itab;
+          renderInspModalContent();return;
+        }
+
+        /* 적합/부적합/해당없음 버튼 */
+        if(t.dataset.iv!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          const no=Number(t.dataset.iv),val=t.dataset.val;
+          const item=insp.checklistItems.find(x=>x.no===no);
+          if(item){
+            item.verdict=item.verdict===val?"":val;
+            calcResult(insp);
+            /* 버튼 상태 업데이트 */
+            document.querySelectorAll(`[data-iv="${no}"]`).forEach(b=>{
+              b.classList.toggle("on",b.dataset.val===item.verdict);
+            });
+            /* 결과 바 업데이트 */
+            const bar=document.getElementById("inspResultBar");
+            if(bar)bar.outerHTML=buildResultBarHtml(insp);
+          }
+          return;
+        }
+
+        /* 하자 추가 */
+        if(t.id==="addDefectBtn"){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          const content=document.getElementById("dContent")?.value.trim()||"";
+          if(!content){toast("하자 내용을 입력해주세요.");return}
+          if(!insp.defects)insp.defects=[];
+          insp.defects.push({
+            id:uid("def"),
+            category:document.getElementById("dCat")?.value.trim()||"",
+            defect:content,
+            severity:document.getElementById("dSev")?.value||"경",
+            foundDate:document.getElementById("dFound")?.value||today,
+            deadlineDate:document.getElementById("dDeadline")?.value||"",
+            action:document.getElementById("dAction")?.value.trim()||"",
+            completionDate:document.getElementById("dDone")?.value||"",
+            confirmer:document.getElementById("dConfirmer")?.value.trim()||"",
+            status:"미조치",note:""
+          });
+          calcResult(insp);
+          const pane=document.getElementById("inspPanes");
+          if(pane&&_inspTab==="defect")pane.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+          return;
+        }
+
+        /* 하자 삭제 */
+        if(t.dataset.delDefect!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          insp.defects.splice(Number(t.dataset.delDefect),1);
+          calcResult(insp);
+          const pane=document.getElementById("inspPanes");
+          if(pane)pane.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+          return;
+        }
+
+        /* 인쇄 */
+        if(t.id==="printPayBtn"){e.preventDefault();e.stopImmediatePropagation();printPayment();return;}
+      },true);
+
+      /* 하자 상태 드롭다운 변경 */
+      document.addEventListener("change",e=>{
+        const t=e.target;
+        if(t.dataset.defectStatus!==undefined){
+          const insp=getEditInsp();if(!insp)return;
+          const d=insp.defects[Number(t.dataset.defectStatus)];
+          if(d){
+            d.status=t.value;
+            if(t.value==="완료"&&!d.completionDate)d.completionDate=today;
+            calcResult(insp);
+          }
         }
       },true);
 
+      /* 체크리스트 하자내용 실시간 동기화 */
+      document.addEventListener("input",e=>{
+        const t=e.target;
+        if(t.dataset.id!==undefined&&t.classList.contains("insp-defect-in")){
+          const insp=getEditInsp();if(!insp)return;
+          const item=insp.checklistItems.find(x=>x.no===Number(t.dataset.id));
+          if(item)item.defect=t.value;
+        }
+      },true);
+
+      ensureInspChrome();ensureInspState();
     })();
 
