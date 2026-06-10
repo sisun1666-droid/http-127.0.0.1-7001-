@@ -229,15 +229,27 @@
         const secret=(state.sheetsSecret||"kiwoom2026").trim()||"kiwoom2026";
         const code=`// ================================================
 // 기술지원팀 업무관리 → Google Sheets 자동 동기화
+// script.google.com 독립 실행형 / Sheets 바인딩 모두 지원
 // ================================================
-// [필수] 아래 SECRET을 관리자 설정의 '동기화 키'와 동일하게 변경하세요
+// [필수] 아래 SECRET을 관리자 설정의 '동기화 키'와 동일하게 입력하세요
 const SECRET = '${secret}';
+
+// 스프레드시트 자동 연결 (독립 실행형이면 첫 실행 시 자동 생성)
+function getOrCreateSS() {
+  try { return SpreadsheetApp.getActiveSpreadsheet(); } catch(e) {}
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty('SS_ID');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch(e) {} }
+  const ss = SpreadsheetApp.create('기술지원팀 업무관리 DB');
+  props.setProperty('SS_ID', ss.getId());
+  return ss;
+}
 
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     if (body.secret !== SECRET) return resp({ok:false, msg:'인증 실패'});
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getOrCreateSS();
 
     if ((body.todos||[]).length)              syncSheet(ss,'📋할일관리',   todosRows(body));
     if ((body.assignments||[]).length)        syncSheet(ss,'📌업무지시',   assignRows(body));
@@ -314,7 +326,7 @@ function inspRows(b) {
       i.capacity||'',i.contractor||'',i.contractAmount||'',i.date||'',
       i.inspector||'',i.result||'',i.id||''])];
 }`;
-        document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="sheetsScriptModal" style="z-index:20"><div class="modal" style="max-width:680px;width:96vw"><div class="modal-head"><h2>📊 Apps Script 코드</h2><div class="row-actions"><button class="btn primary" id="copySheetsScriptBtn">코드 복사</button><button class="btn icon" id="closeSheetsModal">×</button></div></div><div style="background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px;font-size:11.5px;line-height:1.6;max-height:55vh;overflow:auto;font-family:monospace;white-space:pre" id="sheetsScriptCode"></div><div style="background:#f0fdf8;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#065f46;line-height:1.7"><strong>배포 방법:</strong> 위 코드 복사 → <a href="https://script.google.com" target="_blank" style="color:#0d9488">script.google.com</a> → 새 프로젝트 → 붙여넣기 → <strong>배포 &gt; 새 배포 &gt; 웹앱</strong> → 실행: 나, 액세스: 모든 사용자 → 배포 → URL 복사 → 관리자 설정 &gt; Sheets URL에 붙여넣기</div></div></div>`);
+        document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="sheetsScriptModal" style="z-index:20"><div class="modal" style="max-width:680px;width:96vw"><div class="modal-head"><h2>📊 Apps Script 코드</h2><div class="row-actions"><button class="btn primary" id="copySheetsScriptBtn">코드 복사</button><button class="btn icon" id="closeSheetsModal">×</button></div></div><div style="background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px;font-size:11.5px;line-height:1.6;max-height:55vh;overflow:auto;font-family:monospace;white-space:pre" id="sheetsScriptCode"></div><div style="background:#f0fdf8;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#065f46;line-height:1.8"><strong>📌 붙여넣기 방법:</strong><br>① script.google.com에서 기존 코드 전체 선택(Ctrl+A) → 삭제 → 위 코드 붙여넣기 (Ctrl+V)<br>② 저장 (Ctrl+S) → 상단 <strong>배포</strong> 버튼 → <strong>새 배포</strong><br>③ 유형: <strong>웹앱</strong> 선택 → 실행: <strong>나(자신으로)</strong> → 액세스: <strong>모든 사용자</strong> → <strong>배포</strong> 클릭<br>④ 나오는 URL 복사 → 이 앱 관리자 설정 &gt; <strong>Sheets URL</strong> 붙여넣기 → 저장<br><span style="color:#059669">✅ 스프레드시트는 첫 동기화 시 자동으로 생성됩니다 (내 구글 드라이브에 저장)</span></div></div></div>`);
         document.getElementById("sheetsScriptCode").textContent=code;
       }
       $("#sheetsScriptModal").classList.add("open");
