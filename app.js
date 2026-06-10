@@ -404,7 +404,7 @@
     function renderKpis(){
       if(currentView==="dashboard"){
         els.kpis.classList.add("kpis-weather");
-        els.kpis.innerHTML=`<div style="display:grid;grid-template-columns:1fr 360px;gap:12px;height:100%"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.75;pointer-events:none;border-radius:16px"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18) 0%,rgba(0,0,0,.38) 100%);border-radius:16px;pointer-events:none" id="dashClockScrim"></div><div style="position:relative;z-index:2;width:100%;text-align:center;padding:16px 0"><div id="dashClockDate" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.6px;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.6)"></div><div id="dashClock" style="font-size:52px;font-weight:800;letter-spacing:-2px;color:#fff;line-height:1;text-shadow:0 3px 12px rgba(0,0,0,.75)"></div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:10px;font-weight:600;letter-spacing:.4px;text-shadow:0 1px 4px rgba(0,0,0,.5)">Asia/Seoul 기준</div></div></section></div>`;
+        els.kpis.innerHTML=`<div style="display:grid;grid-template-columns:1fr 360px;gap:12px;height:100%"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>🏗️ 시공 기상정보</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">기상 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 시공 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.75;pointer-events:none;border-radius:16px"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18) 0%,rgba(0,0,0,.38) 100%);border-radius:16px;pointer-events:none" id="dashClockScrim"></div><div style="position:relative;z-index:2;width:100%;text-align:center;padding:16px 0"><div id="dashClockDate" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.6px;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.6)"></div><div id="dashClock" style="font-size:52px;font-weight:800;letter-spacing:-2px;color:#fff;line-height:1;text-shadow:0 3px 12px rgba(0,0,0,.75)"></div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:10px;font-weight:600;letter-spacing:.4px;text-shadow:0 1px 4px rgba(0,0,0,.5)">Asia/Seoul 기준</div></div></section></div>`;
         const saved=localStorage.getItem("clockBgImage");
         if(saved){const el=document.getElementById("dashClockBg");if(el)el.style.backgroundImage=`url(${saved})`;}
         const inp=document.getElementById("clockBgInput");
@@ -976,32 +976,77 @@
     }
     function renderWeatherBox(){
       return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
-        <section class="dash-section compact"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">강수 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
+        <section class="dash-section compact"><div class="dash-title"><h2>🏗️ 시공 기상정보</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">기상 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 시공 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
         <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
       </div>`;
     }
     async function updateWeather(){
       const box=$("#dashWeatherContent"),forecast=$("#dashForecastContent");if(!box)return;
-      box.innerHTML=`<div class="meta">강수 정보를 불러오는 중입니다.</div>`;
+      box.innerHTML=`<div class="meta">기상 정보를 불러오는 중입니다.</div>`;
       try{
+        const nowH=new Date().getHours();
         const results=await Promise.all(cityWeather.map(async c=>{
-          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,precipitation,rain,showers,wind_speed_10m&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul`);
+          const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,wind_speed_10m,cloudcover,weathercode&hourly=precipitation_probability,uv_index&daily=precipitation_probability_max,precipitation_sum,temperature_2m_max,temperature_2m_min,sunshine_duration&timezone=Asia%2FSeoul&forecast_days=7`);
           const j=await r.json();
-          return{...c,current:j.current,daily:j.daily};
+          const todayStr=(j.hourly?.time?.[0]||"").slice(0,10);
+          const hIdx=j.hourly?.time?.findIndex(t=>t===`${todayStr}T${String(nowH).padStart(2,"0")}:00`)??-1;
+          const precipNow=hIdx>=0?(j.hourly.precipitation_probability[hIdx]??j.daily.precipitation_probability_max[0]):j.daily.precipitation_probability_max[0];
+          const uvNow=hIdx>=0?Math.round(j.hourly.uv_index?.[hIdx]||0):0;
+          return{...c,current:j.current,daily:j.daily,precipNow:Math.round(precipNow||0),uvNow};
         }));
         const wxIcon=p=>p>=70?"🌧️":p>=40?"🌦️":p>=20?"⛅":"☀️";
+        const workAdvice=(prob,wind)=>{
+          if(wind>=12)return{txt:"⛔ 강풍 작업불가",col:"#b91c1c"};
+          if(prob>=70)return{txt:"🌧️ 우천 작업불가",col:"#b91c1c"};
+          if(wind>=8)return{txt:"⚠️ 강풍 주의",col:"#b45309"};
+          if(prob>=40)return{txt:"⚠️ 우천 주의",col:"#b45309"};
+          return{txt:"✅ 시공 가능",col:"#16a34a"};
+        };
         box.innerHTML=results.map(r=>{
-          const p=Math.round(r.current?.precipitation||0),prob=Math.round(r.daily?.precipitation_probability_max?.[0]||0),sum=(r.daily?.precipitation_sum?.[0]||0).toFixed(1),temp=Math.round(r.current?.temperature_2m||0);
-          const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp),wind=Math.round(r.current?.wind_speed_10m||0);
-          const danger=prob>=60||Number(sum)>=5;
-          return `<div class="weather-city" style="${danger?"border-color:#f59e0b;background:#fff8e6":""}"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:26px;line-height:1">${wxIcon(prob)}</span><strong style="font-size:15px">${esc(r.name)}</strong></div><div style="font-size:30px;font-weight:800;color:${danger?"#b45309":"#1e3a5f"};line-height:1">${prob}%</div><div style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.5px;margin-top:2px;text-transform:uppercase">강수 확률</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.07);display:flex;align-items:baseline;gap:4px"><span style="font-size:20px;font-weight:700;color:#334155">${temp}℃</span><span style="font-size:11px;color:#94a3b8">${tMin}~${tMax}℃</span></div><div style="font-size:11px;color:#94a3b8;margin-top:3px">예상 ${sum}mm · 풍속 ${wind}m/s</div></div>`;
+          const prob=r.precipNow,temp=Math.round(r.current?.temperature_2m||0);
+          const tMax=Math.round(r.daily?.temperature_2m_max?.[0]||temp),tMin=Math.round(r.daily?.temperature_2m_min?.[0]||temp);
+          const wind=Math.round((r.current?.wind_speed_10m||0)*10)/10;
+          const cloud=Math.round(r.current?.cloudcover||0),uv=r.uvNow;
+          const adv=workAdvice(prob,wind);
+          const danger=prob>=70||wind>=12,warn=prob>=40||wind>=8;
+          const borderCol=danger?"#ef4444":warn?"#f59e0b":"#a7f3d0";
+          const bgCol=danger?"#fff5f5":warn?"#fff8e6":"";
+          return `<div class="weather-city" style="border-color:${borderCol};${bgCol?"background:"+bgCol:""}">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <span style="font-size:22px;line-height:1">${wxIcon(prob)}</span>
+              <strong style="font-size:14px">${esc(r.name)}</strong>
+            </div>
+            <div style="font-size:26px;font-weight:800;color:${danger?"#b91c1c":warn?"#b45309":"#0d9488"};line-height:1">${prob}%</div>
+            <div style="font-size:10px;color:#94a3b8;margin-top:1px">강수확률 (현재시간)</div>
+            <div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(0,0,0,.07)">
+              <div style="display:flex;align-items:baseline;gap:3px">
+                <span style="font-size:18px;font-weight:700;color:#334155">${temp}℃</span>
+                <span style="font-size:10px;color:#94a3b8">${tMin}~${tMax}℃</span>
+              </div>
+              <div style="font-size:11px;color:#64748b;margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:3px 6px">
+                <span>☁️ 구름 ${cloud}%</span><span>💨 ${wind}m/s</span>
+                <span>🌞 UV ${uv}</span><span style="color:${adv.col};font-weight:700">${adv.txt}</span>
+              </div>
+            </div>
+          </div>`;
         }).join("");
         const daegu=results.find(r=>r.name==="대구")||results[2];
-        forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
-          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0),sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1),max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0),hot=prob>=60||Number(sum)>=5;
-          return `<div class="forecast-day" style="${hot?"border-color:#f59e0b;background:#fff8e6":""}"><div style="font-size:18px;margin-bottom:2px">${wxIcon(prob)}</div><strong>${d.slice(5).replace("-","/")}</strong><div style="font-size:14px;font-weight:700;color:${hot?"#b45309":"#1e3a5f"}">${prob}%</div><div style="font-size:10px;color:#94a3b8">${min}~${max}℃</div><div style="font-size:10px;color:#94a3b8">${sum}mm</div></div>`;
+        if(forecast)forecast.innerHTML=(daegu?.daily?.time||[]).slice(0,7).map((d,i)=>{
+          const prob=Math.round(daegu.daily.precipitation_probability_max?.[i]||0);
+          const sum=(daegu.daily.precipitation_sum?.[i]||0).toFixed(1);
+          const max=Math.round(daegu.daily.temperature_2m_max?.[i]||0),min=Math.round(daegu.daily.temperature_2m_min?.[i]||0);
+          const sun=Math.round((daegu.daily.sunshine_duration?.[i]||0)/3600);
+          const bad=prob>=70,warn=prob>=40&&prob<70;
+          const col=bad?"#b91c1c":warn?"#b45309":"#0d9488";
+          return `<div class="forecast-day" style="${bad?"border-color:#ef4444;background:#fff5f5":warn?"border-color:#f59e0b;background:#fff8e6":""}">
+            <div style="font-size:16px;margin-bottom:2px">${wxIcon(prob)}</div>
+            <strong style="font-size:11px">${d.slice(5).replace("-","/")}</strong>
+            <div style="font-size:13px;font-weight:800;color:${col}">${prob}%</div>
+            <div style="font-size:10px;color:#94a3b8">${min}~${max}℃</div>
+            <div style="font-size:10px;color:#94a3b8">☀️${sun}h</div>
+          </div>`;
         }).join("");
-      }catch{box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
+      }catch(e){box.innerHTML=`<div class="meta">날씨 정보를 불러오지 못했습니다. 네트워크 상태를 확인하세요.</div>`;if(forecast)forecast.innerHTML=""}
     }
     renderDashboard=function(){
       ensureConfigLists();ensureTaskLinks();
