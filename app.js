@@ -4493,7 +4493,7 @@
             ${["미조치","진행중","완료"].map(s=>`<option${d.status===s?" selected":""}>${esc(s)}</option>`).join("")}
           </select></td>
           <td>${esc(d.note||"")}</td>
-          <td><button class="btn icon danger" data-del-defect="${i}" type="button">×</button></td>
+          <td style="white-space:nowrap">${d.status!=="완료"?`<button class="btn" style="background:#e8faf0;color:#177245;border-color:#a8dfc0;font-size:11px;padding:2px 7px" data-complete-defect="${i}" type="button">✅ 조치완료</button> `:"<span style='color:#177245;font-size:12px;font-weight:900'>✅ 완료</span> "}<button class="btn icon danger" data-del-defect="${i}" type="button">×</button></td>
         </tr>`).join("");
         const uninsp=defs.filter(x=>!x.status||x.status==="미조치").length;
         const inprog=defs.filter(x=>x.status==="진행중").length;
@@ -4518,6 +4518,7 @@
           <span style="color:#a15c00">진행중 <strong>${inprog}건</strong></span>
           <span style="color:#177245">완료 <strong>${done}건</strong></span>
           ${uninsp===0&&defs.length>0?`<span style="color:#177245;font-weight:900">✅ 입금 가능 (미조치 0건)</span>`:`<span style="color:#c93728">⚠ 미조치 ${uninsp}건 잔여</span>`}
+          ${uninsp>0?`<button class="btn" style="background:#e8faf0;color:#177245;border-color:#a8dfc0;font-weight:900" data-complete-all-defects="" type="button">✅ 전체 조치완료</button>`:""}
         </div>
         <div style="overflow-x:auto">
           <table class="insp-dtbl">
@@ -4693,8 +4694,6 @@
         const tmp=calcResult(Object.assign({},insp,{checklistItems:insp.checklistItems?.map(x=>({...x}))||[],defects:insp.defects||[]}));
         const uninsp=(insp.defects||[]).filter(x=>!x.status||x.status==="미조치").length;
         const html=`<div id="inspPrintRoot" style="max-width:720px;margin:auto;font-family:Arial,sans-serif;font-size:13px;line-height:1.6">
-          <h2 style="text-align:center;font-size:20px;margin:0 0 6px">구조물 시공 완료 검수 및 입금승인 확인서</h2>
-          <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">발행일: ${today} · 기술지원팀</div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
             <tr><th colspan="4" style="background:#eef8fa;padding:7px;border:1px solid #ccc;text-align:left">1. 공사 개요</th></tr>
             <tr><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:22%;font-weight:bold">발전소명</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.plantName)}</td><td style="border:1px solid #ccc;padding:5px 8px;background:#f8f8f8;width:22%;font-weight:bold">소재지</td><td style="border:1px solid #ccc;padding:5px 8px">${esc(insp.location)}</td></tr>
@@ -4739,10 +4738,10 @@
             </tr>
           </table>
         </div>`;
-        document.getElementById("inspPrintRoot")?.remove();
-        document.body.insertAdjacentHTML("beforeend",html);
-        window.print();
-        setTimeout(()=>document.getElementById("inspPrintRoot")?.remove(),3000);
+        const pw=window.open("","_blank","width=820,height=900");
+        if(!pw){toast("팝업이 차단됐습니다. 팝업을 허용해주세요.");return;}
+        pw.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>검수확인서 - ${esc(insp.plantName||"")}</title><style>*{box-sizing:border-box}body{margin:0;padding:20px;font-family:Arial,"Noto Sans KR",sans-serif;font-size:13px;line-height:1.6;color:#14212a;background:#eef2f4}.sheet{max-width:720px;margin:0 auto;background:#fff;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.12)}@media print{@page{size:A4;margin:10mm}body{background:#fff;padding:0}.sheet{box-shadow:none;padding:0;max-width:none}.no-print{display:none!important}}h2{margin:0 0 4px;font-size:19px}.subtitle{text-align:center;font-size:11px;color:#888;margin-bottom:14px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th,td{border:1px solid #ccc;padding:5px 8px}th{background:#eef8fa;text-align:left}td.lbl{background:#f8f8f8;font-weight:bold;width:44%}.sign-row td{height:56px;text-align:center;vertical-align:bottom;padding-bottom:6px}.date-row td{text-align:center;font-size:11px;color:#666}.toolbar{text-align:right;margin-bottom:14px}.toolbar button{background:#087d8f;color:#fff;border:0;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:900;cursor:pointer}</style></head><body><div class="sheet"><div class="toolbar no-print"><button onclick="window.print()">인쇄 / PDF 저장</button></div><h2 style="text-align:center">구조물 시공 완료 검수 및 입금승인 확인서</h2><p class="subtitle">발행일: ${today} · 기술지원팀</p>${html}</div><script>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+        pw.document.close();
       }
 
       /* ── 렌더링 훅 ── */
@@ -4811,7 +4810,7 @@
           state.structureInspections.splice(Number(t.dataset.deleteInsp),1);
           saveState("검수를 삭제했습니다.");renderInspView();return;
         }
-        if(t.id==="closeInspModalBtn"||e.target.id==="inspModalOverlay"){
+        if(t.id==="closeInspModalBtn"){
           document.getElementById("inspModalOverlay")?.classList.remove("open");return;
         }
         if(t.id==="saveInspBtn"){e.preventDefault();e.stopImmediatePropagation();saveInspFromModal();return;}
@@ -4866,6 +4865,33 @@
           calcResult(insp);
           const pane=document.getElementById("inspPanes");
           if(pane&&_inspTab==="defect")pane.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+          return;
+        }
+
+        /* 하자 조치완료 (개별) */
+        if(t.dataset.completeDefect!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          const d=insp.defects[Number(t.dataset.completeDefect)];
+          if(d){d.status="완료";if(!d.completionDate)d.completionDate=today;calcResult(insp);}
+          const pane=document.getElementById("inspPanes");
+          if(pane&&_inspTab==="defect")pane.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+          const bar=document.getElementById("inspResultBar");
+          if(bar)bar.outerHTML=buildResultBarHtml(insp);
+          return;
+        }
+
+        /* 하자 전체 조치완료 */
+        if(t.dataset.completeAllDefects!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          (insp.defects||[]).forEach(d=>{if(d.status!=="완료"){d.status="완료";if(!d.completionDate)d.completionDate=today;}});
+          calcResult(insp);
+          const pane=document.getElementById("inspPanes");
+          if(pane&&_inspTab==="defect")pane.innerHTML=`<div class="insp-pane active" style="overflow:auto;padding:16px">${buildDefectHtml(insp)}</div>`;
+          const bar=document.getElementById("inspResultBar");
+          if(bar)bar.outerHTML=buildResultBarHtml(insp);
+          toast("모든 하자를 조치완료 처리했습니다.");
           return;
         }
 
