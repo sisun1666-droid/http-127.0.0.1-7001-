@@ -399,7 +399,7 @@
     function renderKpis(){
       if(currentView==="dashboard"){
         els.kpis.classList.add("kpis-weather");
-        els.kpis.innerHTML=`<div style="display:grid;grid-template-columns:1fr 290px;gap:12px;height:100%"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.68;pointer-events:none;border-radius:16px"></div><div style="position:relative;z-index:1;width:100%;text-align:center;padding:10px 0"><div style="font-size:11px;font-weight:700;color:#be185d;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">현재 시간</div><div id="dashClock" style="font-size:28px;font-weight:800;letter-spacing:-1px;color:#1e0a18;line-height:1.2"></div><div style="font-size:11px;color:#9d174d;margin-top:5px;font-weight:600">Asia/Seoul 기준</div></div></section></div>`;
+        els.kpis.innerHTML=`<div style="display:grid;grid-template-columns:1fr 290px;gap:12px;height:100%"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>강수 중심 날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 강수 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.75;pointer-events:none;border-radius:16px"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18) 0%,rgba(0,0,0,.38) 100%);border-radius:16px;pointer-events:none" id="dashClockScrim"></div><div style="position:relative;z-index:2;width:100%;text-align:center;padding:10px 0"><div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.6)">현재 시간</div><div id="dashClock" style="font-size:28px;font-weight:800;letter-spacing:-1px;color:#fff;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.7)"></div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:5px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5)">Asia/Seoul 기준</div></div></section></div>`;
         const saved=localStorage.getItem("clockBgImage");
         if(saved){const el=document.getElementById("dashClockBg");if(el)el.style.backgroundImage=`url(${saved})`;}
         const inp=document.getElementById("clockBgInput");
@@ -2991,7 +2991,7 @@
         }
       }
       const baseNormalizeForPreferredNav=normalizeState;
-      normalizeState=function(){baseNormalizeForPreferredNav();applyPreferredNavOrder()};
+      normalizeState=baseNormalizeForPreferredNav;
       applyPreferredNavOrder();
     })();
     (function setupOnlinePresence(){
