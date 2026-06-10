@@ -2137,9 +2137,16 @@
         root.className="print-root";
         root.innerHTML=html;
         document.body.appendChild(root);
+        // Explicitly hide all body siblings before printing (CSS @media print alone may not apply in time)
+        const siblings=[...document.body.children].filter(el=>el!==root);
+        siblings.forEach(el=>{el._pd=el.style.cssText;el.style.setProperty("display","none","important")});
         requestAnimationFrame(()=>requestAnimationFrame(()=>{
           window.print();
-          setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent=buttonLabel}},600);
+          setTimeout(()=>{
+            siblings.forEach(el=>{el.style.cssText=el._pd||"";delete el._pd});
+            root.remove();
+            if(button){button.classList.remove("report-printing");button.textContent=buttonLabel}
+          },600);
         }));
       }
       function printAsReport(){_doPrint(renderAsSheet(),"보고서 인쇄")}
