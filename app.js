@@ -404,7 +404,7 @@
         if(saved){const el=document.getElementById("dashClockBg");if(el)el.style.backgroundImage=`url(${saved})`;}
         const inp=document.getElementById("clockBgInput");
         if(inp)inp.addEventListener("change",function(){const file=this.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){localStorage.setItem("clockBgImage",e.target.result);const el=document.getElementById("dashClockBg");if(el)el.style.backgroundImage=`url(${e.target.result})`;};reader.readAsDataURL(file);});
-        setTimeout(()=>{if(typeof updateWeather==="function")updateWeather();},80);
+        updateClock();setTimeout(()=>{if(typeof updateWeather==="function")updateWeather();},80);
         return;
       }
       els.kpis.classList.remove("kpis-weather");
