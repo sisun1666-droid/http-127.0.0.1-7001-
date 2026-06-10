@@ -1171,3 +1171,76 @@ header{position:relative;overflow:hidden;border-radius:10px;padding:12px 14px;ma
         .diary-history-item:hover{background:#ecfdf5;border-color:var(--teal)}
         .diary-history-item strong{font-size:13px;color:var(--text)}
 
+/* ======== Mobile Responsive Fix ======== */
+/* 760-980px: tablet - show aside as sticky top nav (currently hidden) */
+@media(max-width:980px){
+  aside{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 10px!important;min-height:48px;position:sticky;top:0;z-index:5;border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}
+  aside .brand{min-height:0!important;margin:0!important;gap:0}
+  aside .brand .brand-text{display:none}
+  aside nav{min-width:0;padding:0!important;display:flex;flex-direction:row;gap:4px;overflow-x:auto;scrollbar-width:none}
+  aside nav::-webkit-scrollbar{display:none}
+  aside .nav-btn{min-height:34px;padding:0 10px;font-size:12px;white-space:nowrap;flex-shrink:0}
+  main{padding-top:12px!important}
+  /* Meeting shell single column */
+  .meeting-shell{grid-template-columns:1fr!important}
+  .meeting-list{max-height:none!important;overflow:visible!important}
+  .meeting-detail{max-height:none!important}
+  /* Fieldwork KPIs wrap */
+  .fieldwork-kpis{grid-template-columns:repeat(2,1fr)!important}
+  /* EPC shell */
+  .epc-kpi-grid{grid-template-columns:repeat(2,1fr)!important}
+}
+/* Phones ≤600px */
+@media(max-width:600px){
+  aside{grid-template-columns:1fr!important}
+  aside .brand{display:none!important}
+  aside nav{width:100%}
+  aside .nav-btn{font-size:11px;padding:0 7px;min-height:32px}
+  main{padding:10px 10px 32px!important}
+  /* Header stacked */
+  header{display:grid!important;gap:8px!important;margin-bottom:12px!important}
+  .header-actions{display:grid;gap:6px}
+  .toolbar{flex-wrap:wrap;gap:6px}
+  .toolbar .btn{min-height:32px;padding:0 10px;font-size:12px}
+  h1{font-size:18px!important}
+  /* KPIs single column */
+  .kpis{grid-template-columns:1fr!important}
+  #kpis.kpis-weather{display:block!important}
+  /* Form grids single column */
+  .form-grid{grid-template-columns:1fr!important}
+  .form-row.full{grid-column:1!important}
+  /* Modals full-screen */
+  .overlay{padding:0!important;align-items:flex-end!important}
+  .modal{width:100%!important;max-width:100%!important;border-radius:16px 16px 0 0!important;max-height:92vh!important}
+  /* Report shell single column */
+  .report-shell{grid-template-columns:1fr!important}
+  .monthly-report-shell{grid-template-columns:1fr!important}
+  .as-sheet,.monthly-a4,.generic-sheet{width:100%!important}
+  /* Meeting modal grid single column */
+  .meeting-modal-grid{grid-template-columns:1fr!important}
+  .meeting-modal-grid .full{grid-column:1!important}
+  /* Fieldwork KPIs 2 col */
+  .fieldwork-kpis{grid-template-columns:repeat(2,1fr)!important}
+  .fieldwork-board{grid-template-columns:1fr!important}
+  /* Admin grid single column */
+  .admin-grid{grid-template-columns:1fr!important}
+  /* Calendar cells smaller */
+  .day-cell{min-height:72px!important;padding:4px!important}
+  .day-number{font-size:10px;padding:1px 4px}
+  .calendar-task{font-size:10px;padding:2px 4px}
+  /* Table horizontal scroll hint */
+  .table-wrap{-webkit-overflow-scrolling:touch}
+  /* Weather cards scroll */
+  #kpis{overflow-x:auto;flex-wrap:nowrap;display:flex;gap:10px;padding-bottom:4px}
+  /* Login card */
+  .auth-card{padding:18px!important}
+  /* Panel title wrap */
+  .panel-title{flex-wrap:wrap;gap:8px}
+  .row-actions{flex-wrap:wrap}
+}
+/* Extra small phones ≤400px */
+@media(max-width:400px){
+  aside .nav-btn{font-size:10px;padding:0 5px;min-height:30px}
+  h1{font-size:16px!important}
+  .btn,.tab-btn{min-height:30px;padding:0 8px;font-size:12px}
+}
