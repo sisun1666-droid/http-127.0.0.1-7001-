@@ -4476,7 +4476,7 @@
           body.view-structureInspect #sharedNotice{display:none!important}
           body.view-structureInspect #inspectionView{display:block!important}
           @media print{
-            body>*:not(#inspPrintRoot){display:none!important}
+            body>*:not(#inspPrintRoot):not(.print-root){display:none!important}
             #inspPrintRoot{display:block!important;padding:24px;font-family:Arial,sans-serif}
           }
           @media(max-width:960px){
