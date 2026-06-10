@@ -4598,7 +4598,14 @@
               <div class="modal" id="inspModal">
                 <div class="modal-head">
                   <h2 id="inspModalTitle">검수 등록</h2>
-                  <div class="row-actions">
+                  <div class="row-actions" style="gap:8px">
+                    <div style="position:relative">
+                      <button class="btn" id="inspDbImportBtn" type="button" style="background:#fdf2f8;border-color:var(--teal);color:var(--teal);font-weight:900">📋 현장 불러오기</button>
+                      <div id="inspDbPicker" style="display:none;position:absolute;right:0;top:38px;z-index:200;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);width:340px;padding:12px">
+                        <input id="inspDbSearch" placeholder="발전소명 검색..." style="width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;box-sizing:border-box;margin-bottom:8px">
+                        <div id="inspDbList" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+                      </div>
+                    </div>
                     <button class="btn primary" id="saveInspBtn" type="button">저장</button>
                     <button class="btn icon" id="closeInspModalBtn" type="button">×</button>
                   </div>
@@ -4815,6 +4822,50 @@
         if(t.id==="closeInspModalBtn"){
           document.getElementById("inspModalOverlay")?.classList.remove("open");return;
         }
+
+        /* 현장 불러오기 버튼 토글 */
+        if(t.id==="inspDbImportBtn"){
+          e.preventDefault();e.stopImmediatePropagation();
+          const picker=document.getElementById("inspDbPicker");
+          if(!picker)return;
+          const isOpen=picker.style.display!=="none";
+          picker.style.display=isOpen?"none":"block";
+          if(!isOpen){
+            const search=document.getElementById("inspDbSearch");
+            if(search){search.value="";search.focus();}
+            renderInspDbList("");
+          }
+          return;
+        }
+
+        /* 현장 항목 선택 → 폼 자동 입력 */
+        if(t.dataset.inspDbSelect!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const c=state.construction[Number(t.dataset.inspDbSelect)];
+          if(!c)return;
+          const iPN=document.getElementById("iPN"),iLoc=document.getElementById("iLoc"),iCap=document.getElementById("iCap"),iContr=document.getElementById("iContr"),iWork=document.getElementById("iWork"),iSup=document.getElementById("iSup"),iComp=document.getElementById("iComp");
+          if(iPN)iPN.value=c.site||"";
+          if(iLoc)iLoc.value=c.location||c.customer||"";
+          if(iCap)iCap.value=c.kw||"";
+          if(iContr)iContr.value=c.structureTeam||"";
+          if(iWork)iWork.value=c.company||"";
+          if(iSup)iSup.value=c.owner||"";
+          if(iComp)iComp.value=c.end||"";
+          /* 편집 중인 insp 데이터에도 반영 */
+          const insp=getEditInsp();
+          if(insp){
+            insp.plantName=c.site||insp.plantName;
+            insp.location=c.location||c.customer||insp.location;
+            insp.capacity=c.kw||insp.capacity;
+            insp.contractor=c.structureTeam||insp.contractor;
+            insp.workTeam=c.company||insp.workTeam;
+            insp.fieldSupervisor=c.owner||insp.fieldSupervisor;
+            insp.completionNoticeDate=c.end||insp.completionNoticeDate;
+          }
+          document.getElementById("inspDbPicker").style.display="none";
+          toast(`'${c.site}' 현장 정보를 불러왔습니다.`);
+          return;
+        }
         if(t.id==="saveInspBtn"){e.preventDefault();e.stopImmediatePropagation();saveInspFromModal();return;}
 
         /* 탭 전환 */
@@ -4985,6 +5036,39 @@
             /* 연결된 하자 항목 내용도 동기화 */
             const linked=(insp.defects||[]).find(d=>d.checklistNo===no);
             if(linked)linked.defect=item.item+(t.value?`: ${t.value}`:"");
+          }
+        }
+      },true);
+
+      /* 현장 불러오기 목록 렌더 */
+      function renderInspDbList(q){
+        const list=document.getElementById("inspDbList");if(!list)return;
+        const items=state.construction.filter(c=>{
+          const txt=[c.site,c.company,c.structureTeam,c.customer,c.owner].join(" ").toLowerCase();
+          return !q||txt.includes(q.toLowerCase());
+        }).slice(0,30);
+        if(!items.length){list.innerHTML=`<div style="padding:10px;color:#aaa;font-size:13px;text-align:center">검색 결과가 없습니다.</div>`;return;}
+        list.innerHTML=items.map((c,_i)=>{
+          const idx=state.construction.indexOf(c);
+          return `<button type="button" data-insp-db-select="${idx}" style="text-align:left;background:#fdf8fb;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;width:100%;font-size:13px;line-height:1.5">
+            <strong style="color:var(--teal)">${esc(c.site||"이름 없음")}</strong>
+            <span style="color:#999;font-size:11px;margin-left:6px">${esc(c.status||"")}</span><br>
+            <span style="color:#666;font-size:12px">${esc(c.company||"")}${c.structureTeam?` · ${esc(c.structureTeam)}`:""}${c.kw?` · ${c.kw}kW`:""}</span>
+          </button>`;
+        }).join("");
+      }
+
+      /* 현장 검색 입력 */
+      document.addEventListener("input",e=>{
+        if(e.target?.id==="inspDbSearch")renderInspDbList(e.target.value);
+      },true);
+
+      /* 피커 외부 클릭 시 닫기 */
+      document.addEventListener("click",e=>{
+        const picker=document.getElementById("inspDbPicker");
+        if(picker&&picker.style.display!=="none"){
+          if(!picker.contains(e.target)&&e.target?.id!=="inspDbImportBtn"){
+            picker.style.display="none";
           }
         }
       },true);
