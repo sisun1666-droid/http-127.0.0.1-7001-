@@ -113,11 +113,11 @@
     function supabaseHeaders(extra={}){return{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,"Content-Type":"application/json",...extra}}
 
     /* 테이블 목록: 이 키들은 개별 행으로 저장 (동시 편집 충돌 없음) */
-    const TABLE_KEYS=["todos","assignments","construction","projects","meetings","fieldworkLogs"];
+    const TABLE_KEYS=["todos","assignments","construction","projects","meetings","fieldworkLogs","structureInspections"];
     /* Supabase 테이블명 매핑 (JS키 → DB테이블명) */
-    const TABLE_NAME={todos:"todos",assignments:"assignments",construction:"construction",projects:"projects",meetings:"meetings",fieldworkLogs:"fieldwork_logs"};
+    const TABLE_NAME={todos:"todos",assignments:"assignments",construction:"construction",projects:"projects",meetings:"meetings",fieldworkLogs:"fieldwork_logs",structureInspections:"structure_inspections"};
     /* 서버에 존재하는 ID 목록 (삭제 감지용) */
-    let _svrIds={todos:new Set(),assignments:new Set(),construction:new Set(),projects:new Set(),meetings:new Set(),fieldworkLogs:new Set()};
+    let _svrIds={todos:new Set(),assignments:new Set(),construction:new Set(),projects:new Set(),meetings:new Set(),fieldworkLogs:new Set(),structureInspections:new Set()};
     const svrIdsKey="solar-svr-ids-v1";
     function loadSvrIds(){try{const s=localStorage.getItem(svrIdsKey);if(!s)return;const p=JSON.parse(s);Object.keys(_svrIds).forEach(t=>{if(Array.isArray(p[t]))_svrIds[t]=new Set(p[t]);});}catch{}}
     function saveSvrIds(){try{const o={};Object.keys(_svrIds).forEach(t=>{o[t]=[..._svrIds[t]];});localStorage.setItem(svrIdsKey,JSON.stringify(o));}catch{}}
@@ -157,6 +157,7 @@
       }
       const combined={...clone(defaults),...(config||{})};
       TABLE_KEYS.forEach((table,i)=>{
+        if(!tableRes[i]?.ok){return;} /* 테이블 미존재 또는 오류 → app_config 데이터 유지 */
         const rows=tableData[i]||[];
         combined[table]=rows.map(r=>r.data).filter(Boolean);
         _svrIds[table]=new Set(rows.map(r=>r.id).filter(Boolean));saveSvrIds();
