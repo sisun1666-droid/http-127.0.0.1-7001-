@@ -242,7 +242,7 @@
     .mini-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
     .mini-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px}
     .mini-day-name{height:28px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#e879a0}
-    .mini-day{height:32px;display:grid;place-items:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:8px;position:relative;transition:.12s;color:var(--ink)}
+    .mini-day{height:32px;display:grid;place-items:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:8px;position:relative;transition:.12s;color:var(--ink);background:#fdf8f2}
     .mini-day:hover:not(.active){background:#fdf2f8}
     .mini-day.muted{color:#e4bbd0}
     .mini-day.today{background:var(--teal);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(219,39,119,.3)}
