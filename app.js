@@ -1814,7 +1814,7 @@
             .monthly-report-shell{display:grid;grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start}.monthly-report-controls{display:grid;gap:10px;width:100%;max-width:380px;overflow:hidden}.monthly-rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:100%}.monthly-a4{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.monthly-a4 h2{text-align:center;margin:0 0 8px;font-size:24px}.monthly-a4 .subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.monthly-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.monthly-kpi{border:1px solid #d8d8d8;padding:9px;text-align:center}.monthly-kpi strong{display:block;font-size:18px}.monthly-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;margin-top:10px}.monthly-table th,.monthly-table td{border:1px solid #cfd8dc;padding:6px 5px;text-align:right;vertical-align:middle}.monthly-table th{background:#f1f6f8;text-align:center;font-weight:900}.monthly-table td:first-child,.monthly-table td:nth-child(2){text-align:left}.monthly-note{margin-top:12px;border:1px solid #d8d8d8;padding:10px;font-size:12px;line-height:1.6}.monthly-stamp{margin-top:18px;text-align:right;font-size:13px;font-weight:900}.monthly-detail{font-size:11px;color:#444;line-height:1.45}.monthly-empty{text-align:center;color:#777;padding:22px!important}.clean-monthly{padding:30px 34px}.monthly-title-block{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.clean-monthly h2{font-size:22px}.monthly-kpi.profit{background:#f6fffb;border-color:#a9d8c0}.monthly-kpi em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:#17834d;font-weight:900}.monthly-table.summary th,.monthly-table.summary td{font-size:12px}.monthly-table.cost td:nth-child(4),.monthly-table.detail td:nth-child(2){text-align:left}.monthly-profit{color:#118447}.monthly-loss{color:#c0392b}.monthly-input{display:grid;gap:5px;min-width:0}.monthly-input span{font-size:12px;font-weight:900;color:#34444b;white-space:normal;line-height:1.3}.monthly-input .field{width:100%;min-width:0;box-sizing:border-box}.monthly-input small{font-size:11px;line-height:1.35;color:var(--muted);min-height:30px}.monthly-rate-grid.single{grid-template-columns:minmax(0,1fr)}.monthly-rate-summary{display:grid;gap:4px;border:1px solid #d7e7df;background:#f7fffb;border-radius:8px;padding:10px;font-size:13px}.monthly-rate-summary span{color:#118447;font-weight:900}.clean-monthly .monthly-table th,.clean-monthly .monthly-table td{line-height:1.35;white-space:normal;word-break:keep-all}.clean-monthly .monthly-table.summary td:nth-child(n+3),.clean-monthly .monthly-table.summary th:nth-child(n+3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.cost td:nth-child(2),.clean-monthly .monthly-table.cost td:nth-child(3){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(3),.clean-monthly .monthly-table.detail td:nth-child(4),.clean-monthly .monthly-table.detail td:nth-child(5){text-align:right;white-space:nowrap}.clean-monthly .monthly-table.detail td:nth-child(2){max-width:0;overflow:hidden;text-overflow:ellipsis}
             .report-placeholder{min-height:340px;display:grid;place-items:center;text-align:center;color:var(--muted);line-height:1.7}.generic-sheet{width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#111;border:1px solid #ddd;padding:34px 38px;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}.generic-sheet h2{text-align:center;margin:0 0 8px;font-size:23px}.generic-subtitle{text-align:center;color:#555;font-size:13px;margin-bottom:18px}.generic-section-title{margin-top:12px;border-top:2px solid #222;border-bottom:1px solid #ccd6da;background:#f6f9fa;padding:7px 10px;font-weight:900}.generic-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}.generic-table th,.generic-table td{border:1px solid #cfd8dc;padding:8px 9px;vertical-align:top;white-space:pre-wrap;word-break:keep-all;line-height:1.55}.generic-table th{width:118px;background:#f1f6f8;text-align:center;font-weight:900}.generic-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.generic-photo-grid img{width:100%;height:205px;object-fit:cover;border:1px solid #cfd8dc}.generic-photo-caption{text-align:center;font-size:12px;color:#555;margin-top:3px}.generic-photo-drop{border:2px dashed #b8c8cf;border-radius:8px;background:#fbfdfe;min-height:116px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:900;padding:12px;cursor:pointer}.generic-photo-drop.dragover{border-color:var(--teal);background:#e8f8fa;color:var(--ink)}.generic-report-form .report-form-grid{grid-template-columns:1fr 1fr}.generic-report-form textarea.field{min-height:86px}.generic-report-form .wide-textarea{min-height:120px}
             body.report-page #sharedNotice{display:none!important}
-            @media(max-width:1050px){.report-shell,.monthly-report-shell{grid-template-columns:1fr}.as-sheet,.monthly-a4{width:100%}}@media print{@page{size:A4;margin:10mm}body>*:not(.print-root){display:none!important}.print-root{display:block!important}.as-sheet{border:0;width:100%}.monthly-a4{border:0;width:100%;min-height:auto;padding:0}.monthly-table{font-size:11px}}
+            @media(max-width:1050px){.report-shell,.monthly-report-shell{grid-template-columns:1fr}.as-sheet,.monthly-a4{width:100%}}
           #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
         }
       }
@@ -1993,7 +1993,7 @@
       function restoreGenericDraft(){const data=readGenericDraft();genericFieldIds.forEach(id=>{const el=$("#"+id);if(el&&data[id]!==undefined)el.value=data[id]});$(".report-preview").innerHTML=renderGenericSheet()}
       function refreshGenericReport(){saveGenericDraft();$(".report-preview").innerHTML=renderGenericSheet()}
       function addGenericPhotos(files){const picked=[...files].filter(f=>f.type.startsWith("image/")).slice(0,6-genericPhotos.length);if(!picked.length){toast("사진은 최대 6장까지 넣을 수 있습니다.");return}Promise.all(picked.map(file=>new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(file)}))).then(urls=>{genericPhotos=[...genericPhotos,...urls].slice(0,6);refreshGenericReport();renderReportView();toast(`사진 ${urls.length}장을 첨부했습니다.`)})}
-      function printGenericReport(){const button=$("#addProjectBtn");if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}const root=document.createElement("div");root.className="print-root";root.innerHTML=renderGenericSheet();document.body.appendChild(root);window.print();setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="A4 출력"}},500)}
+      function printGenericReport(){_doPrint(renderGenericSheet(),"A4 출력")}
       function readAsDraft(){try{return JSON.parse(localStorage.getItem(asDraftKey)||"{}")}catch{return{}}}
       function saveAsDraft(){const data={};asFieldIds.forEach(id=>{const el=$("#"+id);if(el)data[id]=el.value||""});localStorage.setItem(asDraftKey,JSON.stringify(data))}
       function restoreAsDraft(){const data=readAsDraft();asFieldIds.forEach(id=>{const el=$("#"+id);if(el&&data[id]!==undefined)el.value=data[id]});$(".report-preview").innerHTML=renderAsSheet()}
@@ -2071,27 +2071,21 @@
           $(".report-preview").innerHTML=renderAsSheet();updatePhotoCounts();toast(`${kind==="before"?"작업 전":"작업 후"} 사진 ${urls.length}장을 넣었습니다.`);
         });
       }
-      function printAsReport(){
+      function _doPrint(html,buttonLabel){
+        $$(".print-root").forEach(el=>el.remove());
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        const html=renderAsSheet();
         const root=document.createElement("div");
         root.className="print-root";
         root.innerHTML=html;
         document.body.appendChild(root);
-        window.print();
-        setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="보고서 인쇄"}},500);
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          window.print();
+          setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent=buttonLabel}},600);
+        }));
       }
-      function printMonthlyReport(){
-        const button=$("#addProjectBtn");
-        if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        const root=document.createElement("div");
-        root.className="print-root";
-        root.innerHTML=renderMonthlyReportSheet();
-        document.body.appendChild(root);
-        window.print();
-        setTimeout(()=>{root.remove();if(button){button.classList.remove("report-printing");button.textContent="A4 출력"}},500);
-      }
+      function printAsReport(){_doPrint(renderAsSheet(),"보고서 인쇄")}
+      function printMonthlyReport(){_doPrint(renderMonthlyReportSheet(),"A4 출력")}
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
         if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else if(reportTab==="시공월별보고서")printMonthlyReport();else if(reportTab==="기타")printGenericReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
@@ -4475,10 +4469,6 @@
           body.view-structureInspect #epcView{display:none!important}
           body.view-structureInspect #sharedNotice{display:none!important}
           body.view-structureInspect #inspectionView{display:block!important}
-          @media print{
-            body>*:not(#inspPrintRoot):not(.print-root){display:none!important}
-            #inspPrintRoot{display:block!important;padding:24px;font-family:Arial,sans-serif}
-          }
           @media(max-width:960px){
             .insp-kpis{grid-template-columns:repeat(3,1fr)}
             .insp-pay-grid{grid-template-columns:1fr}
