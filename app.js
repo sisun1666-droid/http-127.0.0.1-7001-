@@ -5166,9 +5166,6 @@
       ensureInspChrome();ensureInspState();
     })();
 
-
-
-    })();
     (function setupGoogleCalendarSync(){
       const CAL_API="https://www.googleapis.com/calendar/v3";
       const SCOPE="https://www.googleapis.com/auth/calendar";
