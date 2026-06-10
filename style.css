@@ -92,7 +92,7 @@
     .day-name{min-height:32px;display:grid;place-items:center;color:#be185d;font-size:11px;font-weight:700;text-transform:uppercase;background:#fdf8fb;letter-spacing:.4px}
     .day-cell{min-height:126px;padding:8px;background:#fff}
     .day-cell.muted{background:#fdf8fb;color:#e4bbd0}
-    .day-number{font-weight:700;font-size:12px;margin-bottom:6px}
+    .day-number{font-weight:700;font-size:12px;margin-bottom:6px;display:inline-block;background:#fdf6ee;border-radius:6px;padding:1px 7px;min-width:22px;text-align:center;}
     .calendar-task{border-left:2px solid var(--teal);background:rgba(219,39,119,.08);border-radius:5px;padding:4px 6px;margin-bottom:4px;font-size:11px;line-height:1.4;font-weight:500}
     .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
     .mini-stat{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fafcfd}
