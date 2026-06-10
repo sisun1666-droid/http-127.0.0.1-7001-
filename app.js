@@ -4455,6 +4455,7 @@
                 <button class="insp-vbtn p${item.verdict==="적합"?" on":""}" data-iv="${item.no}" data-val="적합" type="button">적합</button>
                 <button class="insp-vbtn f${item.verdict==="부적합"?" on":""}" data-iv="${item.no}" data-val="부적합" type="button">부적합</button>
                 <button class="insp-vbtn n${item.verdict==="해당없음"?" on":""}" data-iv="${item.no}" data-val="해당없음" type="button">해당없음</button>
+                ${(()=>{const linked=(insp.defects||[]).find(d=>d.checklistNo===item.no);return item.verdict==="부적합"&&linked?.status!=="완료"?`<button class="insp-vbtn insp-action-btn" style="background:#e8faf0;color:#177245;border-color:#a8dfc0;font-size:10px" data-iv-complete="${item.no}" type="button">✅ 조치완료</button>`:"";})()}
               </div>
               <div><input class="insp-defect-in" data-id="${item.no}" placeholder="하자내용 기록" value="${esc(item.defect||"")}"></div>
             </div>`).join("");
@@ -4830,16 +4831,63 @@
           const no=Number(t.dataset.iv),val=t.dataset.val;
           const item=insp.checklistItems.find(x=>x.no===no);
           if(item){
+            const prevVerdict=item.verdict;
             item.verdict=item.verdict===val?"":val;
+            if(!insp.defects)insp.defects=[];
+            /* 부적합 → 자동 하자 등록 */
+            if(item.verdict==="부적합"){
+              const alreadyLinked=insp.defects.find(d=>d.checklistNo===no);
+              if(!alreadyLinked){
+                insp.defects.push({id:uid("def"),checklistNo:no,category:esc(item.cat||""),defect:item.item+(item.defect?`: ${item.defect}`:""),severity:"경",foundDate:today,deadlineDate:"",action:"",completionDate:"",confirmer:"",status:"미조치",note:""});
+              }
+            } else if(prevVerdict==="부적합"){
+              /* 부적합 해제 → 자동 생성된 하자 삭제 */
+              const idx=insp.defects.findIndex(d=>d.checklistNo===no&&d.status!=="완료");
+              if(idx>=0)insp.defects.splice(idx,1);
+            }
             calcResult(insp);
             /* 버튼 상태 업데이트 */
             document.querySelectorAll(`[data-iv="${no}"]`).forEach(b=>{
               b.classList.toggle("on",b.dataset.val===item.verdict);
             });
+            /* 조치완료 버튼 토글 */
+            const row=t.closest(".insp-row");
+            if(row){
+              let actionBtn=row.querySelector(".insp-action-btn");
+              if(item.verdict==="부적합"&&!actionBtn){
+                const btn=document.createElement("button");
+                btn.type="button";btn.className="insp-vbtn insp-action-btn";
+                btn.style.cssText="background:#e8faf0;color:#177245;border-color:#a8dfc0;font-size:10px";
+                btn.textContent="✅ 조치완료";btn.dataset.ivComplete=no;
+                row.querySelector(".insp-btns")?.appendChild(btn);
+              } else if(item.verdict!=="부적합"&&actionBtn){
+                actionBtn.remove();
+              }
+            }
             /* 결과 바 업데이트 */
             const bar=document.getElementById("inspResultBar");
             if(bar)bar.outerHTML=buildResultBarHtml(insp);
           }
+          return;
+        }
+
+        /* 체크리스트 조치완료 버튼 */
+        if(t.dataset.ivComplete!==undefined){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          const no=Number(t.dataset.ivComplete);
+          const linked=insp.defects?.find(d=>d.checklistNo===no);
+          if(linked){linked.status="완료";if(!linked.completionDate)linked.completionDate=today;}
+          /* 체크리스트 판정도 적합으로 변경 */
+          const item=insp.checklistItems.find(x=>x.no===no);
+          if(item){item.verdict="적합";}
+          calcResult(insp);
+          /* 버튼 UI 갱신 */
+          document.querySelectorAll(`[data-iv="${no}"]`).forEach(b=>{b.classList.toggle("on",b.dataset.val===item?.verdict);});
+          t.closest(".insp-btns")?.querySelector(".insp-action-btn")?.remove();
+          const bar=document.getElementById("inspResultBar");
+          if(bar)bar.outerHTML=buildResultBarHtml(insp);
+          toast("조치완료 처리했습니다.");
           return;
         }
 
@@ -4929,8 +4977,14 @@
         const t=e.target;
         if(t.dataset.id!==undefined&&t.classList.contains("insp-defect-in")){
           const insp=getEditInsp();if(!insp)return;
-          const item=insp.checklistItems.find(x=>x.no===Number(t.dataset.id));
-          if(item)item.defect=t.value;
+          const no=Number(t.dataset.id);
+          const item=insp.checklistItems.find(x=>x.no===no);
+          if(item){
+            item.defect=t.value;
+            /* 연결된 하자 항목 내용도 동기화 */
+            const linked=(insp.defects||[]).find(d=>d.checklistNo===no);
+            if(linked)linked.defect=item.item+(t.value?`: ${t.value}`:"");
+          }
         }
       },true);
 
