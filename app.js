@@ -123,8 +123,13 @@
     function saveSvrIds(){try{const o={};Object.keys(_svrIds).forEach(t=>{o[t]=[..._svrIds[t]];});localStorage.setItem(svrIdsKey,JSON.stringify(o));}catch{}}
     /* 최근 삭제된 항목 보호 (60초간): 다른 브라우저의 덮어쓰기로 인한 부활 방지 */
     const _deletedTombstones={};TABLE_KEYS.forEach(t=>_deletedTombstones[t]=new Map());
-    function markDeleted(table,id){if(id&&_deletedTombstones[table])_deletedTombstones[table].set(id,Date.now())}
-    function wasRecentlyDeleted(table,id){const ts=_deletedTombstones[table]?.get(id);return !!ts&&Date.now()-ts<60000}
+    const _tombstoneKey="solar-deleted-tombstones-v1";
+    const _tombstoneTtl=7*24*60*60*1000;
+    function loadTombstones(){try{const s=localStorage.getItem(_tombstoneKey);if(!s)return;const p=JSON.parse(s);const now=Date.now();TABLE_KEYS.forEach(t=>{if(p[t]&&typeof p[t]==="object")Object.entries(p[t]).forEach(([id,ts])=>{if(now-ts<_tombstoneTtl)_deletedTombstones[t].set(id,ts);})});}catch{}}
+    function saveTombstones(){try{const o={};TABLE_KEYS.forEach(t=>{const e={};_deletedTombstones[t].forEach((ts,id)=>{e[id]=ts;});o[t]=e;});localStorage.setItem(_tombstoneKey,JSON.stringify(o));}catch{}}
+    function markDeleted(table,id){if(id&&_deletedTombstones[table]){_deletedTombstones[table].set(id,Date.now());saveTombstones();}}
+    function wasRecentlyDeleted(table,id){const ts=_deletedTombstones[table]?.get(id);return !!ts&&Date.now()-ts<_tombstoneTtl}
+    loadTombstones();
 
     /* 개별 테이블에서 데이터 로드 */
     async function loadSupabaseData(){
@@ -2833,7 +2838,7 @@
       }
       function openMeetingModal(m=null){$("#projectModal")?.classList.remove("open");fillMeetingModal(m||blankMeeting());$("#meetingModal").classList.add("open");setTimeout(()=>$("#meetingTitle")?.focus(),0)}
       function saveMeetingFromModal(){try{ensureMeetings();disableMeetingSamples();const m=readMeetingModal(),i=state.meetings.findIndex(x=>x.id===m.id);i>=0?state.meetings[i]=m:state.meetings.unshift(m);selectedMeetingId=m.id;$("#meetingModal").classList.remove("open");renderMeetingView();renderNav();updateTopButtons();saveStateAfterPaint("회의록을 저장했습니다.")}catch(err){console.error(err);toast(`회의록 저장 오류: ${err?.message||"확인 필요"}`)}}
-      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");saveState("회의록을 삭제했습니다.");render()}
+      function deleteMeetingFromModal(){const id=$("#meetingModal").dataset.editingId;if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();markDeleted("meetings",id);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";$("#meetingModal").classList.remove("open");saveState("회의록을 삭제했습니다.");render()}
       function renderMeetingView(){
         ensureMeetings();
         let view=$("#meetingView");
@@ -2850,7 +2855,7 @@
       renderCurrentContent=function(){if(currentView==="meetings"){syncViewChrome();renderMeetingView();return}baseRenderCurrentForMeetings()}
       const baseSyncForMeetings=syncViewChrome;
       syncViewChrome=function(){baseSyncForMeetings();if(currentView==="meetings"){els.pageTitle.textContent="회의록";els.pageSub.textContent="회의 내용과 결정사항을 기록합니다.";$("#addProjectBtn").textContent="회의록 추가"}}
-      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";saveState("회의록을 삭제했습니다.");render()}
+      function deleteMeetingById(id){if(!id||!confirm("이 회의록을 삭제할까요?"))return;disableMeetingSamples();markDeleted("meetings",id);state.meetings=state.meetings.filter(m=>m.id!==id);selectedMeetingId=state.meetings[0]?.id||"";saveState("회의록을 삭제했습니다.");render()}
       document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.meetingId){e.preventDefault();e.stopImmediatePropagation();selectedMeetingId=t.dataset.meetingId;renderMeetingView();return}if(t.dataset.deleteMeeting){e.preventDefault();e.stopImmediatePropagation();deleteMeetingById(t.dataset.deleteMeeting);return}if(t.id==="exportMeetingsExcelBtn"){e.preventDefault();e.stopImmediatePropagation();exportMeetingsExcel();return}if(t.id==="printMeetingA4Btn"){e.preventDefault();e.stopImmediatePropagation();printSelectedMeetingA4();return}if(t.id==="addMeetingBtn"||t.id==="addMeetingBtnSide"||currentView==="meetings"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openMeetingModal();return}if(t.dataset.editMeeting){e.preventDefault();e.stopImmediatePropagation();const m=state.meetings.find(x=>x.id===t.dataset.editMeeting);if(m)openMeetingModal(m);return}if(t.id==="toggleMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiPanel")?.classList.toggle("hidden");return}if(t.id==="applyMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();applyMeetingAiText();return}if(t.id==="clearMeetingAiBtn"){e.preventDefault();e.stopImmediatePropagation();$("#meetingAiText").value="";$("#meetingAiText").focus();return}if(t.id==="saveMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();saveMeetingFromModal();return}if(t.id==="deleteMeetingBtn"){e.preventDefault();e.stopImmediatePropagation();deleteMeetingFromModal();return}if(t.dataset.closeMeetingModal!==undefined||e.target?.id==="meetingModal"){e.preventDefault();e.stopImmediatePropagation();$("#meetingModal")?.classList.remove("open");return}},true);
     })();
     function staffAccess(p){return p?.accessRole||p?.authRole||p?.permissionRole||(p?.isAdmin?"admin":"")||(p?.name==="이재강"?"admin":"member")}
@@ -3863,6 +3868,7 @@
         if(!target)return false;
         if(ask&&!confirm(`'${target.title||"회의록"}' 회의록을 삭제할까요?`))return false;
         if(typeof disableMeetingSamples==="function")disableMeetingSamples();
+        if(typeof markDeleted==="function")markDeleted("meetings",id);
         state.meetings=state.meetings.filter(m=>String(m.id)!==String(id));
         selectedMeetingId=state.meetings[0]?.id||"";
         $("#meetingModal")?.classList.remove("open");
