@@ -2415,7 +2415,57 @@ document.addEventListener("change",e=>{
           <div class="full"><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">설치형태</label><input class="field" id="inspInstallType" value="${esc(draft.installType||"")}" placeholder="축사 / 공장(창고) / 지상 등"></div>
         </div><div class="insp-progress-bar-wrap"><div class="insp-progress-bar" style="width:${pct}%"></div></div><div class="insp-progress-label">${done} / ${total} 항목 완료 (${pct}%)</div></div>`;
         const checklistHtml=INSP_CHECKLIST.map((sec,si)=>`<div class="insp-cat"><div class="insp-cat-head"><span class="insp-cat-label">${esc(sec.cat)}</span><span class="insp-cat-sub">${esc(sec.sub)}</span></div>${sec.items.map((item,ii)=>{const key=si+"_"+ii,val=draft.checks?.[key]||"";return`<div class="insp-item"><div class="insp-item-text">${esc(item)}</div><div class="insp-btns"><button class="insp-btn ${val==="양호"?"sel":""}" data-insp-key="${key}" data-v="양호">✓ 양호</button><button class="insp-btn ${val==="불량"?"sel":""}" data-insp-key="${key}" data-v="불량">✗ 불량</button><button class="insp-btn ${val==="해당없음"?"sel":""}" data-insp-key="${key}" data-v="해당없음">— 해당없음</button></div><input class="insp-memo" data-insp-memo="${key}" placeholder="특이사항 (선택)" value="${esc(draft.sectionMemos?.[key]||"")}"></div>`}).join("")}</div>`).join("");
-        return `<div class="insp-wrap">${headerHtml}${checklistHtml}<div style="display:flex;gap:10px"><button class="btn" id="inspBackBtn" style="min-height:52px;flex-shrink:0;padding:0 20px">← 목록</button><button class="insp-save-btn" id="inspSaveBtn">💾 검수 저장</button></div></div>`;
+        return `<div class="insp-wrap">${headerHtml}${checklistHtml}<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="inspBackBtn" style="min-height:52px;flex-shrink:0;padding:0 20px">← 목록</button><button class="insp-save-btn" id="inspSaveBtn" style="flex:2">💾 검수 저장</button><button class="insp-save-btn" id="inspPrintBtn" style="flex:1;background:#2b6cb0">🖨 PDF 출력</button></div></div>`;
+      }
+      function renderInspectionA4(draft){
+        const catColors={안전:"#e53e3e",구조물:"#2b6cb0",전기:"#276749",한전시공:"#6b46c1",마감:"#c05621"};
+        const rows=INSP_CHECKLIST.map((sec,si)=>sec.items.map((item,ii)=>{
+          const key=si+"_"+ii,val=draft.checks?.[key]||"",memo=draft.sectionMemos?.[key]||"";
+          const statusCell=val==="양호"?`<span style="color:#276749;font-weight:900">✓ 양호</span>`:val==="불량"?`<span style="color:#c0392b;font-weight:900">✗ 불량</span>`:val==="해당없음"?`<span style="color:#888">— N/A</span>`:`<span style="color:#ccc">미확인</span>`;
+          return `<tr><td style="text-align:center;font-size:11px;background:${catColors[sec.cat]||"#444"};color:#fff;font-weight:900;width:52px">${esc(sec.cat)}</td><td style="text-align:center;font-size:11px;width:60px;color:#555">${esc(sec.sub)}</td><td style="font-size:12px;padding:4px 6px">${esc(item)}</td><td style="text-align:center;width:62px;font-size:12px">${statusCell}</td><td style="font-size:11px;color:#555;padding:3px 6px">${esc(memo)}</td></tr>`;
+        }).join("")).join("");
+        const {done,total,pct}=inspProgress(draft);
+        const failCount=Object.values(draft.checks||{}).filter(v=>v==="불량").length;
+        return `<div style="width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;padding:20px 24px;box-sizing:border-box">
+          <h2 style="text-align:center;font-size:20px;margin:0 0 4px;letter-spacing:1px">태양광발전설비 현장 점검기록표</h2>
+          <p style="text-align:center;font-size:11px;color:#555;margin:0 0 14px">시공검수 체크리스트</p>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">
+            <tr>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:80px">발전소명</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.site||"")}</td>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:60px">용량</th><td style="border:1px solid #ccc;padding:5px 8px;width:90px">${esc(draft.capacity||"")} kW</td>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:60px">점검자</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.inspector||"")}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">시공사</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.company||"")}</td>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">시공단계</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.phase||"")}</td>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">일시</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.date||"")}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">설치형태</th><td colspan="5" style="border:1px solid #ccc;padding:5px 8px">${esc(draft.installType||"")}</td>
+            </tr>
+          </table>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
+            <thead><tr style="background:#2b6cb0;color:#fff">
+              <th style="padding:5px;font-size:11px;width:52px">분류</th>
+              <th style="padding:5px;font-size:11px;width:60px">소분류</th>
+              <th style="padding:5px;font-size:11px;text-align:left">점검 사항</th>
+              <th style="padding:5px;font-size:11px;width:62px">결과</th>
+              <th style="padding:5px;font-size:11px;text-align:left">특이사항</th>
+            </tr></thead>
+            <tbody style="font-size:12px">${rows}</tbody>
+          </table>
+          <div style="display:flex;gap:12px;margin-bottom:14px">
+            <div style="flex:1;border:1px solid #ccc;border-radius:6px;padding:8px 12px;background:#f9f9f9;font-size:12px"><strong>점검결과 요약</strong><br>총 ${total}항목 중 ${done}항목 확인 (${pct}%) · 불량 ${failCount}건</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <tr><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">점검자</th><td style="border:1px solid #ccc;padding:6px;min-width:120px;height:40px"></td><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">담당자</th><td style="border:1px solid #ccc;padding:6px;min-width:120px;height:40px"></td><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">관리자</th><td style="border:1px solid #ccc;padding:6px;height:40px"></td></tr>
+          </table>
+        </div>`;
+      }
+      function printInspectionReport(){
+        const draft=readInspDraft();
+        if(!draft){toast("인쇄할 검수 데이터가 없습니다.");return}
+        _doPrint(renderInspectionA4(draft),"PDF 저장");
       }
       function renderInspectionTab(){
         const draft=readInspDraft();
@@ -2478,6 +2528,7 @@ document.addEventListener("change",e=>{
             state.siteInspections.push(d);
             clearInspDraft();saveState("시공검수를 저장했습니다.");renderReportView();
           });
+          $("#inspPrintBtn")?.addEventListener("click",()=>{saveInspDraft(_inspGetDraft());printInspectionReport()});
           $("#inspBackBtn")?.addEventListener("click",()=>{if(confirm("작성 중인 내용은 임시저장됩니다. 목록으로 이동할까요?")){saveInspDraft(_inspGetDraft());renderReportView()}});
           $("#inspNewBtn")?.addEventListener("click",()=>{saveInspDraft({date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}});renderReportView()});
           document.querySelectorAll("#reportView [data-insp-load]").forEach(el=>{el.addEventListener("click",()=>{const i=Number(el.dataset.inspLoad),d=state.siteInspections[i];if(d){saveInspDraft(JSON.parse(JSON.stringify(d)));renderReportView()}})});
@@ -2571,7 +2622,7 @@ document.addEventListener("change",e=>{
       function printMonthlyReport(){_doPrint(renderMonthlyReportSheet(),"A4 출력")}
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
-        if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else if(reportTab==="시공월별보고서")printMonthlyReport();else if(reportTab==="기타")printGenericReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
+        if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else if(reportTab==="시공월별보고서")printMonthlyReport();else if(reportTab==="기타")printGenericReport();else if(reportTab==="시공검수")printInspectionReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
         if(t.id==="reportFocusModeBtn"){e.preventDefault();e.stopImmediatePropagation();enterReportFocusMode()}
         if(t.id==="reportDriveSaveBtn"){e.preventDefault();e.stopImmediatePropagation();saveReportToDrive()}
         if(t.id==="reportDriveFolderBtn"){e.preventDefault();e.stopImmediatePropagation();const saved=localStorage.getItem(DRIVE_FOLDER_KEY)||"";if(saved&&!e.shiftKey){window.open(saved,"_blank")}else{openDriveFolder();renderReportView()}}
