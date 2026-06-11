@@ -339,6 +339,14 @@
 #mainGrid.construction-mode>.panel .table-wrap{flex:1;min-height:0;overflow:auto}
 #mainGrid.construction-mode>.stack{height:100%;overflow-y:auto;overflow-x:hidden}
 @media(max-width:980px){#mainGrid.construction-mode{grid-template-columns:1fr;height:auto;overflow:visible}}
+    /* 날씨+시계 그리드 */
+    .weather-clock-grid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}
+    @media(max-width:980px){.weather-clock-grid{grid-template-columns:1fr}}
+    /* 날씨 카드: 모바일 2열 */
+    @media(max-width:980px){.weather-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+    @media(max-width:480px){.weather-grid{grid-template-columns:1fr!important}}
+    /* 예보: 모바일 스크롤 가로 */
+    @media(max-width:980px){.forecast-strip{display:flex!important;overflow-x:auto;gap:8px;padding-bottom:4px;-webkit-overflow-scrolling:touch}.forecast-day{flex:0 0 80px;min-width:80px}}
     @media(max-width:1180px){.workspace-dashboard{grid-template-columns:1fr}.project-list{max-height:360px}.detail-grid{grid-template-columns:1fr}}
     @media(max-width:1180px){.dashboard-workspace .workspace-dashboard{grid-template-columns:1fr}.dashboard-workspace .dash-side{padding-top:0}.dashboard-risk-list{grid-template-columns:1fr}}
     @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -452,10 +460,15 @@
       .project-list{max-height:none!important;overflow:visible!important}
       .project-item,.linked-item,.today-item,.risk-item{width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
       .dash-kpi-grid,.dash-kpi-grid.small,.dashboard-risk-list{grid-template-columns:1fr!important;gap:8px!important}
-      .weather-grid,.forecast-strip{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important;min-width:0!important}
-      .weather-city,.forecast-day{width:100%!important;min-width:0!important;text-align:left!important;white-space:normal!important;word-break:keep-all!important;overflow-wrap:anywhere!important;padding:10px!important}
-      .weather-city strong,.forecast-day strong{display:inline!important;font-size:16px!important}
-      .weather-city .meta,.forecast-day .meta{display:block!important;line-height:1.45!important}
+      .weather-clock-grid{grid-template-columns:1fr!important}
+      .weather-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;min-width:0!important}
+      .forecast-strip{display:flex!important;overflow-x:auto!important;gap:6px!important;padding-bottom:6px!important;-webkit-overflow-scrolling:touch!important}
+      .forecast-day{flex:0 0 72px!important;min-width:72px!important;padding:8px!important;text-align:center!important;border-radius:8px!important}
+      .weather-city{padding:10px!important;text-align:left!important;white-space:normal!important;word-break:keep-all!important}
+      .weather-city strong{font-size:15px!important}
+      .weather-city .meta{display:block!important;line-height:1.4!important;font-size:12px!important}
+      .dash-kpi-grid,.dash-kpi-grid.small{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+      .dashboard-risk-list{grid-template-columns:1fr!important}
       .mini-calendar{width:100%!important;min-width:0!important}
       .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}
       table{min-width:980px}

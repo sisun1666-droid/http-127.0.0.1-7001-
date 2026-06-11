@@ -1021,7 +1021,7 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
       {name:"광주",lat:35.1595,lon:126.8526}
     ];
     function renderWeatherBox(){
-      return `<div class="dash-kpi-grid" style="grid-template-columns:minmax(0,1fr) 260px">
+      return `<div class="weather-clock-grid">
         <section class="dash-section compact"><div class="dash-title"><h2>날씨</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">날씨 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:12px">대구 7일 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section>
         <section class="dash-section compact time-card"><div class="dash-title"><h2>현재 시간</h2></div><div id="dashClock" class="value" style="font-size:22px"></div><div class="meta">Asia/Seoul 기준</div></section>
       </div>`
