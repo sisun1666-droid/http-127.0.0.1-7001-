@@ -219,9 +219,44 @@
     let syncSaveTimer=null,syncSaveBusy=false,syncSaveQueued=false;
     async function pushSharedState(){if(syncSaveBusy){syncSaveQueued=true;return false}syncSaveBusy=true;try{const expectedAt=new Date().toISOString();state.__lastSavedAt=expectedAt;state.__lastSavedAtText=new Date().toLocaleString("ko-KR");setSyncNotice("saving","수정 내용을 자동으로 Supabase에 저장하는 중입니다.");await saveToSupabase();delete state.__pendingCloudSync;delete state.__pendingCloudSyncAt;localStorage.setItem(storageKey,JSON.stringify(state));const verified=await verifySupabaseSave(expectedAt);setSyncNotice(verified?"ok":"warn",verified?"자동 저장이 완료되었습니다. 다른 컴퓨터에서도 최신 내용을 불러옵니다.":"저장 요청은 보냈지만 Supabase에서 같은 저장시각을 다시 확인하지 못했습니다. 네트워크 또는 권한을 확인해주세요.");return verified}catch(err){state.__pendingCloudSync=true;state.__pendingCloudSyncAt=new Date().toLocaleString("ko-KR");localStorage.setItem(storageKey,JSON.stringify(state));setSyncNotice("warn",`자동 저장 실패: ${err?.message||"확인 필요"} 현재 데이터는 이 브라우저에 대기 저장되었습니다.`);return false}finally{syncSaveBusy=false;if(syncSaveQueued){syncSaveQueued=false;scheduleSharedSave(250)}}}
     function scheduleSharedSave(delay=900){clearTimeout(syncSaveTimer);setSyncNotice("saving","수정 내용이 자동 저장 대기 중입니다.");syncSaveTimer=setTimeout(()=>pushSharedState(),delay)}
+    /* ── 5분마다 주기적 자동 저장 ── */
+    setInterval(()=>{if(state.__pendingCloudSync||Date.now()-(state.__updatedAt||0)<600000){pushSharedState()}},300000);
     /* refreshFromGoogleSheetsBeforeManualSave: 제거됨 (Google Sheets 비활성화) */
     function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave();scheduleSheetSync()}
     function saveState(msg="저장되었습니다."){persistState();toast(msg)}
+
+    /* ── JSON 백업 내보내기 ── */
+    function exportStateJson(){
+      const now=new Date().toLocaleString("ko-KR").replace(/[/:]/g,"-").replace(/\s/g,"_");
+      const filename=`업무관리_백업_${now}.json`;
+      const json=JSON.stringify({_backupAt:new Date().toISOString(),_version:"v1",state},null,2);
+      const blob=new Blob([json],{type:"application/json"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download=filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast(`백업 파일 저장: ${filename}`);
+    }
+    /* ── JSON 백업 가져오기 ── */
+    function importStateJson(file){
+      if(!file)return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        try{
+          const parsed=JSON.parse(e.target.result);
+          const imported=parsed.state||parsed;
+          if(!imported.nav||!imported.todos){toast("올바른 백업 파일이 아닙니다.");return}
+          if(!confirm(`백업 파일을 복원하면 현재 데이터가 백업 시점으로 되돌아갑니다.\n백업 시각: ${parsed._backupAt||"알 수 없음"}\n\n계속할까요?`))return;
+          Object.assign(state,imported);
+          persistState();
+          render();
+          toast("백업 데이터를 복원했습니다. Supabase에 저장 중...");
+          pushSharedState();
+        }catch(err){toast("파일을 읽지 못했습니다: "+err.message)}
+      };
+      reader.readAsText(file);
+    }
 
     // ── Google Sheets Apps Script 코드 모달 ───────────────────────
     function showSheetsScriptModal(){
@@ -713,7 +748,22 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
   _sc.id="sheetsSyncCard";_sc.className="card";_sc.style.cssText="grid-column:1/-1;border-color:#a7f3d0;background:#f0fdf8";
   _sc.innerHTML=`<div class="panel-title"><h2>📊 Google Sheets 자동 동기화</h2><div class="row-actions"><button class="btn primary" id="sheetsSyncNowBtn" type="button">지금 동기화</button><button class="btn" id="sheetsScriptBtn" type="button">Apps Script 코드 보기</button></div></div><p class="meta" style="margin:0 0 10px">데이터 저장 시 자동으로 Google Sheets에 반영됩니다<br><span style='font-size:11px'>📋할일·📌업무지시·🏗시공일정·📁현장·📝회의록·🚗외근·🔍구조물검수</span></p><div style="background:#fff;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#065f46;line-height:1.75"><strong>설정 순서:</strong> ① 위 <strong>수정 시작</strong> → Sheets URL·동기화 키 입력 → 저장<br>② <strong>Apps Script 코드 보기</strong> → 코드 복사 → <a href="https://script.google.com" target="_blank" style="color:#0d9488">script.google.com</a> 붙여넣기 → 배포 → URL 입력</div>`;
   _sheetsGrid.appendChild(_sc);
-}}
+}
+/* ── 데이터 백업/복원 카드 ── */
+const _backupGrid=$("#adminView .admin-grid");
+if(_backupGrid&&!_backupGrid.querySelector("#dataBackupCard")){
+  const _bc=document.createElement("div");
+  _bc.id="dataBackupCard";_bc.className="card";_bc.style.cssText="grid-column:1/-1;border-color:#bee3f8;background:#f0f8ff";
+  _bc.innerHTML=`<div class="panel-title"><h2>💾 데이터 백업 / 복원</h2><div class="row-actions"><button class="btn primary" id="exportJsonBtn" type="button">📥 백업 파일 저장</button><label class="btn" style="cursor:pointer">📤 백업 파일 복원<input type="file" id="importJsonInput" accept=".json" style="display:none"></label></div></div><p class="meta" style="margin:0 0 6px">전체 데이터(할일·업무·회의록·시공일정 등)를 JSON 파일로 저장하거나 복원합니다.<br><strong>큰 패치 작업 전에 반드시 "백업 파일 저장"을 눌러두세요.</strong></p><div style="background:#fff;border:1px solid #bee3f8;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e40af;line-height:1.75"><strong>자동 백업:</strong> 데이터 변경 시 Supabase에 자동 저장 + 5분마다 주기 저장<br><strong>수동 백업:</strong> "백업 파일 저장" → 내 컴퓨터에 JSON 파일 보관<br><strong>복원:</strong> "백업 파일 복원" → 저장해둔 JSON 파일 선택 → 자동 복구</div>`;
+  _backupGrid.appendChild(_bc);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button")||e.target;
+  if(t.id==="exportJsonBtn"){e.preventDefault();e.stopImmediatePropagation();exportStateJson()}
+},true);
+document.addEventListener("change",e=>{
+  if(e.target.id==="importJsonInput"&&e.target.files[0]){importStateJson(e.target.files[0]);e.target.value=""}
+},true);
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.hasAttribute?.("data-add-admin-person")){e.preventDefault();e.stopImmediatePropagation();state.people.push({name:KR.newEmployee,role:KR.employee,area:"",monthlyTarget:30,yearlyTarget:360,color:pastelPalette[state.people.length%pastelPalette.length]});saveState("직원을 추가했습니다.");render()}if(t.hasAttribute?.("data-add-admin-project")){e.preventDefault();e.stopImmediatePropagation();state.projects.push({name:KR.newProject});saveState("프로젝트를 추가했습니다.");render()}},true)
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminPersonPin){const p=state.people[Number(t.dataset.adminPersonPin)];if(p){p.pin=t.value.trim();persistState()}}},true)
     let dashboardSelectedConstruction=0,dashboardDate=today;
