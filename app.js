@@ -4606,6 +4606,71 @@
     (function setupWorkDiary(){
       let diaryDate=today;
       let diaryPerson="";
+      const DIARY_SHEET_KEY="solar-diary-sheet-url-v1";
+
+      function getDiarySheetUrl(){return localStorage.getItem(DIARY_SHEET_KEY)||"";}
+      function setDiarySheetUrl(url){localStorage.setItem(DIARY_SHEET_KEY,url.trim());}
+
+      /* ── 구글 시트 동기화 ── */
+      async function syncDiaryToSheet(date,person,memo){
+        const url=getDiarySheetUrl();
+        if(!url){openDiarySheetSetup();return;}
+        const rows=diaryTodos(date,person).map(t=>({
+          title:t.title,type:t.type||"일반업무",project:t.project||"",
+          status:statusLabel(t.status),priority:t.priority||"보통",
+          result:t.result||"",detail:t.detail||""
+        }));
+        const btn=document.getElementById("diarySyncBtn");
+        if(btn){btn.textContent="저장 중...";btn.disabled=true;}
+        try{
+          const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({action:"save",date,person,rows,memo:memo||""})});
+          const json=await res.json();
+          if(json.ok){
+            toast(`✅ 구글 시트에 저장됐습니다 (${date} · ${person})`);
+            if(btn){btn.textContent="✅ 구글 시트 저장됨";btn.style.background="#1a8c4e";}
+            setTimeout(()=>{if(btn){btn.textContent="구글 시트 저장";btn.style.background="";btn.disabled=false;}},3000);
+          }else{throw new Error(json.error||"저장 실패");}
+        }catch(err){
+          toast("❌ 구글 시트 저장 실패: "+err.message);
+          if(btn){btn.textContent="구글 시트 저장";btn.disabled=false;}
+        }
+      }
+
+      /* ── 시트 URL 설정 모달 ── */
+      function openDiarySheetSetup(){
+        document.getElementById("diarySheetSetupModal")?.remove();
+        const el=document.createElement("div");
+        el.id="diarySheetSetupModal";
+        el.innerHTML=`<div class="overlay open" style="z-index:10001;">
+          <div class="modal" style="max-width:540px;">
+            <div class="modal-head"><h2>구글 시트 연동 설정</h2><button class="btn icon" id="closeDiarySheetSetupBtn">×</button></div>
+            <div style="padding:4px 0 16px;color:#65737d;font-size:14px;line-height:1.7;">
+              <strong style="color:#08245c;">Apps Script 배포 URL</strong>을 아래에 붙여넣으세요.<br>
+              <span style="font-size:12px;">(<code>업무일지_GoogleAppsScript.gs</code> 파일을 script.google.com에 배포한 URL)</span>
+            </div>
+            <input class="field" id="diarySheetUrlInput" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(getDiarySheetUrl())}" style="margin-bottom:12px;">
+            <div style="display:flex;gap:8px;">
+              <button class="btn primary" id="saveDiarySheetUrlBtn">저장 및 연결 테스트</button>
+              <button class="btn" id="closeDiarySheetSetupBtn2">취소</button>
+            </div>
+            <div id="diarySheetTestResult" style="margin-top:12px;font-size:13px;"></div>
+            <hr style="margin:16px 0;border-color:#e0ecef;">
+            <details style="font-size:12px;color:#65737d;">
+              <summary style="cursor:pointer;font-weight:600;color:#08245c;">📋 배포 방법 보기</summary>
+              <ol style="margin:10px 0 0 16px;line-height:2;">
+                <li><a href="https://script.google.com" target="_blank">script.google.com</a> 접속 → 새 프로젝트</li>
+                <li>바탕화면 <code>기술지원팀_업무관리</code> 폴더의 <code>업무일지_GoogleAppsScript.gs</code> 내용 전체 복사 후 붙여넣기</li>
+                <li>상단 메뉴 <strong>배포 → 새 배포</strong></li>
+                <li>유형: <strong>웹 앱</strong> / 실행 계정: <strong>나</strong> / 액세스: <strong>모든 사용자(익명 포함)</strong></li>
+                <li>배포 클릭 → 권한 허용 → URL 복사 후 위에 붙여넣기</li>
+              </ol>
+            </details>
+          </div>
+        </div>`;
+        document.body.appendChild(el);
+        document.getElementById("diarySheetUrlInput")?.focus();
+      }
 
       function currentDiaryPerson(){
         if(diaryPerson)return diaryPerson;
@@ -4692,7 +4757,9 @@
             </div>
             <button class="btn primary" id="todoAddBtn">할일 추가</button>
             <button class="btn" id="todoExportDbBtn">목록 엑셀</button>
-            <button class="btn" id="diaryExportBtn" style="background:#087d8f;color:#fff;font-weight:bold;">업무일지 엑셀</button>
+            <button class="btn" id="diaryExportBtn" style="background:#087d8f;color:#fff;font-weight:bold;">엑셀 저장</button>
+            <button class="btn" id="diarySyncBtn" style="background:${getDiarySheetUrl()?"#1a8c4e":"#34a853"};color:#fff;font-weight:bold;">${getDiarySheetUrl()?"✅ 구글 시트 저장":"구글 시트 저장"}</button>
+            <button class="btn" id="diarySheetSettingBtn" style="font-size:11px;padding:4px 8px;" title="구글 시트 연동 설정">⚙ 시트 설정</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;flex-wrap:wrap;">
             <button class="btn icon" id="diaryPrevBtn">&#8249;</button>
@@ -4702,7 +4769,11 @@
             <input type="date" id="diaryDateInput" value="${esc(diaryDate)}" style="border:1px solid #d0dde3;border-radius:6px;padding:5px 8px;font-size:13px;">
           </div>
           <div class="todo-chips" style="margin-bottom:6px;">${personTabs}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0;">${todoCards}</div>`;
+          <div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0;">${todoCards}</div>
+          <div style="margin-top:16px;border-top:1px solid #e0ecef;padding-top:12px;">
+            <label style="font-weight:600;font-size:13px;color:#08245c;display:block;margin-bottom:6px;">✏ 오늘 업무 메모 (구글 시트에 함께 저장)</label>
+            <textarea id="diaryMemoInput" class="field" style="min-height:70px;font-size:13px;" placeholder="특이사항, 총평, 내일 할 일 등을 자유롭게 입력하세요...">${esc(state._diaryMemo?.[diaryDate]?.[person]||"")}</textarea>
+          </div>`;
       }
 
       const _origRenderForDiary=renderTodoBoard;
@@ -4723,6 +4794,36 @@
         if(t.id==="diaryNextBtn"){const d=new Date(diaryDate);d.setDate(d.getDate()+1);diaryDate=d.toISOString().slice(0,10);renderDiaryPanel();return;}
         if(t.id==="diaryTodayBtn"){diaryDate=today;renderDiaryPanel();return;}
         if(t.dataset.todoView==="diary"){e.preventDefault();e.stopImmediatePropagation();todoViewMode="diary";renderDiaryPanel();return;}
+        /* 구글 시트 저장 */
+        if(t.id==="diarySyncBtn"){
+          e.preventDefault();e.stopImmediatePropagation();
+          const memo=document.getElementById("diaryMemoInput")?.value||"";
+          const person=currentDiaryPerson();
+          if(!state._diaryMemo)state._diaryMemo={};
+          if(!state._diaryMemo[diaryDate])state._diaryMemo[diaryDate]={};
+          state._diaryMemo[diaryDate][person]=memo;
+          syncDiaryToSheet(diaryDate,person,memo);
+          return;
+        }
+        /* 시트 설정 */
+        if(t.id==="diarySheetSettingBtn"){e.preventDefault();e.stopImmediatePropagation();openDiarySheetSetup();return;}
+        /* 시트 URL 저장 */
+        if(t.id==="saveDiarySheetUrlBtn"){
+          const url=document.getElementById("diarySheetUrlInput")?.value||"";
+          if(!url.includes("script.google.com")){toast("올바른 Apps Script URL을 입력해주세요.");return;}
+          setDiarySheetUrl(url);
+          const res=document.getElementById("diarySheetTestResult");
+          if(res)res.innerHTML="<span style='color:#1a8c4e;'>연결 테스트 중...</span>";
+          fetch(url).then(r=>r.json()).then(j=>{
+            if(res)res.innerHTML=`<span style='color:#1a8c4e;'>✅ 연결 성공: ${j.message||"OK"}</span>`;
+            setTimeout(()=>{document.getElementById("diarySheetSetupModal")?.remove();renderDiaryPanel();},1200);
+          }).catch(err=>{
+            if(res)res.innerHTML=`<span style='color:#d87568;'>⚠ 연결 실패 (URL 재확인): ${err.message}</span>`;
+          });
+          return;
+        }
+        /* 설정 모달 닫기 */
+        if(t.id==="closeDiarySheetSetupBtn"||t.id==="closeDiarySheetSetupBtn2"){document.getElementById("diarySheetSetupModal")?.remove();return;}
       },true);
 
       document.addEventListener("change",e=>{
