@@ -4234,23 +4234,26 @@
 
       /* ── 현장 불러오기: state.construction DB에서 검색 ── */
       function renderSiteSearch(insp){
-        const q=siteSearchQuery;
-        const sites=(state.construction||[]).filter(c=>{
+        const q=siteSearchQuery.trim().toLowerCase();
+        const epcProjects=(window.SOLAR_EPC_DATA?.projects)||[];
+        const sites=epcProjects.filter(c=>{
           if(!q)return true;
-          const lower=q.toLowerCase();
-          return (c.site||"").toLowerCase().includes(lower)||(c.customer||"").toLowerCase().includes(lower)||(c.company||"").toLowerCase().includes(lower);
-        }).slice(0,20);
+          return (c.plant||"").toLowerCase().includes(q)||(c.corp||"").toLowerCase().includes(q)||(c.region||"").toLowerCase().includes(q)||(c.manager||"").toLowerCase().includes(q);
+        }).slice(0,30);
+        const total=epcProjects.length;
         return`<div id="siteSearchPanel" style="background:#fff;border:1px solid #d0dde3;border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-weight:700;margin-bottom:10px;color:#08245c;">시공일정 DB에서 현장 불러오기</div>
-          <input id="siteSearchInput" class="field" placeholder="현장명, 고객, 시공사로 검색" value="${esc(q)}" style="margin-bottom:10px;" autocomplete="off">
-          <div style="max-height:220px;overflow-y:auto;">${sites.length?sites.map(c=>`
-            <div class="todo-list-row" style="cursor:pointer;padding:10px;border-radius:6px;border:1px solid #eaf2f4;margin-bottom:4px;display:grid;grid-template-columns:1fr auto;" data-load-site="${esc(c.id||c.site)}">
+          <div style="font-weight:700;margin-bottom:4px;color:#08245c;">발전소 DB에서 불러오기</div>
+          <div style="font-size:12px;color:#9ab0b8;margin-bottom:10px;">전체 ${total.toLocaleString()}개 발전소</div>
+          <input id="siteSearchInput" class="field" placeholder="발전소명, 법인, 지역, 담당자로 검색" value="${esc(siteSearchQuery)}" style="margin-bottom:10px;" autocomplete="off">
+          <div style="max-height:260px;overflow-y:auto;">${sites.length?sites.map(c=>`
+            <div style="padding:10px;border-radius:6px;border:1px solid #eaf2f4;margin-bottom:4px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
               <div>
-                <strong>${esc(c.site||"")}</strong>
-                <span style="font-size:12px;color:#65737d;margin-left:8px;">${esc(c.company||"")} · ${esc(c.kw||"")}kW · ${esc(c.customer||"")}</span>
+                <strong>${esc(c.plant||"")}</strong>
+                <span style="font-size:11px;background:#e7f6f8;color:#087d8f;padding:1px 6px;border-radius:4px;margin-left:6px;">${esc(c.status||"")}</span>
+                <div style="font-size:12px;color:#65737d;margin-top:2px;">${esc(c.corp||"")} · ${esc(c.capacity||"")}kW · ${esc(c.region||"")} · ${esc(c.manager||"")}</div>
               </div>
-              <button class="btn" data-load-site-btn="${esc(JSON.stringify({site:c.site,kw:c.kw,customer:c.customer,company:c.company}))}">선택</button>
-            </div>`).join(""):`<div class="meta" style="padding:12px 0;">${q?"검색 결과가 없습니다.":"시공일정 DB에 데이터가 없습니다."}</div>`}
+              <button class="btn" data-load-site-btn="${esc(JSON.stringify({plant:c.plant,kw:c.capacity,corp:c.corp,region:c.region,manager:c.manager,type:c.type}))}">선택</button>
+            </div>`).join(""):`<div class="meta" style="padding:12px 0;">${q?"검색 결과가 없습니다.":"발전소명을 입력해서 검색하세요."}</div>`}
           </div>
           <button class="btn" id="closeSiteSearchBtn" style="margin-top:10px;">닫기</button>
         </div>`;
@@ -4462,11 +4465,11 @@
         if(t.dataset.loadSiteBtn){
           const data=JSON.parse(t.dataset.loadSiteBtn);
           const insp=currentInspection();if(!insp)return;
-          /* 현재 필드값 먼저 저장 */
           saveCurrentInspectionFields();
-          if(data.site)insp.plant=data.site;
+          if(data.plant)insp.plant=data.plant;
           if(data.kw)insp.kw=data.kw;
-          if(data.worker||data.company)insp.worker=data.company||data.worker||"";
+          if(data.region)insp.address=data.region;
+          if(data.type)insp.roofType=data.type.includes("지붕")?data.type:insp.roofType;
           document.getElementById("siteSearchContainer").innerHTML="";
           siteSearchQuery="";
           renderInspectionOverlay();
