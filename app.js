@@ -1642,6 +1642,20 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
         if(t.dataset.driveDelete){const f=driveTokenState.files.find(x=>x.id===t.dataset.driveDelete);if(f&&confirm(`${f.name} 파일을 휴지통으로 이동할까요?`)){driveFetch(`https://www.googleapis.com/drive/v3/files/${f.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({trashed:true})}).then(()=>{toast("파일을 휴지통으로 이동했습니다.");refreshDriveFiles()}).catch(()=>toast("삭제에 실패했습니다."))}}
       },true);
       injectDriveChrome();
+      /* ── 보고서 IIFE에서 사용할 Drive API 노출 ── */
+      window.driveApi={
+        isConnected:()=>!!driveTokenState.token&&Date.now()<driveTokenState.expiresAt,
+        ensureToken:ensureDriveToken,
+        uploadFile:async function(name,blob){
+          await ensureRootFolder();
+          const folderId=driveTokenState.folderId;
+          const boundary="dr-"+Date.now();
+          const meta={name,parents:[folderId]};
+          const body=new Blob([`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: ${blob.type}\r\n\r\n`,blob,`\r\n--${boundary}--`]);
+          const r=await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink",{method:"POST",headers:{"Content-Type":`multipart/related; boundary=${boundary}`},body});
+          return r.json();
+        }
+      };
     })();
     (function setupDbCenter(){
       const dbStoreKey="solar-business-db-v1";
@@ -2031,6 +2045,8 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
             .report-toolbar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
             .report-drive-btn{display:inline-flex;align-items:center;gap:5px;padding:0 12px;height:32px;border:1px solid #4285f4;background:#fff;color:#4285f4;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap}
             .report-drive-btn:hover{background:#e8f0fe}
+            .report-drive-save-btn{display:inline-flex;align-items:center;gap:5px;padding:0 12px;height:32px;border:1px solid #0f9d58;background:#fff;color:#0f9d58;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap}
+            .report-drive-save-btn:hover{background:#e6f4ea}
             .report-focus-btn{display:inline-flex;align-items:center;gap:5px;padding:0 12px;height:32px;border:1px solid #333;background:#fff;color:#333;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap}
             .report-focus-btn:hover{background:#f5f5f5}
           #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
@@ -2264,7 +2280,7 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
       function renderReportView(){
         injectReportChrome();
         const driveUrl=localStorage.getItem(DRIVE_FOLDER_KEY)||"";
-        const toolbarHtml=`<div class="report-toolbar-row"><button class="report-focus-btn" id="reportFocusModeBtn">📄 집중 모드</button><button class="report-drive-btn" id="reportDriveFolderBtn" title="${driveUrl?"클릭: Drive 열기 / Shift+클릭: URL 변경":"구글 드라이브 폴더 URL을 설정합니다"}">📁 ${driveUrl?"Drive 열기":"Drive 설정"}</button></div>`;
+        const toolbarHtml=`<div class="report-toolbar-row"><button class="report-focus-btn" id="reportFocusModeBtn">📄 집중 모드</button><button class="report-drive-save-btn" id="reportDriveSaveBtn" title="현재 보고서를 구글 드라이브에 HTML 파일로 저장합니다">☁️ Drive 저장</button><button class="report-drive-btn" id="reportDriveFolderBtn" title="${driveUrl?"클릭: Drive 열기 / Shift+클릭: URL 변경":"구글 드라이브 폴더 URL을 설정합니다"}">📁 ${driveUrl?"Drive 열기":"Drive 설정"}</button></div>`;
         els.reportView.innerHTML=`${toolbarHtml}<div class="report-tabs">${reportTabs.map(t=>`<button class="${reportTab===t?"active":""}" data-report-tab="${esc(t)}">${esc(t)}</button>`).join("")}</div>${reportTab==="A/S"?`<div class="report-shell"><aside>${renderReportForm()}</aside><section class="report-preview">${renderAsSheet()}</section></div>`:reportTab==="시공월별보고서"?`<div class="monthly-report-shell"><aside>${renderMonthlyReportForm()}</aside><section class="report-preview">${renderMonthlyReportSheet()}</section></div>`:reportTab==="기타"?`<div class="report-shell"><aside>${renderGenericReportForm()}</aside><section class="report-preview">${renderGenericSheet()}</section></div>`:`<div class="report-card report-placeholder"><div><h2>${esc(reportTab)}</h2><p>양식 준비 영역입니다.<br>필요한 항목을 정하면 같은 방식으로 자동 보고서 양식을 붙일 수 있습니다.</p></div></div>`}`;
         if(reportTab==="A/S")restoreAsDraft();
         if(reportTab==="기타")restoreGenericDraft();
@@ -2345,12 +2361,41 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
           },600);
         }));
       }
+      async function saveReportToDrive(){
+        if(!window.driveApi){toast("Drive 연동 모듈이 없습니다.");return}
+        const driveConfig=JSON.parse(localStorage.getItem("solar-google-drive-config-v1")||"{}");
+        if(!driveConfig.clientId){toast("프로젝트 파일 탭에서 먼저 Drive Client ID를 설정해주세요.");return}
+        toast("Drive 연결 중...");
+        const ok=await window.driveApi.ensureToken();
+        if(!ok){toast("Drive 연결에 실패했습니다.");return}
+        let reportHtml="";
+        if(reportTab==="A/S")reportHtml=renderAsSheet();
+        else if(reportTab==="시공월별보고서")reportHtml=renderMonthlyReportSheet();
+        else if(reportTab==="기타")reportHtml=renderGenericSheet();
+        else{toast("저장할 보고서를 선택하세요.");return}
+        const styleEl=document.getElementById("reportStyle");
+        const styles=styleEl?styleEl.textContent:"";
+        const fullHtml=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${reportTab} 보고서 ${today}</title><style>body{margin:0;padding:20px;background:#fff;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif}${styles}</style></head><body>${reportHtml}</body></html>`;
+        const name=`보고서_${reportTab}_${today}.html`;
+        toast("Drive에 저장 중...");
+        try{
+          const blob=new Blob([fullHtml],{type:"text/html"});
+          const file=await window.driveApi.uploadFile(name,blob);
+          toast(`✓ Drive에 저장했습니다: ${name}`);
+          if(file.webViewLink){
+            setTimeout(()=>{
+              if(confirm(`Drive 저장 완료!\n\n${name}\n\n지금 Drive에서 열어볼까요?`))window.open(file.webViewLink,"_blank");
+            },300);
+          }
+        }catch(err){toast("Drive 저장 실패: "+(err.message||String(err)));console.warn(err)}
+      }
       function printAsReport(){_doPrint(renderAsSheet(),"보고서 인쇄")}
       function printMonthlyReport(){_doPrint(renderMonthlyReportSheet(),"A4 출력")}
       document.addEventListener("click",e=>{
         const t=e.target.closest("button")||e.target;
         if(currentView==="reports"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();if(reportTab==="A/S")printAsReport();else if(reportTab==="시공월별보고서")printMonthlyReport();else if(reportTab==="기타")printGenericReport();else toast(`${reportTab} 양식은 준비 중입니다.`)}
         if(t.id==="reportFocusModeBtn"){e.preventDefault();e.stopImmediatePropagation();enterReportFocusMode()}
+        if(t.id==="reportDriveSaveBtn"){e.preventDefault();e.stopImmediatePropagation();saveReportToDrive()}
         if(t.id==="reportDriveFolderBtn"){e.preventDefault();e.stopImmediatePropagation();const saved=localStorage.getItem(DRIVE_FOLDER_KEY)||"";if(saved&&!e.shiftKey){window.open(saved,"_blank")}else{openDriveFolder();renderReportView()}}
         if(t.dataset.reportTab){reportTab=t.dataset.reportTab;syncViewChrome();renderReportView()}
         if(t.dataset.asDbRow!==undefined){const row=window.solarDb?.rows()[Number(t.dataset.asDbRow)];if(row)applyDbRowToAs(row)}
