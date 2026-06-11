@@ -2589,24 +2589,15 @@ document.addEventListener("change",e=>{
         });
       }
       function _doPrint(html,buttonLabel){
-        $$(".print-root").forEach(el=>el.remove());
         const button=$("#addProjectBtn");
-        if(button){button.classList.add("report-printing");button.textContent="인쇄 준비 중"}
-        const root=document.createElement("div");
-        root.className="print-root";
-        root.innerHTML=html;
-        document.body.appendChild(root);
-        // Explicitly hide all body siblings before printing (CSS @media print alone may not apply in time)
-        const siblings=[...document.body.children].filter(el=>el!==root);
-        siblings.forEach(el=>{el._pd=el.style.cssText;el.style.setProperty("display","none","important")});
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          window.print();
-          setTimeout(()=>{
-            siblings.forEach(el=>{el.style.cssText=el._pd||"";delete el._pd});
-            root.remove();
-            if(button){button.classList.remove("report-printing");button.textContent=buttonLabel}
-          },600);
-        }));
+        if(button){button.classList.add("report-printing");button.textContent="준비 중"}
+        const reportCss=($("#reportStyle")?.textContent||"").replace(/<\/?style[^>]*>/g,"");
+        const fullHtml=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{size:A4 portrait;margin:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}body{margin:0;padding:8mm 10mm;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;background:#fff;color:#111}${reportCss}</style></head><body>${html}<script>window.addEventListener('load',function(){setTimeout(function(){window.print()},350)});<\/script></body></html>`;
+        const blob=new Blob([fullHtml],{type:"text/html;charset=utf-8"});
+        const url=URL.createObjectURL(blob);
+        window.open(url,"_blank");
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        if(button){setTimeout(()=>{button.classList.remove("report-printing");button.textContent=buttonLabel},800)}
       }
       async function saveReportToDrive(){
         if(!window.driveApi){toast("Drive 연동 모듈이 없습니다.");return}
