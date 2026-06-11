@@ -5678,6 +5678,28 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
           <div style="margin-top:16px;border-top:1px solid #e0ecef;padding-top:12px;">
             <label style="font-weight:600;font-size:13px;color:#08245c;display:block;margin-bottom:6px;">✏ 오늘 업무 메모 (구글 시트에 함께 저장)</label>
             <textarea id="diaryMemoInput" class="field" style="min-height:70px;font-size:13px;" placeholder="특이사항, 총평, 내일 할 일 등을 자유롭게 입력하세요...">${esc(state._diaryMemo?.[diaryDate]?.[person]||"")}</textarea>
+          </div>
+          <div style="margin-top:20px;border-top:1px solid #e0ecef;padding-top:14px;">
+            <details style="font-size:13px;color:#65737d;">
+              <summary style="cursor:pointer;font-weight:700;color:#08245c;font-size:13px;user-select:none;">📖 업무일지 사용 방법</summary>
+              <div style="margin-top:12px;display:grid;gap:10px;">
+                <div style="background:#f0fdf8;border-left:3px solid #087d8f;padding:10px 14px;border-radius:0 8px 8px 0;">
+                  <div style="font-weight:700;color:#087d8f;margin-bottom:4px;">🌅 아침 출근 시</div>
+                  <div style="line-height:1.7;">"할일 추가" 버튼으로 오늘 업무를 등록합니다.<br><span style="color:#aaa;font-size:12px;">→ 마감일을 오늘로 설정하면 업무일지에 자동으로 표시됩니다.</span></div>
+                </div>
+                <div style="background:#f0fdf8;border-left:3px solid #087d8f;padding:10px 14px;border-radius:0 8px 8px 0;">
+                  <div style="font-weight:700;color:#087d8f;margin-bottom:4px;">☀ 업무 중</div>
+                  <div style="line-height:1.7;">보드(칸반) 탭에서 상태를 변경합니다.<br><span style="color:#aaa;font-size:12px;">할 일 → 진행중 → 완료</span></div>
+                </div>
+                <div style="background:#f0fdf8;border-left:3px solid #087d8f;padding:10px 14px;border-radius:0 8px 8px 0;">
+                  <div style="font-weight:700;color:#087d8f;margin-bottom:4px;">🌙 퇴근 전</div>
+                  <div style="line-height:1.7;">① 위 메모란에 특이사항·총평 입력<br>② 상단 담당자 탭에서 본인 이름 선택<br>③ <strong style="color:#08245c;">"구글 시트 저장"</strong> 버튼 클릭<br><span style="color:#aaa;font-size:12px;">→ 날짜별 실적이 구글 시트에 자동 누적됩니다.</span></div>
+                </div>
+                <div style="background:#fff8e6;border-left:3px solid #b86d13;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;color:#7a5010;">
+                  💡 <strong>팁:</strong> 구글 시트 연동이 안 됐다면 우측 상단 "시트 설정"에서 Apps Script URL을 먼저 등록하세요.
+                </div>
+              </div>
+            </details>
           </div>`;
       }
 
