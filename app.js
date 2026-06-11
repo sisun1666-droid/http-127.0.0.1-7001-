@@ -2336,17 +2336,22 @@ document.addEventListener("change",e=>{
       }
       function renderGenericSheet(){
         const reporter=genericVal("genericReporter")||genericReporterName();
+        /* 빈 값이면 행 자체를 생략 */
+        const gRow=(label,id)=>{const v=genericVal(id);return v?`<tr><th style="white-space:nowrap">${label}</th><td style="white-space:pre-wrap;word-break:keep-all">${esc(v)}</td></tr>`:""};
+        const gRow2=(l1,id1,l2,id2)=>{const v1=genericVal(id1),v2=genericVal(id2);if(!v1&&!v2)return "";return `<tr><th>${l1}</th><td>${v1?esc(v1):"-"}</td><th>${l2}</th><td>${v2?esc(v2):"-"}</td></tr>`;};
+        const sec=(title,rows)=>{const body=rows.join("");return body?`<div class="generic-section-title">${title}</div><table class="generic-table"><tbody>${body}</tbody></table>`:""};
+        const s1=gRow2("보고 구분","genericCategory","작성 부서","genericDept")+gRow2("관련 현장","genericSite","대상/업체","genericTarget");
+        const s2=gRow("핵심 요약","genericSummary")+gRow("배경/경위","genericBackground");
+        const s3=gRow("문제/상황","genericIssue")+gRow("조치 내용","genericAction")+gRow("현재 결과","genericResult");
+        const s4=gRow("요청사항","genericRequest")+gRow("다음 조치","genericNext")+gRow("비고","genericMemo");
         return `<div class="generic-sheet" id="genericReportSheet">
-          <div style="display:grid;grid-template-columns:1fr auto;align-items:flex-end;border-bottom:3px solid #111;padding-bottom:10px;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1fr auto;align-items:flex-end;border-bottom:3px solid #111;padding-bottom:8px;margin-bottom:8px">
             <div><div style="font-size:11px;font-weight:700;color:#333;letter-spacing:.5px;margin-bottom:2px">기술지원팀</div><h2 style="margin:0;font-size:22px;font-weight:900;color:#111">${esc(genericVal("genericTitle")||"업무 보고서")}</h2></div>
             <div style="text-align:right;font-size:11px;color:#333;line-height:1.7"><div>${esc(genericVal("genericDate")||today)}</div><div>작성자: <strong>${esc(reporter||"미입력")}</strong> / ${esc(genericVal("genericDept")||"기술지원팀")}</div></div>
           </div>
-          <div class="generic-section-title">1. 기본 정보</div><table class="generic-table"><tbody><tr><th>보고 구분</th><td>${esc(genericVal("genericCategory"))}</td><th>작성 부서</th><td>${esc(genericVal("genericDept"))}</td></tr><tr><th>관련 현장</th><td>${esc(genericVal("genericSite"))}</td><th>대상/업체</th><td>${esc(genericVal("genericTarget"))}</td></tr></tbody></table>
-          <div class="generic-section-title">2. 보고 요약</div><table class="generic-table"><tbody><tr><th>핵심 요약</th><td>${genericLines("genericSummary")}</td></tr><tr><th>배경/경위</th><td>${genericLines("genericBackground")}</td></tr></tbody></table>
-          <div class="generic-section-title">3. 내용 및 조치</div><table class="generic-table"><tbody><tr><th>문제/상황</th><td>${genericLines("genericIssue")}</td></tr><tr><th>조치 내용</th><td>${genericLines("genericAction")}</td></tr><tr><th>현재 결과</th><td>${genericLines("genericResult")}</td></tr></tbody></table>
-          <div class="generic-section-title">4. 요청 및 후속 조치</div><table class="generic-table"><tbody><tr><th>요청사항</th><td>${genericLines("genericRequest")}</td></tr><tr><th>다음 조치</th><td>${genericLines("genericNext")}</td></tr><tr><th>비고</th><td>${genericLines("genericMemo")}</td></tr></tbody></table>
+          ${sec("1. 기본 정보",[s1])}${sec("2. 보고 요약",[s2])}${sec("3. 내용 및 조치",[s3])}${sec("4. 요청 및 후속 조치",[s4])}
           ${renderGenericPhotos()}
-          <div style="margin-top:14px;text-align:right;font-size:11px;font-weight:700;color:#333">보고: 기술지원팀</div></div>`
+          <div style="margin-top:10px;text-align:right;font-size:11px;font-weight:700;color:#333">보고: 기술지원팀</div></div>`
       }
       function renderGenericReportForm(){
         const reporter=esc(genericReporterName());
@@ -2437,47 +2442,50 @@ document.addEventListener("change",e=>{
       }
       function renderInspectionA4(draft){
         const catColors={안전:"#e53e3e",구조물:"#2b6cb0",전기:"#276749",한전시공:"#6b46c1",마감:"#c05621"};
-        const rows=INSP_CHECKLIST.map((sec,si)=>sec.items.map((item,ii)=>{
-          const key=si+"_"+ii,val=draft.checks?.[key]||"",memo=draft.sectionMemos?.[key]||"";
-          const statusCell=val==="양호"?`<span style="color:#276749;font-weight:900">✓ 양호</span>`:val==="불량"?`<span style="color:#c0392b;font-weight:900">✗ 불량</span>`:val==="해당없음"?`<span style="color:#888">— N/A</span>`:`<span style="color:#ccc">미확인</span>`;
-          return `<tr><td style="text-align:center;font-size:11px;background:${catColors[sec.cat]||"#444"};color:#fff;font-weight:900;width:52px">${esc(sec.cat)}</td><td style="text-align:center;font-size:11px;width:60px;color:#555">${esc(sec.sub)}</td><td style="font-size:12px;padding:4px 6px">${esc(item)}</td><td style="text-align:center;width:62px;font-size:12px">${statusCell}</td><td style="font-size:11px;color:#555;padding:3px 6px">${esc(memo)}</td></tr>`;
-        }).join("")).join("");
+        /* 2열 레이아웃: 왼쪽(안전+구조물) / 오른쪽(전기+한전+마감) */
+        const leftSecs=[0,1,2],rightSecs=[3,4,5,6,7];
+        function buildCol(secIdxs){
+          return secIdxs.map(si=>{
+            const sec=INSP_CHECKLIST[si];
+            const itemRows=sec.items.map((item,ii)=>{
+              const key=si+"_"+ii,val=draft.checks?.[key]||"",memo=draft.sectionMemos?.[key]||"";
+              const dot=val==="양호"?`<span style="color:#276749;font-weight:900">✓</span>`:val==="불량"?`<span style="color:#c0392b;font-weight:900">✗</span>`:val==="해당없음"?`<span style="color:#888">N/A</span>`:`<span style="color:#ddd">·</span>`;
+              return `<tr><td style="padding:2px 4px;font-size:9.5px;line-height:1.3;border-bottom:1px solid #eee">${esc(item)}${memo?`<span style="color:#888;font-size:8.5px"> (${esc(memo)})</span>`:""}</td><td style="text-align:center;width:26px;border-bottom:1px solid #eee;font-size:9.5px">${dot}</td></tr>`;
+            }).join("");
+            const color=catColors[sec.cat]||"#444";
+            return `<tr><td colspan="2" style="background:${color};color:#fff;font-size:9px;font-weight:900;padding:3px 5px;letter-spacing:.3px">${esc(sec.cat)} · ${esc(sec.sub)}</td></tr>${itemRows}`;
+          }).join("");
+        }
+        const leftRows=buildCol(leftSecs),rightRows=buildCol(rightSecs);
         const {done,total,pct}=inspProgress(draft);
         const failCount=Object.values(draft.checks||{}).filter(v=>v==="불량").length;
-        return `<div style="width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;padding:20px 24px;box-sizing:border-box">
-          <h2 style="text-align:center;font-size:20px;margin:0 0 4px;letter-spacing:1px">태양광발전설비 현장 점검기록표</h2>
-          <p style="text-align:center;font-size:11px;color:#555;margin:0 0 14px">시공검수 체크리스트</p>
-          <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">
-            <tr>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:80px">발전소명</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.site||"")}</td>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:60px">용량</th><td style="border:1px solid #ccc;padding:5px 8px;width:90px">${esc(draft.capacity||"")} kW</td>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px;width:60px">점검자</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.inspector||"")}</td>
-            </tr>
-            <tr>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">시공사</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.company||"")}</td>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">시공단계</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.phase||"")}</td>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">일시</th><td style="border:1px solid #ccc;padding:5px 8px">${esc(draft.date||"")}</td>
-            </tr>
-            <tr>
-              <th style="background:#f1f6f8;border:1px solid #ccc;padding:5px 8px">설치형태</th><td colspan="5" style="border:1px solid #ccc;padding:5px 8px">${esc(draft.installType||"")}</td>
-            </tr>
+        const th=`background:#f1f6f8;border:1px solid #bbb;padding:4px 6px;font-size:10.5px`;
+        const td=`border:1px solid #bbb;padding:4px 6px;font-size:10.5px`;
+        return `<div style="width:100%;background:#fff;color:#111;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;box-sizing:border-box">
+          <h2 style="text-align:center;font-size:17px;margin:0 0 2px;letter-spacing:.5px">태양광발전설비 현장 점검기록표</h2>
+          <p style="text-align:center;font-size:10px;color:#555;margin:0 0 8px">시공검수 체크리스트</p>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:7px">
+            <tr><th style="${th};width:72px">발전소명</th><td style="${td}">${esc(draft.site||"")}</td><th style="${th};width:52px">용량</th><td style="${td};width:80px">${esc(draft.capacity||"")} kW</td><th style="${th};width:52px">점검자</th><td style="${td}">${esc(draft.inspector||"")}</td></tr>
+            <tr><th style="${th}">시공사</th><td style="${td}">${esc(draft.company||"")}</td><th style="${th}">시공단계</th><td style="${td}">${esc(draft.phase||"")}</td><th style="${th}">일시</th><td style="${td}">${esc(draft.date||"")}</td></tr>
+            <tr><th style="${th}">설치형태</th><td colspan="5" style="${td}">${esc(draft.installType||"")}</td></tr>
           </table>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
-            <thead><tr style="background:#2b6cb0;color:#fff">
-              <th style="padding:5px;font-size:11px;width:52px">분류</th>
-              <th style="padding:5px;font-size:11px;width:60px">소분류</th>
-              <th style="padding:5px;font-size:11px;text-align:left">점검 사항</th>
-              <th style="padding:5px;font-size:11px;width:62px">결과</th>
-              <th style="padding:5px;font-size:11px;text-align:left">특이사항</th>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:7px;table-layout:fixed">
+            <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+            <thead><tr>
+              <th style="background:#2b6cb0;color:#fff;padding:4px 6px;font-size:10px;text-align:left">◀ 안전 · 구조물 (${leftSecs.reduce((a,si)=>a+INSP_CHECKLIST[si].items.length,0)}항목)</th>
+              <th style="background:#276749;color:#fff;padding:4px 6px;font-size:10px;text-align:left">◀ 전기 · 한전 · 마감 (${rightSecs.reduce((a,si)=>a+INSP_CHECKLIST[si].items.length,0)}항목)</th>
             </tr></thead>
-            <tbody style="font-size:12px">${rows}</tbody>
+            <tbody>
+              <tr style="vertical-align:top">
+                <td style="padding:0;border-right:2px solid #bbb"><table style="width:100%;border-collapse:collapse"><tbody>${leftRows}</tbody></table></td>
+                <td style="padding:0"><table style="width:100%;border-collapse:collapse"><tbody>${rightRows}</tbody></table></td>
+              </tr>
+            </tbody>
           </table>
-          <div style="display:flex;gap:12px;margin-bottom:14px">
-            <div style="flex:1;border:1px solid #ccc;border-radius:6px;padding:8px 12px;background:#f9f9f9;font-size:12px"><strong>점검결과 요약</strong><br>총 ${total}항목 중 ${done}항목 확인 (${pct}%) · 불량 ${failCount}건</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div style="border:1px solid #bbb;border-radius:4px;padding:6px 10px;background:#f9f9f9;font-size:10.5px"><strong>점검결과 요약</strong> &nbsp; 총 ${total}항목 중 ${done}항목 완료 (${pct}%) · 불량 ${failCount}건</div>
+            <table style="width:100%;border-collapse:collapse;font-size:10.5px"><tr><th style="${th};text-align:center">점검자</th><td style="${td};height:32px"></td><th style="${th};text-align:center">담당자</th><td style="${td}"></td><th style="${th};text-align:center">관리자</th><td style="${td}"></td></tr></table>
           </div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <tr><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">점검자</th><td style="border:1px solid #ccc;padding:6px;min-width:120px;height:40px"></td><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">담당자</th><td style="border:1px solid #ccc;padding:6px;min-width:120px;height:40px"></td><th style="background:#f1f6f8;border:1px solid #ccc;padding:6px 8px;text-align:center;width:80px">관리자</th><td style="border:1px solid #ccc;padding:6px;height:40px"></td></tr>
-          </table>
         </div>`;
       }
       function printInspectionReport(){
@@ -2592,7 +2600,7 @@ document.addEventListener("change",e=>{
         const button=$("#addProjectBtn");
         if(button){button.classList.add("report-printing");button.textContent="준비 중"}
         const reportCss=($("#reportStyle")?.textContent||"").replace(/<\/?style[^>]*>/g,"");
-        const fullHtml=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{size:A4 portrait;margin:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}body{margin:0;padding:8mm 10mm;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;background:#fff;color:#111}${reportCss}</style></head><body>${html}<script>window.addEventListener('load',function(){setTimeout(function(){window.print()},350)});<\/script></body></html>`;
+        const fullHtml=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@page{size:A4 portrait;margin:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}body{margin:0;padding:6mm 8mm;font-family:'Malgun Gothic','Noto Sans KR',Arial,sans-serif;background:#fff;color:#111}${reportCss}</style></head><body>${html}<script>window.addEventListener('load',function(){setTimeout(function(){window.print()},350)});<\/script></body></html>`;
         const blob=new Blob([fullHtml],{type:"text/html;charset=utf-8"});
         const url=URL.createObjectURL(blob);
         window.open(url,"_blank");
