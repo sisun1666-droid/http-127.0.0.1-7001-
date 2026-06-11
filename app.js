@@ -5736,7 +5736,6 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
             <button class="btn" id="diaryExportBtn" style="background:#087d8f;color:#fff;font-weight:bold;">엑셀 저장</button>
             <button class="btn" id="diarySyncBtn" style="background:${getDiarySheetUrl()?"#1a8c4e":"#34a853"};color:#fff;font-weight:bold;">${getDiarySheetUrl()?"✅ 구글 시트 저장":"구글 시트 저장"}</button>
             <button class="btn" id="diarySheetSettingBtn" style="font-size:11px;padding:4px 8px;" title="구글 시트 연동 설정">⚙ 시트 설정</button>
-            <button class="btn" id="sheetViewerBtn" style="background:#4285f4;color:#fff;font-weight:bold;">📊 시트 보기</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;flex-wrap:wrap;">
             <button class="btn icon" id="diaryPrevBtn">&#8249;</button>
@@ -5751,7 +5750,10 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
             <label style="font-weight:600;font-size:13px;color:#08245c;display:block;margin-bottom:6px;">✏ 오늘 업무 메모 (구글 시트에 함께 저장)</label>
             <textarea id="diaryMemoInput" class="field" style="min-height:70px;font-size:13px;" placeholder="특이사항, 총평, 내일 할 일 등을 자유롭게 입력하세요...">${esc(state._diaryMemo?.[diaryDate]?.[person]||"")}</textarea>
           </div>
-          <div style="margin-top:20px;border-top:1px solid #e0ecef;padding-top:14px;">
+          <div style="margin-top:20px;border-top:1px solid #e0ecef;padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="sheetViewerBtn" style="flex:1;min-width:140px;padding:12px;background:#4285f4;color:#fff;font-weight:700;font-size:14px;border:none;border-radius:10px;cursor:pointer;">📊 구글 시트 바로가기</button>
+          </div>
+          <div style="margin-top:14px;border-top:1px solid #e0ecef;padding-top:14px;">
             <details style="font-size:13px;color:#65737d;">
               <summary style="cursor:pointer;font-weight:700;color:#08245c;font-size:13px;user-select:none;">📖 업무일지 사용 방법</summary>
               <div style="margin-top:12px;display:grid;gap:10px;">
@@ -5784,9 +5786,6 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
           tview.insertAdjacentHTML("beforeend",`<button data-todo-view="diary">업무일지</button>`);
         }
         const toolbar=$("#todoBoardPanel .todo-toolbar");
-        if(toolbar&&!toolbar.querySelector("#sheetViewerBtn")){
-          toolbar.insertAdjacentHTML("beforeend",`<button class="btn" id="sheetViewerBtn" style="background:#4285f4;color:#fff;font-weight:bold;">📊 시트 보기</button>`);
-        }
       };
 
       document.addEventListener("click",e=>{
