@@ -2044,8 +2044,19 @@ document.addEventListener("change",e=>{
       injectDbChrome();
     })();
     (function setupReports(){
-      const reportTabs=["A/S","시공월별보고서","기타"];
+      const reportTabs=["A/S","시공월별보고서","기타","시공검수"];
       let reportTab="A/S",beforePhotos=[],afterPhotos=[],genericPhotos=[];
+      const inspDraftKey="solar-inspection-draft-v1";
+      const INSP_CHECKLIST=[
+        {cat:"안전",sub:"안전장비",items:["안전모·안전화·안전장갑·안전벨트 착용 확인","안전펜스·안전와이어·안전망 설치 확인","안전사다리·승주방지판 설치 확인"]},
+        {cat:"구조물",sub:"배치",items:["용마루 - 베이스 간격 확인","처마끝 - 베이스 간격 확인","베이스-베이스 전후 간격 확인","베이스-베이스 좌우 간격 확인","모듈-모듈 간격 확인","음영발생·높이 단차 확인"]},
+        {cat:"구조물",sub:"구조물",items:["시공 구조물 - 도면 배치 동일 유무 확인","시공 모듈 - 도면 배치 동일 유무 확인","시공된 T볼트 - 도면과 위치 일치 유무 확인","시공된 T볼트 체결 상태 확인","베이스·T볼트·스크류볼트 실리콘 마감 상태 확인","손상 구조물·가공 치수 불일치 확인","클램프류 체결 상태 확인","양끝 모듈 100mm 이격 거리 확인","X 브레이싱 설치 및 마감 확인","안전와이어 설치 확인","빔캡·레일 앤드캡 부착 여부 확인","발전소별 호기구분 표시 확인 (락카·매직 등)","구조물 설치 후 마감 상태 확인"]},
+        {cat:"전기",sub:"모듈",items:["파손 모듈 여부 확인","모듈-구조물 접지 연결 상태 확인"]},
+        {cat:"전기",sub:"인버터",items:["전기실 구조물·지붕 설치 확인","인버터 고정상태 확인 (유격·흔들림)","인버터 상하·좌우 간격 확인","모듈 어레이 구성·스트링 확인","인버터 손상 부위 및 소음 확인","배선 손상 확인","접속단자 (AC/DC) 체결 확인"]},
+        {cat:"전기",sub:"배전반",items:["배전반 고정상태 확인 (유격·흔들림)","차단기 설치 상태 확인","배선 결선 및 손상 확인"]},
+        {cat:"한전시공",sub:"외부",items:["전주·변압기 설치 확인","외선·내선·인입·COS 시공 상태 확인"]},
+        {cat:"마감",sub:"청소상태",items:["지붕 위·물받이 내부·작업 반경내 청소 확인","홈통 쓰레기·쇳가루 제거 확인"]}
+      ];
       const asDraftKey="solar-as-report-draft-v1",asFieldIds=["asNo","asReceived","asCompleted","asPhone","asSite","asClient","asAddress","asKw","asRoof","asBuilt","asDefectType","asDefectArea","asSymptom","asCause","asAction","asMaterial","asFinish","asCustomerCheck","asNotice"],genericDraftKey="solar-generic-report-draft-v1",genericFieldIds=["genericTitle","genericDate","genericReporter","genericDept","genericCategory","genericSite","genericTarget","genericSummary","genericBackground","genericIssue","genericAction","genericResult","genericRequest","genericNext","genericMemo"];
       function injectReportChrome(){
         if(!$("#reportView")){
@@ -2100,6 +2111,45 @@ document.addEventListener("change",e=>{
             .report-drive-save-btn:hover{background:#e6f4ea}
             .report-focus-btn{display:inline-flex;align-items:center;gap:5px;padding:0 12px;height:32px;border:1px solid #333;background:#fff;color:#333;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap}
             .report-focus-btn:hover{background:#f5f5f5}
+            .insp-wrap{max-width:700px;margin:0 auto;display:grid;gap:16px}
+            .insp-header-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+            .insp-header-card h3{margin:0 0 4px;font-size:15px;font-weight:900;color:var(--teal)}
+            .insp-header-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+            .insp-header-grid .full{grid-column:1/-1}
+            .insp-progress-bar-wrap{height:8px;border-radius:999px;background:#e8eef1;overflow:hidden;margin-top:4px}
+            .insp-progress-bar{height:100%;border-radius:999px;background:var(--teal);transition:width .3s}
+            .insp-progress-label{font-size:12px;color:var(--muted);font-weight:700;text-align:right;margin-top:2px}
+            .insp-cat{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+            .insp-cat-head{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f6f9fa;border-bottom:1px solid var(--line);font-weight:900;font-size:13px}
+            .insp-cat-label{background:var(--teal);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px}
+            .insp-cat-sub{color:var(--muted);font-size:12px;font-weight:700}
+            .insp-item{padding:10px 14px;border-bottom:1px solid #f0f4f5;display:grid;gap:6px}
+            .insp-item:last-child{border-bottom:0}
+            .insp-item-text{font-size:13px;font-weight:700;color:var(--ink);line-height:1.45}
+            .insp-btns{display:flex;gap:6px}
+            .insp-btn{flex:1;min-height:42px;border-radius:8px;border:2px solid #d1dce0;background:#f6f9fa;font-size:12px;font-weight:900;cursor:pointer;transition:.12s;color:#52636b}
+            .insp-btn:active{transform:scale(.96)}
+            .insp-btn[data-v="양호"].sel{background:#d1fae5;border-color:#10b981;color:#065f46}
+            .insp-btn[data-v="불량"].sel{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+            .insp-btn[data-v="해당없음"].sel{background:#f3f4f6;border-color:#9ca3af;color:#4b5563}
+            .insp-memo{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;min-height:32px;resize:none;font-family:inherit;color:var(--ink);background:#fff}
+            .insp-save-btn{width:100%;min-height:52px;border-radius:10px;border:0;background:var(--teal);color:#fff;font-size:15px;font-weight:900;cursor:pointer;margin-top:4px}
+            .insp-save-btn:active{opacity:.85}
+            .insp-new-btn{width:100%;min-height:52px;border-radius:10px;border:2px dashed var(--teal);background:#f2fbfc;color:var(--teal);font-size:15px;font-weight:900;cursor:pointer}
+            .insp-new-btn:active{background:#e6f8fa}
+            .insp-list{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+            .insp-list-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+            .insp-list-head h3{margin:0;font-size:14px;font-weight:900}
+            .insp-list-item{padding:11px 14px;border-bottom:1px solid #f0f4f5;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;cursor:pointer}
+            .insp-list-item:last-child{border-bottom:0}
+            .insp-list-item:hover{background:#f6f9fa}
+            .insp-list-meta{font-size:12px;color:var(--muted);margin-top:2px}
+            .insp-badge{font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px}
+            .insp-badge-ok{background:#d1fae5;color:#065f46}
+            .insp-badge-fail{background:#fee2e2;color:#991b1b}
+            .insp-badge-wip{background:#fef3c7;color:#92400e}
+            .insp-empty{text-align:center;color:var(--muted);padding:32px;font-size:13px}
+            @media(max-width:600px){.insp-header-grid{grid-template-columns:1fr}.insp-btns{gap:4px}.insp-btn{font-size:11px;min-height:44px}}
           #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);
         }
       }
@@ -2145,7 +2195,7 @@ document.addEventListener("change",e=>{
           els.pageTitle.textContent="보고서";
           els.pageSub.textContent="A/S, 시공월별보고서, 기타 보고서를 작성하고 출력합니다.";
           const top=$("#addProjectBtn");
-          if(top){top.textContent=reportTab==="A/S"?"보고서 인쇄":reportTab==="시공월별보고서"?"A4 출력":reportTab==="기타"?"A4 출력":"양식 준비 중";top.disabled=false;top.classList.toggle("primary",true)}
+          if(top){top.textContent=reportTab==="A/S"?"보고서 인쇄":reportTab==="시공월별보고서"?"A4 출력":reportTab==="기타"?"A4 출력":reportTab==="시공검수"?"검수 저장":reportTab;top.disabled=false;top.classList.toggle("primary",true)}
         }
       };
       const baseGoToViewForReports=goToView;
@@ -2328,11 +2378,54 @@ document.addEventListener("change",e=>{
         document.body.classList.remove("report-focus-mode");
         document.getElementById("reportFocusBar")?.remove();
       }
+      /* ── 시공검수 ── */
+      function readInspDraft(){try{return JSON.parse(localStorage.getItem(inspDraftKey)||"null")}catch{return null}}
+      function saveInspDraft(d){localStorage.setItem(inspDraftKey,JSON.stringify(d))}
+      function clearInspDraft(){localStorage.removeItem(inspDraftKey)}
+      function inspProgress(draft){
+        let total=0,done=0;
+        INSP_CHECKLIST.forEach((sec,si)=>sec.items.forEach((_,ii)=>{total++;if(draft.checks?.[si+"_"+ii])done++}));
+        return{total,done,pct:total?Math.round(done/total*100):0};
+      }
+      function inspBadge(draft){
+        const hasFail=Object.values(draft.checks||{}).includes("불량");
+        const {done,total}=inspProgress(draft);
+        if(done===total&&total>0)return hasFail?`<span class="insp-badge insp-badge-fail">불량 항목</span>`:`<span class="insp-badge insp-badge-ok">점검 완료</span>`;
+        return `<span class="insp-badge insp-badge-wip">진행중 ${done}/${total}</span>`;
+      }
+      function renderInspectionListView(){
+        if(!state.siteInspections)state.siteInspections=[];
+        const list=state.siteInspections;
+        const listHtml=list.length?[...list].reverse().map((d,ri)=>{
+          const i=list.length-1-ri;
+          return `<div class="insp-list-item" data-insp-load="${i}"><div><div style="font-weight:900;font-size:13px">${esc(d.site||"발전소명 미입력")} <span style="font-weight:700;color:var(--muted);font-size:12px">${esc(d.phase||"")}</span></div><div class="insp-list-meta">${esc(d.date||"")} · ${esc(d.company||"")} · ${esc(d.inspector||"")}</div></div>${inspBadge(d)}</div>`;
+        }).join(""):`<div class="insp-empty">저장된 검수 기록이 없습니다.</div>`;
+        return `<div class="insp-wrap"><button class="insp-new-btn" id="inspNewBtn">+ 새 검수 시작</button><div class="insp-list"><div class="insp-list-head"><h3>검수 기록</h3></div>${listHtml}</div></div>`;
+      }
+      function renderInspectionFormView(draft){
+        if(!draft){draft={date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}}}
+        const {done,total,pct}=inspProgress(draft);
+        const headerHtml=`<div class="insp-header-card"><h3>📋 시공현장 검수체크리스트</h3><div class="insp-header-grid">
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">발전소명</label><input class="field" id="inspSite" value="${esc(draft.site||"")}" placeholder="발전소명"></div>
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">시공단계</label><input class="field" id="inspPhase" value="${esc(draft.phase||"")}" placeholder="구조물 1일차 등"></div>
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">시공사</label><input class="field" id="inspCompany" value="${esc(draft.company||"")}" placeholder="시공사명"></div>
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">점검자</label><input class="field" id="inspInspector" value="${esc(draft.inspector||"")}" placeholder="담당자명"></div>
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">일시</label><input class="field" id="inspDate" type="date" value="${esc(draft.date||today)}"></div>
+          <div><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">용량(kW)</label><input class="field" id="inspCapacity" value="${esc(draft.capacity||"")}" placeholder="예: 216.32"></div>
+          <div class="full"><label class="meta" style="display:block;font-weight:900;margin-bottom:3px;font-size:12px">설치형태</label><input class="field" id="inspInstallType" value="${esc(draft.installType||"")}" placeholder="축사 / 공장(창고) / 지상 등"></div>
+        </div><div class="insp-progress-bar-wrap"><div class="insp-progress-bar" style="width:${pct}%"></div></div><div class="insp-progress-label">${done} / ${total} 항목 완료 (${pct}%)</div></div>`;
+        const checklistHtml=INSP_CHECKLIST.map((sec,si)=>`<div class="insp-cat"><div class="insp-cat-head"><span class="insp-cat-label">${esc(sec.cat)}</span><span class="insp-cat-sub">${esc(sec.sub)}</span></div>${sec.items.map((item,ii)=>{const key=si+"_"+ii,val=draft.checks?.[key]||"";return`<div class="insp-item"><div class="insp-item-text">${esc(item)}</div><div class="insp-btns"><button class="insp-btn ${val==="양호"?"sel":""}" data-insp-key="${key}" data-v="양호">✓ 양호</button><button class="insp-btn ${val==="불량"?"sel":""}" data-insp-key="${key}" data-v="불량">✗ 불량</button><button class="insp-btn ${val==="해당없음"?"sel":""}" data-insp-key="${key}" data-v="해당없음">— 해당없음</button></div><input class="insp-memo" data-insp-memo="${key}" placeholder="특이사항 (선택)" value="${esc(draft.sectionMemos?.[key]||"")}"></div>`}).join("")}</div>`).join("");
+        return `<div class="insp-wrap">${headerHtml}${checklistHtml}<div style="display:flex;gap:10px"><button class="btn" id="inspBackBtn" style="min-height:52px;flex-shrink:0;padding:0 20px">← 목록</button><button class="insp-save-btn" id="inspSaveBtn">💾 검수 저장</button></div></div>`;
+      }
+      function renderInspectionTab(){
+        const draft=readInspDraft();
+        return draft?renderInspectionFormView(draft):renderInspectionListView();
+      }
       function renderReportView(){
         injectReportChrome();
         const driveUrl=localStorage.getItem(DRIVE_FOLDER_KEY)||"";
         const toolbarHtml=`<div class="report-toolbar-row"><button class="report-focus-btn" id="reportFocusModeBtn">📄 집중 모드</button><button class="report-drive-save-btn" id="reportDriveSaveBtn" title="현재 보고서를 구글 드라이브에 HTML 파일로 저장합니다">☁️ Drive 저장</button><button class="report-drive-btn" id="reportDriveFolderBtn" title="${driveUrl?"클릭: Drive 열기 / Shift+클릭: URL 변경":"구글 드라이브 폴더 URL을 설정합니다"}">📁 ${driveUrl?"Drive 열기":"Drive 설정"}</button></div>`;
-        els.reportView.innerHTML=`${toolbarHtml}<div class="report-tabs">${reportTabs.map(t=>`<button class="${reportTab===t?"active":""}" data-report-tab="${esc(t)}">${esc(t)}</button>`).join("")}</div>${reportTab==="A/S"?`<div class="report-shell"><aside>${renderReportForm()}</aside><section class="report-preview">${renderAsSheet()}</section></div>`:reportTab==="시공월별보고서"?`<div class="monthly-report-shell"><aside>${renderMonthlyReportForm()}</aside><section class="report-preview">${renderMonthlyReportSheet()}</section></div>`:reportTab==="기타"?`<div class="report-shell"><aside>${renderGenericReportForm()}</aside><section class="report-preview">${renderGenericSheet()}</section></div>`:`<div class="report-card report-placeholder"><div><h2>${esc(reportTab)}</h2><p>양식 준비 영역입니다.<br>필요한 항목을 정하면 같은 방식으로 자동 보고서 양식을 붙일 수 있습니다.</p></div></div>`}`;
+        els.reportView.innerHTML=`${toolbarHtml}<div class="report-tabs">${reportTabs.map(t=>`<button class="${reportTab===t?"active":""}" data-report-tab="${esc(t)}">${esc(t)}</button>`).join("")}</div>${reportTab==="A/S"?`<div class="report-shell"><aside>${renderReportForm()}</aside><section class="report-preview">${renderAsSheet()}</section></div>`:reportTab==="시공월별보고서"?`<div class="monthly-report-shell"><aside>${renderMonthlyReportForm()}</aside><section class="report-preview">${renderMonthlyReportSheet()}</section></div>`:reportTab==="기타"?`<div class="report-shell"><aside>${renderGenericReportForm()}</aside><section class="report-preview">${renderGenericSheet()}</section></div>`:reportTab==="시공검수"?renderInspectionTab():`<div class="report-card report-placeholder"><div><h2>${esc(reportTab)}</h2><p>양식 준비 영역입니다.</p></div></div>`}`;
         if(reportTab==="A/S")restoreAsDraft();
         if(reportTab==="기타")restoreGenericDraft();
         if(reportTab==="A/S")$$(`#reportView input,#reportView textarea`).forEach(el=>el.addEventListener("input",()=>{saveAsDraft();$(".report-preview").innerHTML=renderAsSheet()}));
@@ -2355,6 +2448,40 @@ document.addEventListener("change",e=>{
           });
         });
         updatePhotoCounts();
+        if(reportTab==="시공검수"){
+          function _inspGetDraft(){
+            const d=readInspDraft()||{date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}};
+            d.site=$("#inspSite")?.value??d.site;d.phase=$("#inspPhase")?.value??d.phase;d.company=$("#inspCompany")?.value??d.company;
+            d.inspector=$("#inspInspector")?.value??d.inspector;d.date=$("#inspDate")?.value??d.date;
+            d.capacity=$("#inspCapacity")?.value??d.capacity;d.installType=$("#inspInstallType")?.value??d.installType;
+            return d;
+          }
+          function _inspAutoSave(){const d=_inspGetDraft();saveInspDraft(d);const {done,total,pct}=inspProgress(d);const bar=$("#reportView .insp-progress-bar");if(bar)bar.style.width=pct+"%";const lbl=$("#reportView .insp-progress-label");if(lbl)lbl.textContent=`${done} / ${total} 항목 완료 (${pct}%)`}
+          document.querySelectorAll("#reportView .insp-btn").forEach(btn=>{
+            btn.addEventListener("click",()=>{
+              const key=btn.dataset.inspKey,val=btn.dataset.v,d=_inspGetDraft();
+              if(!d.checks)d.checks={};
+              d.checks[key]=d.checks[key]===val?"":val;
+              saveInspDraft(d);
+              const row=btn.closest(".insp-btns");
+              row.querySelectorAll(".insp-btn").forEach(b=>b.classList.toggle("sel",b.dataset.v===d.checks[key]));
+              _inspAutoSave();
+            });
+          });
+          document.querySelectorAll("#reportView .insp-memo").forEach(inp=>{
+            inp.addEventListener("input",()=>{const d=_inspGetDraft();if(!d.sectionMemos)d.sectionMemos={};d.sectionMemos[inp.dataset.inspMemo]=inp.value;saveInspDraft(d)});
+          });
+          document.querySelectorAll("#reportView #inspSite,#reportView #inspPhase,#reportView #inspCompany,#reportView #inspInspector,#reportView #inspDate,#reportView #inspCapacity,#reportView #inspInstallType").forEach(el=>{el.addEventListener("input",()=>saveInspDraft(_inspGetDraft()))});
+          $("#inspSaveBtn")?.addEventListener("click",()=>{
+            if(!state.siteInspections)state.siteInspections=[];
+            const d=_inspGetDraft();d.savedAt=new Date().toISOString();
+            state.siteInspections.push(d);
+            clearInspDraft();saveState("시공검수를 저장했습니다.");renderReportView();
+          });
+          $("#inspBackBtn")?.addEventListener("click",()=>{if(confirm("작성 중인 내용은 임시저장됩니다. 목록으로 이동할까요?")){saveInspDraft(_inspGetDraft());renderReportView()}});
+          $("#inspNewBtn")?.addEventListener("click",()=>{saveInspDraft({date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}});renderReportView()});
+          document.querySelectorAll("#reportView [data-insp-load]").forEach(el=>{el.addEventListener("click",()=>{const i=Number(el.dataset.inspLoad),d=state.siteInspections[i];if(d){saveInspDraft(JSON.parse(JSON.stringify(d)));renderReportView()}})});
+        }
       }
       function renderAsDbResults(){
         const box=$("#asDbResults"),q=$("#asDbSearch")?.value||"";
