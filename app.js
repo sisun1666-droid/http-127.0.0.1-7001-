@@ -4623,8 +4623,9 @@
         const btn=document.getElementById("diarySyncBtn");
         if(btn){btn.textContent="저장 중...";btn.disabled=true;}
         try{
-          const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({action:"save",date,person,rows,memo:memo||""})});
+          const payload=JSON.stringify({action:"save",date,person,rows,memo:memo||""});
+          const res=await fetch(url,{method:"POST",
+            body:"payload="+encodeURIComponent(payload)});
           const json=await res.json();
           if(json.ok){
             toast(`✅ 구글 시트에 저장됐습니다 (${date} · ${person})`);
