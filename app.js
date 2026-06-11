@@ -5669,19 +5669,26 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
         const needSetup=!dbUrl&&!diaryUrl;
         const el=document.createElement("div");
         el.id="sheetViewerModal";
+        const linkBtn=(label,url,color)=>url
+          ?`<a href="${esc(url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:14px 18px;background:#fff;border:1.5px solid ${color};border-radius:10px;text-decoration:none;color:#08245c;font-weight:700;font-size:14px;transition:.12s;" onmouseover="this.style.background='${color}22'" onmouseout="this.style.background='#fff'">
+              <span style="font-size:22px;">📊</span>
+              <div><div>${esc(label)}</div><div style="font-size:11px;font-weight:400;color:#65737d;margin-top:2px;">${esc(url.length>60?url.slice(0,60)+"…":url)}</div></div>
+              <span style="margin-left:auto;font-size:12px;color:${color};">새 탭으로 열기 →</span>
+            </a>`
+          :`<div style="padding:14px 18px;background:#f8f8f8;border:1.5px dashed #ccc;border-radius:10px;color:#aaa;font-size:13px;">URL 미설정 — 아래 설정에서 입력하세요</div>`;
         el.innerHTML=`
           <div class="overlay open" style="z-index:10002;padding:16px;">
-            <div class="modal" style="max-width:1100px;width:98vw;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-              <div class="modal-head" style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e0ecef;flex-shrink:0;">
-                <span style="font-weight:800;font-size:15px;color:#08245c;">📊 구글 시트 보기</span>
-                <div style="display:flex;gap:6px;margin-left:8px;">
-                  <button class="btn ${!diaryUrl||true?"active":""}" data-sheet-tab="diary" style="font-weight:700;font-size:13px;${true?"background:#087d8f;color:#fff;border-color:#087d8f":""}">업무일지</button>
-                  <button class="btn" data-sheet-tab="db" style="font-size:13px;">업무관리 DB</button>
-                </div>
+            <div class="modal" style="max-width:600px;width:96vw;padding:0;overflow:hidden;">
+              <div class="modal-head" style="padding:14px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e0ecef;">
+                <span style="font-weight:800;font-size:15px;color:#08245c;">📊 구글 시트 바로가기</span>
                 <button class="btn" id="sheetViewerSetupToggle" style="margin-left:auto;font-size:12px;padding:4px 10px;">⚙ URL 설정</button>
-                <button class="btn icon" id="closeSheetViewerBtn" style="font-size:18px;margin-left:4px;">×</button>
+                <button class="btn icon" id="closeSheetViewerBtn" style="font-size:18px;">×</button>
               </div>
-              <div id="svSetupArea" style="display:${needSetup?"":"none"};padding:16px;border-bottom:1px solid #e0ecef;background:#f8fcff;flex-shrink:0;">
+              <div style="padding:18px;display:grid;gap:12px;">
+                ${linkBtn("업무일지",diaryUrl,"#087d8f")}
+                ${linkBtn("기술지원팀 업무관리 DB",dbUrl,"#4285f4")}
+              </div>
+              <div id="svSetupArea" style="display:${needSetup?"":"none"};padding:16px;border-top:1px solid #e0ecef;background:#f8fcff;">
                 <div style="font-size:13px;color:#08245c;font-weight:700;margin-bottom:10px;">구글 시트 URL 설정</div>
                 <div style="display:grid;gap:8px;">
                   <div>
@@ -5692,17 +5699,12 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
                     <label style="font-size:12px;font-weight:600;color:#65737d;display:block;margin-bottom:4px;">업무관리 DB 시트 URL</label>
                     <input id="svDbUrlInput" class="field" style="width:100%;font-size:13px;" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="${esc(dbUrl)}">
                   </div>
-                  <div style="font-size:11px;color:#aaa;">💡 시트가 "웹에 게시"되어 있어야 iframe으로 보입니다. 구글 시트 → 파일 → 웹에 게시</div>
-                  <button class="btn primary" id="saveSheetViewerUrlsBtn">저장 후 보기</button>
+                  <button class="btn primary" id="saveSheetViewerUrlsBtn">저장</button>
                 </div>
-              </div>
-              <div id="svFrameArea" style="flex:1;min-height:0;display:${needSetup?"none":"flex"};">
-                <iframe id="sheetViewerFrame" style="width:100%;height:100%;border:none;min-height:500px;" src="" allowfullscreen></iframe>
               </div>
             </div>
           </div>`;
         document.body.appendChild(el);
-        if(!needSetup)loadSheetFrame("diary");
         el.addEventListener("click",e=>{if(e.target===el.querySelector(".overlay"))document.getElementById("sheetViewerModal")?.remove();});
       }
 
@@ -5809,9 +5811,7 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
           const diaryUrl=document.getElementById("svDiaryUrlInput")?.value.trim()||"";
           if(dbUrl)localStorage.setItem("sheet-viewer-db-url",dbUrl);
           if(diaryUrl)localStorage.setItem("sheet-viewer-diary-url",diaryUrl);
-          document.getElementById("svSetupArea").style.display="none";
-          document.getElementById("svFrameArea").style.display="";
-          loadSheetFrame("diary");
+          openSheetViewer();
           return;
         }
         if(t.id==="sheetViewerSetupToggle"){
