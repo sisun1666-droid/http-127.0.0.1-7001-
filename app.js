@@ -4625,6 +4625,7 @@
         try{
           const payload=JSON.stringify({action:"save",date,person,rows,memo:memo||""});
           const res=await fetch(url,{method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded"},
             body:"payload="+encodeURIComponent(payload)});
           const json=await res.json();
           if(json.ok){
