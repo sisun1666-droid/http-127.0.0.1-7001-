@@ -764,6 +764,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("change",e=>{
   if(e.target.id==="importJsonInput"&&e.target.files[0]){importStateJson(e.target.files[0]);e.target.value=""}
 },true);
+}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.hasAttribute?.("data-add-admin-person")){e.preventDefault();e.stopImmediatePropagation();state.people.push({name:KR.newEmployee,role:KR.employee,area:"",monthlyTarget:30,yearlyTarget:360,color:pastelPalette[state.people.length%pastelPalette.length]});saveState("직원을 추가했습니다.");render()}if(t.hasAttribute?.("data-add-admin-project")){e.preventDefault();e.stopImmediatePropagation();state.projects.push({name:KR.newProject});saveState("프로젝트를 추가했습니다.");render()}},true)
     document.addEventListener("input",e=>{const t=e.target;if(t.dataset.adminPersonPin){const p=state.people[Number(t.dataset.adminPersonPin)];if(p){p.pin=t.value.trim();persistState()}}},true)
     let dashboardSelectedConstruction=0,dashboardDate=today;
