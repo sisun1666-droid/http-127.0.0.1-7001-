@@ -5637,6 +5637,75 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
         toast(`업무일지(${date})를 엑셀로 내보냈습니다.`);
       }
 
+      function toEmbedUrl(url){
+        if(!url)return"";
+        // 구글 시트 URL을 embed URL로 변환
+        const m=url.match(/\/spreadsheets\/d\/([^\/]+)/);
+        if(!m)return url;
+        const id=m[1];
+        const gidM=url.match(/[#&]gid=(\d+)/);
+        const gid=gidM?gidM[1]:"";
+        return`https://docs.google.com/spreadsheets/d/${id}/pubhtml${gid?`?gid=${gid}&single=true&widget=true&headers=false`:"?widget=true&headers=false"}`;
+      }
+
+      function loadSheetFrame(tab){
+        const frame=document.getElementById("sheetViewerFrame");
+        if(!frame)return;
+        const dbUrl=localStorage.getItem("sheet-viewer-db-url")||"";
+        const diaryUrl=localStorage.getItem("sheet-viewer-diary-url")||"";
+        const url=tab==="db"?toEmbedUrl(dbUrl):toEmbedUrl(diaryUrl);
+        if(!url){
+          frame.srcdoc=`<div style="padding:40px;text-align:center;font-family:sans-serif;color:#888;">URL이 설정되지 않았습니다.<br>상단 ⚙ 설정 버튼을 눌러 구글 시트 URL을 입력하세요.</div>`;
+        }else{
+          frame.src=url;
+          frame.srcdoc="";
+        }
+      }
+
+      function openSheetViewer(){
+        document.getElementById("sheetViewerModal")?.remove();
+        const dbUrl=localStorage.getItem("sheet-viewer-db-url")||"";
+        const diaryUrl=localStorage.getItem("sheet-viewer-diary-url")||"";
+        const needSetup=!dbUrl&&!diaryUrl;
+        const el=document.createElement("div");
+        el.id="sheetViewerModal";
+        el.innerHTML=`
+          <div class="overlay open" style="z-index:10002;padding:16px;">
+            <div class="modal" style="max-width:1100px;width:98vw;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+              <div class="modal-head" style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e0ecef;flex-shrink:0;">
+                <span style="font-weight:800;font-size:15px;color:#08245c;">📊 구글 시트 보기</span>
+                <div style="display:flex;gap:6px;margin-left:8px;">
+                  <button class="btn ${!diaryUrl||true?"active":""}" data-sheet-tab="diary" style="font-weight:700;font-size:13px;${true?"background:#087d8f;color:#fff;border-color:#087d8f":""}">업무일지</button>
+                  <button class="btn" data-sheet-tab="db" style="font-size:13px;">업무관리 DB</button>
+                </div>
+                <button class="btn" id="sheetViewerSetupToggle" style="margin-left:auto;font-size:12px;padding:4px 10px;">⚙ URL 설정</button>
+                <button class="btn icon" id="closeSheetViewerBtn" style="font-size:18px;margin-left:4px;">×</button>
+              </div>
+              <div id="svSetupArea" style="display:${needSetup?"":"none"};padding:16px;border-bottom:1px solid #e0ecef;background:#f8fcff;flex-shrink:0;">
+                <div style="font-size:13px;color:#08245c;font-weight:700;margin-bottom:10px;">구글 시트 URL 설정</div>
+                <div style="display:grid;gap:8px;">
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#65737d;display:block;margin-bottom:4px;">업무일지 시트 URL</label>
+                    <input id="svDiaryUrlInput" class="field" style="width:100%;font-size:13px;" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="${esc(diaryUrl)}">
+                  </div>
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:#65737d;display:block;margin-bottom:4px;">업무관리 DB 시트 URL</label>
+                    <input id="svDbUrlInput" class="field" style="width:100%;font-size:13px;" placeholder="https://docs.google.com/spreadsheets/d/.../edit" value="${esc(dbUrl)}">
+                  </div>
+                  <div style="font-size:11px;color:#aaa;">💡 시트가 "웹에 게시"되어 있어야 iframe으로 보입니다. 구글 시트 → 파일 → 웹에 게시</div>
+                  <button class="btn primary" id="saveSheetViewerUrlsBtn">저장 후 보기</button>
+                </div>
+              </div>
+              <div id="svFrameArea" style="flex:1;min-height:0;display:${needSetup?"none":"flex"};">
+                <iframe id="sheetViewerFrame" style="width:100%;height:100%;border:none;min-height:500px;" src="" allowfullscreen></iframe>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(el);
+        if(!needSetup)loadSheetFrame("diary");
+        el.addEventListener("click",e=>{if(e.target===el.querySelector(".overlay"))document.getElementById("sheetViewerModal")?.remove();});
+      }
+
       function renderDiaryPanel(){
         const panel=$("#todoBoardPanel");
         if(!panel)return;
@@ -5665,6 +5734,7 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
             <button class="btn" id="diaryExportBtn" style="background:#087d8f;color:#fff;font-weight:bold;">엑셀 저장</button>
             <button class="btn" id="diarySyncBtn" style="background:${getDiarySheetUrl()?"#1a8c4e":"#34a853"};color:#fff;font-weight:bold;">${getDiarySheetUrl()?"✅ 구글 시트 저장":"구글 시트 저장"}</button>
             <button class="btn" id="diarySheetSettingBtn" style="font-size:11px;padding:4px 8px;" title="구글 시트 연동 설정">⚙ 시트 설정</button>
+            <button class="btn" id="sheetViewerBtn" style="background:#4285f4;color:#fff;font-weight:bold;">📊 시트 보기</button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;flex-wrap:wrap;">
             <button class="btn icon" id="diaryPrevBtn">&#8249;</button>
@@ -5711,6 +5781,10 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
         if(tview&&!tview.querySelector("[data-todo-view='diary']")){
           tview.insertAdjacentHTML("beforeend",`<button data-todo-view="diary">업무일지</button>`);
         }
+        const toolbar=$("#todoBoardPanel .todo-toolbar");
+        if(toolbar&&!toolbar.querySelector("#sheetViewerBtn")){
+          toolbar.insertAdjacentHTML("beforeend",`<button class="btn" id="sheetViewerBtn" style="background:#4285f4;color:#fff;font-weight:bold;">📊 시트 보기</button>`);
+        }
       };
 
       document.addEventListener("click",e=>{
@@ -5721,6 +5795,30 @@ if(_sheetsGrid&&!_sheetsGrid.querySelector("#sheetsSyncCard")){
         if(t.id==="diaryNextBtn"){const d=new Date(diaryDate);d.setDate(d.getDate()+1);diaryDate=d.toISOString().slice(0,10);renderDiaryPanel();return;}
         if(t.id==="diaryTodayBtn"){diaryDate=today;renderDiaryPanel();return;}
         if(t.dataset.todoView==="diary"){e.preventDefault();e.stopImmediatePropagation();todoViewMode="diary";renderDiaryPanel();return;}
+        /* 시트 보기 팝업 */
+        if(t.id==="sheetViewerBtn"){e.preventDefault();e.stopImmediatePropagation();openSheetViewer();return;}
+        if(t.id==="closeSheetViewerBtn"){document.getElementById("sheetViewerModal")?.remove();return;}
+        if(t.dataset.sheetTab){
+          document.querySelectorAll("[data-sheet-tab]").forEach(b=>b.classList.remove("active"));
+          t.classList.add("active");
+          loadSheetFrame(t.dataset.sheetTab);
+          return;
+        }
+        if(t.id==="saveSheetViewerUrlsBtn"){
+          const dbUrl=document.getElementById("svDbUrlInput")?.value.trim()||"";
+          const diaryUrl=document.getElementById("svDiaryUrlInput")?.value.trim()||"";
+          if(dbUrl)localStorage.setItem("sheet-viewer-db-url",dbUrl);
+          if(diaryUrl)localStorage.setItem("sheet-viewer-diary-url",diaryUrl);
+          document.getElementById("svSetupArea").style.display="none";
+          document.getElementById("svFrameArea").style.display="";
+          loadSheetFrame("diary");
+          return;
+        }
+        if(t.id==="sheetViewerSetupToggle"){
+          const a=document.getElementById("svSetupArea");
+          if(a)a.style.display=a.style.display==="none"?"":"none";
+          return;
+        }
         /* 구글 시트 저장 */
         if(t.id==="diarySyncBtn"){
           e.preventDefault();e.stopImmediatePropagation();
