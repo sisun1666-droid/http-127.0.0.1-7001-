@@ -2444,7 +2444,7 @@ document.addEventListener("change",e=>{
         const list=state.siteInspections;
         const listHtml=list.length?[...list].reverse().map((d,ri)=>{
           const i=list.length-1-ri;
-          return `<div class="insp-list-item" data-insp-load="${i}"><div><div style="font-weight:900;font-size:13px">${esc(d.site||"발전소명 미입력")} <span style="font-weight:700;color:var(--muted);font-size:12px">${esc(d.phase||"")}</span></div><div class="insp-list-meta">${esc(d.date||"")} · ${esc(d.company||"")} · ${esc(d.inspector||"")}</div></div>${inspBadge(d)}</div>`;
+          return `<div class="insp-list-item" style="display:flex;align-items:center;gap:8px"><div style="flex:1;cursor:pointer" data-insp-load="${i}"><div style="font-weight:900;font-size:13px">${esc(d.site||"발전소명 미입력")} <span style="font-weight:700;color:var(--muted);font-size:12px">${esc(d.phase||"")}</span></div><div class="insp-list-meta">${esc(d.date||"")} · ${esc(d.company||"")} · ${esc(d.inspector||"")}</div>${inspBadge(d)}</div><button class="btn icon danger" data-insp-delete="${i}" style="flex-shrink:0">×</button></div>`;
         }).join(""):`<div class="insp-empty">저장된 검수 기록이 없습니다.</div>`;
         return `<div class="insp-wrap"><button class="insp-new-btn" id="inspNewBtn">+ 새 검수 시작</button><div class="insp-list"><div class="insp-list-head"><h3>검수 기록</h3></div>${listHtml}</div></div>`;
       }
@@ -2581,9 +2581,64 @@ document.addEventListener("change",e=>{
           $("#inspBackBtn")?.addEventListener("click",()=>{if(confirm("작성 중인 내용은 임시저장됩니다. 목록으로 이동할까요?")){saveInspDraft(_inspGetDraft());renderReportView()}});
           $("#inspNewBtn")?.addEventListener("click",()=>{saveInspDraft({date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}});renderReportView()});
           document.querySelectorAll("#reportView [data-insp-load]").forEach(el=>{el.addEventListener("click",()=>{const i=Number(el.dataset.inspLoad),d=state.siteInspections[i];if(d){saveInspDraft(JSON.parse(JSON.stringify(d)));renderReportView()}})});
-          function _renderInspDbResults(){const box=$("#inspDbResults"),q=$("#inspDbSearch")?.value||"";if(!box||!window.solarDb)return;const rows=window.solarDb.search(q,10);box.classList.toggle("hidden",!q.trim());const c=window.solarDb.cell;box.innerHTML=rows.length?rows.map(x=>{const site=c(x.row,["발전소명","현장명","사업장명","발전소"])||"";const kw=String(c(x.row,["공사용량","발전허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,"");const customer=c(x.row,["사업주","사업주명","대표자","고객명","성명"])||"";const sub=[customer,kw?kw+"kW":""].filter(Boolean).join(" · ");return `<button class="report-db-result" type="button" data-insp-db-row="${x.i}" style="text-align:left;width:100%;padding:8px 10px;border:none;background:none;cursor:pointer;border-bottom:1px solid #eee"><strong>${esc(site||"DB 항목")}</strong>${sub?`<small style="display:block;color:#888;font-size:11px">${esc(sub)}</small>`:""}</button>`}).join(""):q.trim()?`<div style="padding:8px;color:#888;font-size:13px">검색 결과가 없습니다.</div>`:""}
+          document.querySelectorAll("#reportView [data-insp-delete]").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();const i=Number(el.dataset.inspDelete);if(confirm("이 검수 기록을 삭제할까요?")){if(!state.siteInspections)state.siteInspections=[];state.siteInspections.splice(i,1);saveState("검수 기록을 삭제했습니다.");renderReportView()}})});
+          function _renderInspDbResults(){
+            const box=$("#inspDbResults"),q=$("#inspDbSearch")?.value||"";
+            if(!box||!window.solarDb)return;
+            const rows=window.solarDb.search(q,12);
+            box.classList.toggle("hidden",!q.trim());
+            const c=window.solarDb.cell;
+            window.__inspDbMatches=rows;
+            box.innerHTML=rows.length?
+              `<div style="padding:6px 10px;background:#f0f9f4;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:12px;color:#555">체크 후 취합 선택</span><button class="btn primary" type="button" id="inspDbMergeBtn" style="padding:4px 10px;font-size:12px;flex-shrink:0">선택 취합</button></div>`+
+              rows.map((x,i)=>{
+                const site=c(x.row,["발전소명","현장명","사업장명","발전소"])||"";
+                const kw=String(c(x.row,["공사용량","발전허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,"");
+                const customer=c(x.row,["사업주","사업주명","대표자","고객명","성명"])||"";
+                const sub=[customer,kw?kw+"kW":""].filter(Boolean).join(" · ");
+                return`<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer"><input type="checkbox" data-insp-db-check="${i}" style="flex-shrink:0"><span style="flex:1"><strong>${esc(site||"DB 항목")}</strong>${sub?`<small style="display:block;color:#888;font-size:11px">${esc(sub)}</small>`:""}</span><button class="btn" type="button" data-insp-db-row="${x.i}" style="padding:4px 8px;font-size:12px;flex-shrink:0">단일</button></label>`;
+              }).join("")
+              :q.trim()?`<div style="padding:8px;color:#888;font-size:13px">검색 결과가 없습니다.</div>`:"";
+          }
           document.querySelector("#reportView #inspDbSearch")?.addEventListener("input",_renderInspDbResults);
-          document.querySelector("#reportView")?.addEventListener("click",function(e){const t=e.target.closest("[data-insp-db-row]");if(!t)return;const row=window.solarDb?.rows()[Number(t.dataset.inspDbRow)];if(!row)return;const c=window.solarDb.cell;const site=c(row,["발전소명","현장명","사업장명","발전소"]);const kw=String(c(row,["공사용량","발전허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,"");const company=c(row,["시공업체","시공_전기시공업체","전기시공업체","시공사"]);const installType=c(row,["설치형태","설치유형","지붕유형","설치타입"]);if(site)$("#inspSite").value=site;if(kw)$("#inspCapacity").value=kw;if(company)$("#inspCompany").value=company;if(installType)$("#inspInstallType").value=installType;saveInspDraft(_inspGetDraft());$("#inspDbResults")?.classList.add("hidden");if($("#inspDbSearch"))$("#inspDbSearch").value=site||"";toast("DB 정보를 자동 입력했습니다.")});
+          document.querySelector("#reportView")?.addEventListener("click",function(e){
+            if(e.target.closest("#inspDbMergeBtn")){
+              const checked=[...document.querySelectorAll("[data-insp-db-check]:checked")].map(el=>window.__inspDbMatches?.[Number(el.dataset.inspDbCheck)]).filter(Boolean);
+              if(!checked.length){toast("먼저 호기를 체크해주세요.");return}
+              const rows=checked.map(x=>window.solarDb?.rows()[x.i]).filter(Boolean);
+              const c=window.solarDb.cell;
+              const sites=rows.map(r=>c(r,["발전소명","현장명","사업장명","발전소"])||"").filter(Boolean);
+              const totalKw=Math.round(rows.reduce((s,r)=>s+Number(String(c(r,["공사용량","발전허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,"")||0),0)*100)/100;
+              const company=c(rows[0],["시공업체","시공_전기시공업체","전기시공업체","시공사"])||"";
+              const installType=c(rows[0],["설치형태","설치유형","지붕유형"])||"";
+              const label=sites.length>1?`${sites[0]} 외 ${sites.length-1}건`:sites[0]||"";
+              if(label&&$("#inspSite"))$("#inspSite").value=label;
+              if(totalKw&&$("#inspCapacity"))$("#inspCapacity").value=String(totalKw);
+              if(company&&$("#inspCompany"))$("#inspCompany").value=company;
+              if(installType&&$("#inspInstallType"))$("#inspInstallType").value=installType;
+              saveInspDraft(_inspGetDraft());
+              $("#inspDbResults")?.classList.add("hidden");
+              if($("#inspDbSearch"))$("#inspDbSearch").value=label||"";
+              toast(`${checked.length}개 호기를 취합했습니다.`);
+              return;
+            }
+            const t=e.target.closest("[data-insp-db-row]");
+            if(!t)return;
+            const row=window.solarDb?.rows()[Number(t.dataset.inspDbRow)];if(!row)return;
+            const c=window.solarDb.cell;
+            const site=c(row,["발전소명","현장명","사업장명","발전소"]);
+            const kw=String(c(row,["공사용량","발전허가용량","용량(kW)","용량","설비용량"])||"").replace(/[^\d.]/g,"");
+            const company=c(row,["시공업체","시공_전기시공업체","전기시공업체","시공사"]);
+            const installType=c(row,["설치형태","설치유형","지붕유형","설치타입"]);
+            if(site&&$("#inspSite"))$("#inspSite").value=site;
+            if(kw&&$("#inspCapacity"))$("#inspCapacity").value=kw;
+            if(company&&$("#inspCompany"))$("#inspCompany").value=company;
+            if(installType&&$("#inspInstallType"))$("#inspInstallType").value=installType;
+            saveInspDraft(_inspGetDraft());
+            $("#inspDbResults")?.classList.add("hidden");
+            if($("#inspDbSearch"))$("#inspDbSearch").value=site||"";
+            toast("DB 정보를 자동 입력했습니다.");
+          });
         }
       }
       function renderAsDbResults(){
