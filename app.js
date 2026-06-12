@@ -2,7 +2,7 @@
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"◎",label:"고객·계약"},{icon:"▦",label:"현장관리"},{icon:"▣",label:"설계·자재"},{icon:"◉",label:"시공일정"},{icon:"☑",label:"할일관리"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"☑",label:"할일관리"},{icon:"⌖",label:"외근현황"},{icon:"✉",label:"메세지"},{icon:"▣",label:"보고서"},{icon:"▤",label:"회의록"},{icon:"◉",label:"시공일정"},{icon:"▦",label:"DB"},{icon:"▤",label:"프로젝트 파일"},{icon:"▣",label:"MW"},{icon:"◉",label:"구조물 검수"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
     let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",todoPanelTab="tasks",diaryDateCursor=today,editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
@@ -3624,6 +3624,7 @@ document.addEventListener("change",e=>{
         "대시보드":{icon:"⌂",label:"대시보드",access:"member"},
         "할일관리":{icon:"☑",label:"할일관리",access:"member"},
         "외근현황":{icon:"⌖",label:"외근현황",access:"member"},
+        "메세지":{icon:"✉",label:"메세지",access:"member"},
         "보고서":{icon:"▣",label:"보고서",access:"member"},
         "회의록":{icon:"▤",label:"회의록",access:"member"},
         "시공일정":{icon:"◉",label:"시공일정",access:"admin"},
@@ -3640,9 +3641,9 @@ document.addEventListener("change",e=>{
       }
       function applyPreferredNavOrder(){
         if(!Array.isArray(state.nav))state.nav=[];
-        state.hiddenNavLabels=Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels.filter(x=>!preferredNavOrder.includes(preferredNavLabel(x))):[];
+        const hidden=Array.isArray(state.hiddenNavLabels)?state.hiddenNavLabels.map(h=>preferredNavLabel(h)):[];
         const current=state.nav.map(n=>({...n,label:preferredNavLabel(n.label)}));
-        state.nav=preferredNavOrder.map(label=>current.find(n=>n.label===label)||{...preferredNavDefaults[label]});
+        state.nav=preferredNavOrder.filter(label=>!hidden.includes(label)).map(label=>current.find(n=>n.label===label)||{...preferredNavDefaults[label]});
         normalizePermissionState?.();
         if(currentView==="projects"||currentView==="assignments"){
           currentView="todos";
@@ -3650,7 +3651,7 @@ document.addEventListener("change",e=>{
         }
       }
       const baseNormalizeForPreferredNav=normalizeState;
-      normalizeState=baseNormalizeForPreferredNav;
+      normalizeState=function(){baseNormalizeForPreferredNav();applyPreferredNavOrder()};
       applyPreferredNavOrder();
     })();
     (function setupOnlinePresence(){
