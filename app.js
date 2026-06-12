@@ -134,13 +134,15 @@
     /* 개별 테이블에서 데이터 로드 */
     async function loadSupabaseData(){
       const h=supabaseHeaders();
-      const [cfgRes,...tableRes]=await Promise.all([
+      const [cfgRes,dbCfgRes,...tableRes]=await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.main&select=data`,{cache:"no-store",headers:h}),
+        fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.db&select=data`,{cache:"no-store",headers:h}),
         ...TABLE_KEYS.map(t=>fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME[t]||t}?select=id,data&order=updated_at.desc`,{cache:"no-store",headers:h}))
       ]);
       /* 모든 응답 실패 = 연결 불가 */
       if(!cfgRes.ok&&tableRes.every(r=>!r.ok))throw new Error("Supabase 연결 실패");
       const cfgRows=cfgRes.ok?await cfgRes.json():[];
+      const dbCfgRows=dbCfgRes.ok?await dbCfgRes.json():[];
       const tableData=await Promise.all(tableRes.map(r=>r.ok?r.json():Promise.resolve([])));
       const config=cfgRows[0]?.data||null;
       /* 새 테이블에 데이터가 있는지 확인 (config는 있어도 업무 데이터가 없으면 마이그레이션 필요) */
@@ -161,6 +163,9 @@
         return config?{...clone(defaults),...config}:null;
       }
       const combined={...clone(defaults),...(config||{})};
+      /* 별도 슬롯(id=db)에 저장된 businessDb가 있으면 main config의 것보다 우선 적용 */
+      const dbConfig=dbCfgRows[0]?.data||null;
+      if(dbConfig&&Array.isArray(dbConfig.rows)&&dbConfig.rows.length)combined.businessDb=dbConfig;
       TABLE_KEYS.forEach((table,i)=>{
         if(!tableRes[i]?.ok){return;} /* 테이블 미존재 또는 오류 → app_config 데이터 유지 */
         const rows=tableData[i]||[];
@@ -174,10 +179,10 @@
     async function saveDataToSupabase(data=state,options={}){
       const now=new Date().toISOString();
       const h=supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"});
-      /* 1. 설정 데이터 저장 (app_config) */
+      /* 1. 설정 데이터 저장 (app_config) - businessDb는 별도 슬롯(id=db)에 저장하므로 제외 */
       const cfgData={};
       Object.keys(data).forEach(k=>{
-        if(!TABLE_KEYS.includes(k)&&!k.startsWith("__"))cfgData[k]=data[k];
+        if(!TABLE_KEYS.includes(k)&&!k.startsWith("__")&&k!=="businessDb")cfgData[k]=data[k];
       });
       ["__lastSavedAt","__lastSavedAtText","__deviceId","__updatedAt"].forEach(k=>{if(data[k]!==undefined)cfgData[k]=data[k]});
       const cfgBody=JSON.stringify({id:"main",data:cfgData,updated_at:now});
@@ -1741,6 +1746,14 @@ document.addEventListener("change",e=>{
         state.businessDb=db;
         state.businessDbSyncedAt=db.cloudSavedAt;
         delete state.businessDbClearedAt;
+        /* DB는 크기가 크므로 별도 Supabase 슬롯(id=db)에 즉시 직접 저장 */
+        const h=supabaseHeaders({Prefer:"resolution=merge-duplicates,return=minimal"});
+        fetch(`${SUPABASE_URL}/rest/v1/app_config`,{
+          method:"POST",headers:h,
+          body:JSON.stringify({id:"db",data:db,updated_at:db.cloudSavedAt})
+        }).then(r=>{
+          if(!r.ok)toast("⚠️ DB 공유 저장 실패 - 다시 시도해주세요");
+        }).catch(()=>toast("⚠️ DB 공유 저장 실패 - 네트워크를 확인해주세요"));
         persistState();
       }
       function clearDb(){
@@ -1748,6 +1761,7 @@ document.addEventListener("change",e=>{
         delete state.businessDb;
         state.businessDbSyncedAt=new Date().toISOString();
         state.businessDbClearedAt=state.businessDbSyncedAt;
+        fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.db`,{method:"DELETE",headers:supabaseHeaders()}).catch(()=>{});
         persistState();
       }
       function dbSavedText(db){
