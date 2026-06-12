@@ -6015,6 +6015,9 @@ document.addEventListener("change",e=>{
           for(let i=1;i<cols.length;i++){const raw=cols[i].replace(/[^0-9.]/g,"");const v=parseFloat(raw);if(!isNaN(v)&&v>0&&/\d/.test(cols[i])){kw=v;kwIdx=i;break;}}
           for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(/(특별시|광역시|도|시|군|구)/.test(cols[i])){region=cols[i];break;}}
           for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(cols[i]===region)continue;if(!/\d/.test(cols[i])){corp=cols[i];break;}}
+          /* 계열사: 동광/다온/남해/다호 우선 인식 */
+          const KNOWN_CORPS=["동광","다온","남해","다호"];
+          for(let ci=1;ci<cols.length;ci++){if(ci===kwIdx||cols[ci]===region)continue;if(KNOWN_CORPS.includes(cols[ci])){corp=cols[ci];break;}}
           if(!name)continue;
           out.push({id:uid("alc"),name,kw,region,corp,team:"",lockTeam:""});
         }
