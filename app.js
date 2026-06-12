@@ -182,7 +182,7 @@
       /* 1. 설정 데이터 저장 (app_config) - businessDb는 별도 슬롯(id=db)에 저장하므로 제외 */
       const cfgData={};
       Object.keys(data).forEach(k=>{
-        if(!TABLE_KEYS.includes(k)&&!k.startsWith("__")&&k!=="businessDb")cfgData[k]=data[k];
+        if(!TABLE_KEYS.includes(k)&&!k.startsWith("__")&&k!=="businessDb"&&k!=="clockBgImage")cfgData[k]=data[k];
       });
       ["__lastSavedAt","__lastSavedAtText","__deviceId","__updatedAt"].forEach(k=>{if(data[k]!==undefined)cfgData[k]=data[k]});
       const cfgBody=JSON.stringify({id:"main",data:cfgData,updated_at:now});
@@ -591,7 +591,7 @@ function inspRows(b) {
     function renderKpis(){
       if(currentView==="dashboard"){
         els.kpis.classList.add("kpis-weather");
-        els.kpis.innerHTML=`<div style="display:grid;grid-template-columns:1fr 360px;gap:12px;height:100%"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>🏗️ 시공 기상정보</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">기상 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 시공 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.75;pointer-events:none;border-radius:16px"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18) 0%,rgba(0,0,0,.38) 100%);border-radius:16px;pointer-events:none" id="dashClockScrim"></div><div style="position:relative;z-index:2;width:100%;text-align:center;padding:16px 0"><div id="dashClockDate" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.6px;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.6)"></div><div id="dashClock" style="font-size:52px;font-weight:800;letter-spacing:-2px;color:#fff;line-height:1;text-shadow:0 3px 12px rgba(0,0,0,.75)"></div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:10px;font-weight:600;letter-spacing:.4px;text-shadow:0 1px 4px rgba(0,0,0,.5)">Asia/Seoul 기준</div></div></section></div>`;
+        els.kpis.innerHTML=`<div class="dash-top-grid"><section class="dash-section compact" style="margin:0;border-radius:16px"><div class="dash-title"><h2>🏗️ 시공 기상정보</h2><button class="btn" data-refresh-weather>새로고침</button></div><div id="dashWeatherContent" class="weather-grid"><div class="meta">기상 정보를 불러오는 중입니다.</div></div><div class="label" style="margin-top:10px">대구 7일 시공 예보</div><div id="dashForecastContent" class="forecast-strip"></div></section><section class="dash-section compact time-card" style="margin:0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><div id="dashClockBg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.75;pointer-events:none;border-radius:16px"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18) 0%,rgba(0,0,0,.38) 100%);border-radius:16px;pointer-events:none" id="dashClockScrim"></div><div style="position:relative;z-index:2;width:100%;text-align:center;padding:16px 0"><div id="dashClockDate" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.6px;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.6)"></div><div id="dashClock" style="font-size:52px;font-weight:800;letter-spacing:-2px;color:#fff;line-height:1;text-shadow:0 3px 12px rgba(0,0,0,.75)"></div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:10px;font-weight:600;letter-spacing:.4px;text-shadow:0 1px 4px rgba(0,0,0,.5)">Asia/Seoul 기준</div></div></section></div>`;
         const saved=localStorage.getItem("clockBgImage");
         if(saved){const el=document.getElementById("dashClockBg");if(el)el.style.backgroundImage=`url(${saved})`;}
         const inp=document.getElementById("clockBgInput");
@@ -5438,9 +5438,13 @@ document.addEventListener("change",e=>{
                   <div class="row-actions" style="gap:8px">
                     <div style="position:relative">
                       <button class="btn" id="inspDbImportBtn" type="button" style="background:#ecfdf5;border-color:var(--teal);color:var(--teal);font-weight:900">📋 현장 불러오기</button>
-                      <div id="inspDbPicker" style="display:none;position:absolute;right:0;top:38px;z-index:200;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);width:340px;padding:12px">
+                      <div id="inspDbPicker" style="display:none;position:absolute;right:0;top:38px;z-index:200;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);width:360px;padding:12px">
                         <input id="inspDbSearch" placeholder="발전소명 검색..." style="width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;box-sizing:border-box;margin-bottom:8px">
-                        <div id="inspDbList" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+                        <div id="inspDbMergeRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 8px;background:#f0fdf8;border-radius:8px;font-size:12px;color:#065f46">
+                          <span id="inspDbSelCount">0개 선택됨</span>
+                          <button type="button" id="inspDbMergeBtn" class="btn primary" style="padding:4px 12px;font-size:12px">일괄 등록</button>
+                        </div>
+                        <div id="inspDbList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
                       </div>
                     </div>
                     <button class="btn primary" id="saveInspBtn" type="button">저장</button>
@@ -5482,6 +5486,7 @@ document.addEventListener("change",e=>{
               <div><label>시공완료 통보일</label><input id="iComp" type="date" value="${esc(insp.completionNoticeDate||"")}"></div>
             </div>
             ${buildResultBarHtml(insp)}
+            <div style="margin:8px 0 4px;text-align:right"><button type="button" id="allPassBtn" class="btn" style="background:#d1fae5;border-color:var(--teal);color:#065f46;font-weight:700;font-size:13px">✅ 전체 적합</button></div>
             ${buildChecklistHtml(insp)}
           </div>`;
         }else if(_inspTab==="defect"){
@@ -5668,6 +5673,7 @@ document.addEventListener("change",e=>{
           const isOpen=picker.style.display!=="none";
           picker.style.display=isOpen?"none":"block";
           if(!isOpen){
+            _inspDbSel=new Set();
             const search=document.getElementById("inspDbSearch");
             if(search){search.value="";search.focus();}
             renderInspDbList("");
@@ -5675,33 +5681,41 @@ document.addEventListener("change",e=>{
           return;
         }
 
-        /* 현장 항목 선택 → 폼 자동 입력 (SOLAR_EPC_DATA) */
-        if(t.dataset.inspDbSelect!==undefined){
+        /* 현장 항목 체크박스 토글 */
+        if(t.dataset.inspDbSelect!==undefined||t.dataset.inspChk!==undefined){
           e.preventDefault();e.stopImmediatePropagation();
+          const row=t.closest("[data-insp-db-select]")||t;
+          const idx=Number(row.dataset.inspDbSelect??t.dataset.inspChk);
+          if(isNaN(idx))return;
+          if(_inspDbSel.has(idx))_inspDbSel.delete(idx);else _inspDbSel.add(idx);
+          renderInspDbList(document.getElementById("inspDbSearch")?.value||"");
+          return;
+        }
+
+        /* 일괄 등록 버튼 */
+        if(t.id==="inspDbMergeBtn"){
+          e.preventDefault();e.stopImmediatePropagation();
+          if(_inspDbSel.size===0)return;
           const src=(window.SOLAR_EPC_DATA&&window.SOLAR_EPC_DATA.projects)||[];
-          const c=src[Number(t.dataset.inspDbSelect)];
-          if(!c)return;
-          const iPN=document.getElementById("iPN"),iLoc=document.getElementById("iLoc"),iCap=document.getElementById("iCap"),iContr=document.getElementById("iContr"),iWork=document.getElementById("iWork"),iSup=document.getElementById("iSup"),iComp=document.getElementById("iComp");
-          if(iPN)iPN.value=c.plant||"";
-          if(iLoc)iLoc.value=c.region||"";
-          if(iCap)iCap.value=c.capacity||"";
-          if(iContr)iContr.value=c.corp||"";
-          if(iWork)iWork.value=c.corp||"";
-          if(iSup)iSup.value=c.manager||"";
-          if(iComp)iComp.value=c.end||"";
-          /* 편집 중인 insp 데이터에도 반영 */
-          const insp=getEditInsp();
-          if(insp){
-            insp.plantName=c.site||insp.plantName;
-            insp.location=c.location||c.customer||insp.location;
-            insp.capacity=c.kw||insp.capacity;
-            insp.contractor=c.structureTeam||insp.contractor;
-            insp.workTeam=c.company||insp.workTeam;
-            insp.fieldSupervisor=c.owner||insp.fieldSupervisor;
-            insp.completionNoticeDate=c.end||insp.completionNoticeDate;
-          }
+          const created=[];
+          _inspDbSel.forEach(idx=>{
+            const c=src[idx];if(!c)return;
+            const insp=blankInsp();
+            insp.plantName=c.plant||"";
+            insp.location=c.region||"";
+            insp.capacity=Number(c.capacity)||0;
+            insp.contractor=c.corp||"";
+            insp.workTeam=c.corp||"";
+            insp.fieldSupervisor=c.manager||"";
+            insp.completionNoticeDate=c.end||"";
+            insp.savedAt=new Date().toISOString();
+            created.push(insp);
+          });
+          state.structureInspections.unshift(...created);
           document.getElementById("inspDbPicker").style.display="none";
-          toast(`'${c.site}' 현장 정보를 불러왔습니다.`);
+          document.getElementById("inspModalOverlay")?.classList.remove("open");
+          saveState(`${created.length}개 검수를 일괄 등록했습니다.`);
+          if(currentView==="structureInspect")renderInspView();
           return;
         }
         if(t.id==="saveInspBtn"){e.preventDefault();e.stopImmediatePropagation();saveInspFromModal();return;}
@@ -5778,6 +5792,17 @@ document.addEventListener("change",e=>{
           const bar=document.getElementById("inspResultBar");
           if(bar)bar.outerHTML=buildResultBarHtml(insp);
           toast("조치완료 처리했습니다.");
+          return;
+        }
+
+        /* 전체 적합 버튼 */
+        if(t.id==="allPassBtn"){
+          e.preventDefault();e.stopImmediatePropagation();
+          const insp=getEditInsp();if(!insp)return;
+          insp.checklistItems.forEach(item=>{item.verdict="적합";});
+          calcResult(insp);
+          renderInspModalContent();
+          toast("모든 항목을 적합으로 설정했습니다.");
           return;
         }
 
@@ -5878,6 +5903,15 @@ document.addEventListener("change",e=>{
         }
       },true);
 
+      /* 현장 불러오기 다중선택 상태 */
+      let _inspDbSel=new Set();
+      function _updateInspDbSelCount(){
+        const cnt=document.getElementById("inspDbSelCount");
+        const btn=document.getElementById("inspDbMergeBtn");
+        if(cnt)cnt.textContent=`${_inspDbSel.size}개 선택됨`;
+        if(btn)btn.disabled=_inspDbSel.size===0;
+      }
+
       /* 현장 불러오기 목록 렌더 (SOLAR_EPC_DATA 기반) */
       function renderInspDbList(q){
         const list=document.getElementById("inspDbList");if(!list)return;
@@ -5885,15 +5919,19 @@ document.addEventListener("change",e=>{
         const items=src.filter(c=>{
           const txt=[c.plant,c.corp,c.region,c.manager].join(" ").toLowerCase();
           return !q||txt.includes(q.toLowerCase());
-        }).slice(0,30);
+        }).slice(0,50);
         if(!items.length){list.innerHTML=`<div style="padding:10px;color:#aaa;font-size:13px;text-align:center">검색 결과가 없습니다.</div>`;return;}
-        list.innerHTML=items.map((c,i)=>{
-          return `<button type="button" data-insp-db-select="${src.indexOf(c)}" style="text-align:left;background:#f0fdf8;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;width:100%;font-size:13px;line-height:1.5">
-            <strong style="color:var(--teal)">${esc(c.plant||"이름 없음")}</strong>
-            <span style="color:#999;font-size:11px;margin-left:6px">${esc(c.status||"")}</span><br>
-            <span style="color:#666;font-size:12px">${esc(c.corp||"")}${c.region?` · ${esc(c.region)}`:""}${c.capacity?` · ${c.capacity}kW`:""}</span>
-          </button>`;
+        list.innerHTML=items.map(c=>{
+          const idx=src.indexOf(c);
+          const chk=_inspDbSel.has(idx);
+          return `<label data-insp-db-select="${idx}" style="display:flex;align-items:flex-start;gap:8px;background:${chk?"#d1fae5":"#f0fdf8"};border:1px solid ${chk?"var(--teal)":"var(--line)"};border-radius:8px;padding:8px 10px;cursor:pointer;width:100%;box-sizing:border-box;font-size:13px;line-height:1.5">
+            <input type="checkbox" ${chk?"checked":""} data-insp-chk="${idx}" style="margin-top:2px;flex-shrink:0">
+            <span><strong style="color:var(--teal)">${esc(c.plant||"이름 없음")}</strong>
+            <span style="color:#999;font-size:11px;margin-left:4px">${esc(c.status||"")}</span><br>
+            <span style="color:#666;font-size:12px">${esc(c.corp||"")}${c.region?` · ${esc(c.region)}`:""}${c.capacity?` · ${c.capacity}kW`:""}</span></span>
+          </label>`;
         }).join("");
+        _updateInspDbSelCount();
       }
 
       /* 현장 검색 입력 */
@@ -6478,6 +6516,7 @@ document.addEventListener("change",e=>{
             const reader=new FileReader();
             reader.onload=e=>{
               state.clockBgImage=e.target.result;
+              localStorage.setItem("clockBgImage",e.target.result);
               saveState("시계 배경 이미지를 저장했습니다.");
               toast("이미지가 저장됐습니다. 대시보드를 확인해보세요!");
               const card=$("#clockImgAdminCard");if(card)card.remove();

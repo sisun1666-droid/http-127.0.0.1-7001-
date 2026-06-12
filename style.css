@@ -41,6 +41,9 @@
     /* ── KPI 상단바 ── */
     .kpis{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-bottom:16px}
     #kpis.kpis-weather{display:block;height:auto;min-height:0}
+    .dash-top-grid{display:grid;grid-template-columns:1fr 360px;gap:12px;height:100%}
+    @media(max-width:980px){.dash-top-grid{grid-template-columns:1fr;height:auto}}
+    @media(max-width:620px){.dash-top-grid{grid-template-columns:1fr;height:auto;gap:10px}}
     .kpi,.panel,.card,.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
     .kpi{padding:16px}
     .label{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
