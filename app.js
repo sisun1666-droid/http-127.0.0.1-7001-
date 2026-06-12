@@ -5442,7 +5442,7 @@ document.addEventListener("change",e=>{
                         <input id="inspDbSearch" placeholder="발전소명 검색..." style="width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;box-sizing:border-box;margin-bottom:8px">
                         <div id="inspDbMergeRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 8px;background:#f0fdf8;border-radius:8px;font-size:12px;color:#065f46">
                           <span id="inspDbSelCount">0개 선택됨</span>
-                          <button type="button" id="inspDbMergeBtn" class="btn primary" style="padding:4px 12px;font-size:12px">일괄 등록</button>
+                          <button type="button" id="structInspBulkBtn" class="btn primary" style="padding:4px 12px;font-size:12px">일괄 등록</button>
                         </div>
                         <div id="inspDbList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
                       </div>
@@ -5693,7 +5693,7 @@ document.addEventListener("change",e=>{
         }
 
         /* 일괄 등록 버튼 */
-        if(t.id==="inspDbMergeBtn"){
+        if(t.id==="structInspBulkBtn"){
           e.preventDefault();e.stopImmediatePropagation();
           if(_inspDbSel.size===0)return;
           const src=(window.SOLAR_EPC_DATA&&window.SOLAR_EPC_DATA.projects)||[];
@@ -5795,14 +5795,22 @@ document.addEventListener("change",e=>{
           return;
         }
 
-        /* 전체 적합 버튼 */
+        /* 전체 적합 토글 버튼 */
         if(t.id==="allPassBtn"){
           e.preventDefault();e.stopImmediatePropagation();
           const insp=getEditInsp();if(!insp)return;
-          insp.checklistItems.forEach(item=>{item.verdict="적합";});
-          calcResult(insp);
-          renderInspModalContent();
-          toast("모든 항목을 적합으로 설정했습니다.");
+          const allPass=insp.checklistItems.every(x=>x.verdict==="적합");
+          if(allPass){
+            insp.checklistItems.forEach(item=>{item.verdict="";});
+            calcResult(insp);
+            renderInspModalContent();
+            toast("전체 적합 취소됐습니다.");
+          }else{
+            insp.checklistItems.forEach(item=>{item.verdict="적합";});
+            calcResult(insp);
+            renderInspModalContent();
+            toast("모든 항목을 적합으로 설정했습니다.");
+          }
           return;
         }
 
@@ -5909,7 +5917,8 @@ document.addEventListener("change",e=>{
         const cnt=document.getElementById("inspDbSelCount");
         const btn=document.getElementById("inspDbMergeBtn");
         if(cnt)cnt.textContent=`${_inspDbSel.size}개 선택됨`;
-        if(btn)btn.disabled=_inspDbSel.size===0;
+        const btn2=document.getElementById("structInspBulkBtn");
+        if(btn2)btn2.disabled=_inspDbSel.size===0;
       }
 
       /* 현장 불러오기 목록 렌더 (SOLAR_EPC_DATA 기반) */
