@@ -967,7 +967,7 @@ body.masking-mode main,
             .report-drop-count{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:999px;background:#e8eef1;color:#52636b;padding:0 9px;font-size:12px;font-weight:900}
             .report-drop-zone{cursor:pointer}.report-drop-zone:active{transform:translateY(1px);box-shadow:inset 0 2px 8px rgba(0,0,0,.08)}
             .report-printing{transform:translateY(1px);box-shadow:inset 0 2px 7px rgba(0,0,0,.18)!important}
-            .as-sheet{width:794px;max-width:100%;margin:0 auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
+            .as-sheet{width:794px;max-width:100%;min-height:1050px;margin:0 auto;background:#fff;color:#111;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;border:1px solid #ddd}
             .as-sheet h2{text-align:center;font-size:22px;margin:18px 0 20px}.as-section-title{font-weight:900;border-top:1px solid #999;border-bottom:1px solid #d8d8d8;padding:7px 12px;background:#fff}
             .as-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}.as-table th,.as-table td{border-bottom:1px solid #d8d8d8;border-right:1px solid #d8d8d8;padding:7px 9px;white-space:normal;overflow:visible;text-overflow:clip;height:30px}
             .as-table th{width:96px;text-align:center;background:#fff;font-weight:900;color:#111}.as-table td:last-child,.as-table th:last-child{border-right:0}
