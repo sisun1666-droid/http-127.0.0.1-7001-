@@ -461,6 +461,8 @@ function inspRows(b) {
       const svrIdsEmpty=Object.values(_svrIds).every(s=>s.size===0);
       if(isFirstLoad&&svrIdsEmpty)forceReplace=true;
       sharedLoaded=true;
+      const _localSiteInsp=Array.isArray(state.siteInspections)?[...state.siteInspections]:null;
+      const _localUpdatedAt=state.__updatedAt||0;
       const merged={...clone(defaults),...shared};
       let hadLocalOnly=false;
       if(!forceReplace){
@@ -476,6 +478,8 @@ function inspRows(b) {
       /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
       TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
       state=merged;
+      /* siteInspections: TABLE_KEYS 밖에 있어 폴링 때마다 덮어써지는 버그 방지 — 로컬이 더 최신이면 유지 */
+      if(!forceReplace&&_localSiteInsp!==null&&_localUpdatedAt>(shared.__updatedAt||0))state.siteInspections=_localSiteInsp;
       /* _svrIds 업데이트 (서버 기준 ID 동기화) */
       if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});saveSvrIds();
       localStorage.setItem(storageKey,JSON.stringify(state));
@@ -2575,13 +2579,13 @@ document.addEventListener("change",e=>{
             if(!state.siteInspections)state.siteInspections=[];
             const d=_inspGetDraft();d.savedAt=new Date().toISOString();
             state.siteInspections.push(d);
-            clearInspDraft();saveState("시공검수를 저장했습니다.");renderReportView();
+            clearInspDraft();deleteAndSync("시공검수를 저장했습니다.");renderReportView();
           });
           $("#inspPrintBtn")?.addEventListener("click",()=>{saveInspDraft(_inspGetDraft());printInspectionReport()});
           $("#inspBackBtn")?.addEventListener("click",()=>{if(confirm("작성 중인 내용은 임시저장됩니다. 목록으로 이동할까요?")){saveInspDraft(_inspGetDraft());renderReportView()}});
           $("#inspNewBtn")?.addEventListener("click",()=>{saveInspDraft({date:today,site:"",company:"",phase:"",inspector:loginName()||"",capacity:"",installType:"",checks:{},sectionMemos:{}});renderReportView()});
           document.querySelectorAll("#reportView [data-insp-load]").forEach(el=>{el.addEventListener("click",()=>{const i=Number(el.dataset.inspLoad),d=state.siteInspections[i];if(d){saveInspDraft(JSON.parse(JSON.stringify(d)));renderReportView()}})});
-          document.querySelectorAll("#reportView [data-insp-delete]").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();const i=Number(el.dataset.inspDelete);if(confirm("이 검수 기록을 삭제할까요?")){if(!state.siteInspections)state.siteInspections=[];state.siteInspections.splice(i,1);saveState("검수 기록을 삭제했습니다.");renderReportView()}})});
+          document.querySelectorAll("#reportView [data-insp-delete]").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();const i=Number(el.dataset.inspDelete);if(confirm("이 검수 기록을 삭제할까요?")){if(!state.siteInspections)state.siteInspections=[];state.siteInspections.splice(i,1);deleteAndSync("검수 기록을 삭제했습니다.");renderReportView()}})});
           function _renderInspDbResults(){
             const box=$("#inspDbResults"),q=$("#inspDbSearch")?.value||"";
             if(!box||!window.solarDb)return;
