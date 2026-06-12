@@ -2,9 +2,9 @@
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
     const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"☑",label:"할일관리"},{icon:"⌖",label:"외근현황"},{icon:"✉",label:"메세지"},{icon:"▣",label:"보고서"},{icon:"▤",label:"회의록"},{icon:"◉",label:"시공일정"},{icon:"▦",label:"DB"},{icon:"▤",label:"프로젝트 파일"},{icon:"▣",label:"MW"},{icon:"◉",label:"구조물 검수"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광","금태양","JW","보강"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","보강공사","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"☑",label:"할일관리"},{icon:"⌖",label:"외근현황"},{icon:"✉",label:"메세지"},{icon:"▣",label:"보고서"},{icon:"▤",label:"회의록"},{icon:"◉",label:"시공일정"},{icon:"⚖",label:"시공배분"},{icon:"▦",label:"DB"},{icon:"▤",label:"프로젝트 파일"},{icon:"▣",label:"MW"},{icon:"◉",label:"구조물 검수"},{icon:"⚙",label:"관리자"}],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광","금태양","JW","보강"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","보강공사","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
-    let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",todoPanelTab="tasks",diaryDateCursor=today,editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
+    let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages","alloc","structureInspect"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",todoPanelTab="tasks",diaryDateCursor=today,editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
     const staffSessionKey="solar-staff-session-v1";
     const adminUnlockKey="solar-admin-unlocked",adminOwnerKey="solar-admin-owner";
@@ -461,7 +461,10 @@ function inspRows(b) {
       const svrIdsEmpty=Object.values(_svrIds).every(s=>s.size===0);
       if(isFirstLoad&&svrIdsEmpty)forceReplace=true;
       sharedLoaded=true;
-      const _localSiteInsp=Array.isArray(state.siteInspections)?[...state.siteInspections]:null;
+      /* TABLE_KEYS 밖이지만 폴링 때 덮어써지면 안 되는 로컬 보호 키 */
+      const _localProtectKeys=["siteInspections","allocation"];
+      const _localProtect={};
+      _localProtectKeys.forEach(k=>{if(state[k]!==undefined)_localProtect[k]=clone(state[k])});
       const _localUpdatedAt=state.__updatedAt||0;
       const merged={...clone(defaults),...shared};
       let hadLocalOnly=false;
@@ -478,8 +481,10 @@ function inspRows(b) {
       /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
       TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
       state=merged;
-      /* siteInspections: TABLE_KEYS 밖에 있어 폴링 때마다 덮어써지는 버그 방지 — 로컬이 더 최신이면 유지 */
-      if(!forceReplace&&_localSiteInsp!==null&&_localUpdatedAt>(shared.__updatedAt||0))state.siteInspections=_localSiteInsp;
+      /* TABLE_KEYS 밖 보호 키(siteInspections, allocation): 폴링 때마다 덮어써지는 버그 방지 — 로컬이 더 최신이면 유지 */
+      if(!forceReplace&&_localUpdatedAt>(shared.__updatedAt||0)){
+        Object.keys(_localProtect).forEach(k=>{state[k]=_localProtect[k]});
+      }
       /* _svrIds 업데이트 (서버 기준 ID 동기화) */
       if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});saveSvrIds();
       localStorage.setItem(storageKey,JSON.stringify(state));
@@ -5959,6 +5964,247 @@ document.addEventListener("change",e=>{
       },true);
 
       ensureInspChrome();ensureInspState();
+    })();
+
+    /* ══════════════════════════════════════════════════════
+       시공배분 (월간 시공팀 배분 도구)  setupAllocationView
+       - 다음 달 들어올 발전소 목록(수기 붙여넣기)
+       - 시공사별 kW 균등 분산 + 지역 클러스터링 자동 배분
+       - 한전협의 잠금(협의한 시공사 고정), 배분 초안 후 수정
+    ══════════════════════════════════════════════════════ */
+    (function setupAllocationView(){
+      function nextMonthStr(){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
+      function ensureAllocState(){
+        if(!state.allocation||typeof state.allocation!=="object"||Array.isArray(state.allocation))state.allocation={month:nextMonthStr(),plants:[]};
+        if(!state.allocation.month)state.allocation.month=nextMonthStr();
+        if(!Array.isArray(state.allocation.plants))state.allocation.plants=[];
+        state.allocation.plants.forEach(p=>{if(!p.id)p.id=uid("alc");p.kw=+p.kw||0;p.region=p.region||"";p.name=p.name||"";p.team=p.team||"";p.lockTeam=p.lockTeam||"";p.corp=p.corp||"";});
+        /* nav 주입 (시공일정 뒤) — 사용자가 숨긴 경우는 제외 */
+        const _allocHidden=Array.isArray(state.hiddenNavLabels)&&state.hiddenNavLabels.includes("시공배분");
+        if(Array.isArray(state.nav)&&!_allocHidden&&!state.nav.some(n=>n.label==="시공배분")){
+          const ci=state.nav.findIndex(n=>n.label.includes("시공일정"));
+          const adminI=state.nav.findIndex(n=>n.label.includes("관리자"));
+          const at=ci>=0?ci+1:(adminI>=0?adminI:state.nav.length);
+          state.nav.splice(at,0,{icon:"⚖",label:"시공배분"});
+        }
+      }
+      const baseNormAlc=normalizeState;
+      normalizeState=function(){baseNormAlc();ensureAllocState();};
+      const baseVFLAlc=viewForLabel;
+      viewForLabel=function(lbl){return String(lbl||"").replace(/\s/g,"").includes("시공배분")?"alloc":baseVFLAlc(lbl);};
+      const baseIsActAlc=isActive;
+      isActive=function(lbl){return currentView==="alloc"?String(lbl||"").replace(/\s/g,"")==="시공배분":baseIsActAlc(lbl);};
+
+      function shortRegion(r){r=String(r||"").trim();if(!r)return"";const m=r.match(/([가-힣]+(시|군|구))/g);if(m&&m.length)return m[m.length-1];const parts=r.split(/\s+/);return parts[parts.length-1]||r;}
+      function dbReadiness(name){
+        const src=(window.SOLAR_EPC_DATA&&window.SOLAR_EPC_DATA.projects)||[];
+        if(!name)return null;const n=String(name).replace(/\s/g,"");
+        const hit=src.find(p=>String(p.plant||"").replace(/\s/g,"")===n);
+        if(!hit)return null;return{done:hit.completedStages||0,total:hit.totalStages||8,missing:hit.missingStages||[]};
+      }
+
+      function parseAllocPaste(text){
+        const lines=String(text||"").split(/\r?\n/).map(l=>l.replace(/ /g," ").trim()).filter(Boolean);
+        const out=[];
+        for(const line of lines){
+          const cols=line.split(/\t|,|;|\s{2,}/).map(c=>c.trim()).filter(c=>c!=="");
+          if(!cols.length)continue;
+          /* 헤더행 스킵 */
+          if(/발전소|용량|지역|계열사/.test(line)&&!/\d{2,}/.test(line))continue;
+          let name=cols[0],kw=0,kwIdx=-1,region="",corp="";
+          for(let i=1;i<cols.length;i++){const raw=cols[i].replace(/[^0-9.]/g,"");const v=parseFloat(raw);if(!isNaN(v)&&v>0&&/\d/.test(cols[i])){kw=v;kwIdx=i;break;}}
+          for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(/(특별시|광역시|도|시|군|구)/.test(cols[i])){region=cols[i];break;}}
+          for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(cols[i]===region)continue;if(!/\d/.test(cols[i])){corp=cols[i];break;}}
+          if(!name)continue;
+          out.push({id:uid("alc"),name,kw,region,corp,team:"",lockTeam:""});
+        }
+        return out;
+      }
+
+      function allocAutoDistribute(){
+        const a=state.allocation;if(!a||!a.plants.length){toast("배분할 발전소가 없습니다.");return;}
+        const teams=(state.constructionTeams||[]).slice();
+        if(!teams.length){toast("시공사가 없습니다. 관리자에서 추가해주세요.");return;}
+        const load=Object.fromEntries(teams.map(t=>[t,0]));
+        const reg=Object.fromEntries(teams.map(t=>[t,new Set()]));
+        a.plants.forEach(p=>{if(!p.lockTeam)p.team="";});
+        a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);const sr=shortRegion(p.region);if(sr)reg[p.lockTeam].add(sr);}});
+        const rest=a.plants.filter(p=>!p.team).sort((x,y)=>(+y.kw||0)-(+x.kw||0));
+        const avg=rest.length?rest.reduce((s,p)=>s+(+p.kw||0),0)/rest.length:0;
+        const bonus=avg*0.6;
+        for(const p of rest){
+          const sr=shortRegion(p.region);let best=teams[0],score=Infinity;
+          for(const t of teams){let s=load[t];if(sr&&reg[t].has(sr))s-=bonus;if(s<score){score=s;best=t;}}
+          p.team=best;load[best]+=(+p.kw||0);if(sr)reg[best].add(sr);
+        }
+        saveState("자동 배분했습니다.");renderAllocView();
+      }
+
+      function allocExportText(){
+        const a=state.allocation;const teams=(state.constructionTeams||[]).slice();
+        let out=`[${a.month||""} 시공 배분]\n`;
+        const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
+        out+=`총 ${a.plants.length}건 / ${totAll.toFixed(1)}kW\n`;
+        teams.forEach(t=>{
+          const ps=a.plants.filter(p=>p.team===t);if(!ps.length)return;
+          const tot=ps.reduce((s,p)=>s+(+p.kw||0),0);
+          out+=`\n● ${t} — ${ps.length}건 / ${tot.toFixed(1)}kW\n`;
+          ps.forEach(p=>{out+=`  · ${p.name} (${(+p.kw||0)}kW) ${p.region||""}${p.lockTeam?" [한전협의]":""}\n`;});
+        });
+        const un=a.plants.filter(p=>!p.team||!teams.includes(p.team));
+        if(un.length){out+=`\n● 미배정 — ${un.length}건\n`;un.forEach(p=>{out+=`  · ${p.name} (${(+p.kw||0)}kW) ${p.region||""}\n`;});}
+        return out;
+      }
+
+      function ensureAllocChrome(){
+        if(!document.getElementById("allocationView")){
+          const anchor=document.getElementById("inspectionView")||document.getElementById("meetingView")||els.dbView||els.adminView;
+          anchor.insertAdjacentHTML("afterend",`<section class="panel hidden" id="allocationView"></section>`);
+        }
+        if(document.getElementById("allocStyle"))return;
+        document.head.insertAdjacentHTML("beforeend",`<style id="allocStyle">
+          #allocationView{box-shadow:none;background:transparent;border:0;padding:0}
+          .alc-shell{display:grid;gap:14px}
+          .alc-toolcard{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:14px 16px}
+          .alc-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+          .alc-tools input[type=month]{height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:13px}
+          .alc-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+          .alc-chip{background:#f0fdf8;border:1px solid #a7f3d0;border-radius:999px;padding:5px 12px;font-size:12px;color:#065f46;font-weight:800}
+          .alc-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+          .alc-col{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;min-height:120px}
+          .alc-col.un{background:#fff8f1;border-color:#fde2c8}
+          .alc-col-head{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:6px;position:sticky;top:0;background:inherit}
+          .alc-col-head h3{margin:0;font-size:14px;font-weight:900}
+          .alc-col-head .kw{font-size:12px;color:var(--teal);font-weight:900}
+          .alc-col.un .alc-col-head .kw{color:#c2710c}
+          .alc-bar{height:5px;background:#eef4f3}.alc-bar>span{display:block;height:100%;background:var(--teal)}
+          .alc-cards{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1}
+          .alc-card{border:1px solid var(--line);border-radius:8px;padding:8px 9px;background:#fbfdfd}
+          .alc-card.locked{border-color:#f6b87a;background:#fff7ee}
+          .alc-card .nm{font-size:13px;font-weight:800;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+          .alc-card .mt{font-size:11px;color:var(--muted);margin-top:2px}
+          .alc-rdy{font-size:10px;font-weight:800;border-radius:4px;padding:1px 5px}
+          .alc-rdy.ok{background:#e8faf0;color:#177245}.alc-rdy.mid{background:#fff7e6;color:#a15c00}.alc-rdy.low{background:#fdecec;color:#c2410c}
+          .alc-card-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+          .alc-card-row select{flex:1;height:30px;border:1px solid var(--line);border-radius:6px;font-size:12px;padding:0 6px;background:#fff}
+          .alc-icon{border:1px solid var(--line);background:#fff;border-radius:6px;height:30px;min-width:30px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+          .alc-icon.on{background:#f6b87a;border-color:#e0934a;color:#7a3d05}
+          .alc-empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+          @media(max-width:600px){.alc-board{grid-template-columns:1fr}}
+        </style>`);
+      }
+
+      function renderAllocView(){
+        ensureAllocChrome();ensureAllocState();
+        const host=document.getElementById("allocationView");if(!host)return;
+        const a=state.allocation;const teams=(state.constructionTeams||[]).slice();
+        const teamOpts=name=>`<option value="">미배정</option>`+teams.map(t=>`<option value="${esc(t)}"${name===t?" selected":""}>${esc(t)}</option>`).join("");
+        const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
+        const loads=teams.map(t=>({t,ps:a.plants.filter(p=>p.team===t)}));
+        const maxKw=Math.max(1,...loads.map(l=>l.ps.reduce((s,p)=>s+(+p.kw||0),0)));
+        function cardHtml(p){
+          const rdy=dbReadiness(p.name);
+          let rb="";if(rdy){const cls=rdy.done>=rdy.total?"ok":rdy.done>=rdy.total-2?"mid":"low";rb=`<span class="alc-rdy ${cls}" title="${esc((rdy.missing||[]).join(', ')||'완료')}">서류 ${rdy.done}/${rdy.total}</span>`;}
+          return `<div class="alc-card${p.lockTeam?" locked":""}" data-alc-id="${p.id}">
+            <div class="nm">${esc(p.name)} ${rb}</div>
+            <div class="mt">${(+p.kw||0)}kW · ${esc(p.region||"지역 미입력")}${p.corp?` · ${esc(p.corp)}`:""}${p.lockTeam?` · 🔒한전협의(${esc(p.lockTeam)})`:""}</div>
+            <div class="alc-card-row">
+              <select data-alloc-team="${p.id}">${teamOpts(p.team)}</select>
+              <button class="alc-icon${p.lockTeam?" on":""}" data-alloc-lock="${p.id}" title="한전협의 고정(이 시공사에서 꼭 시공)">🔒</button>
+              <button class="alc-icon" data-alloc-del="${p.id}" title="삭제">✕</button>
+            </div>
+          </div>`;
+        }
+        const colHtml=(name,ps,un)=>{
+          const tot=ps.reduce((s,p)=>s+(+p.kw||0),0);
+          return `<div class="alc-col${un?" un":""}">
+            <div class="alc-col-head"><h3>${esc(name)}</h3><span class="kw">${ps.length}건 · ${tot.toFixed(1)}kW</span></div>
+            <div class="alc-bar"><span style="width:${un?0:Math.round(tot/maxKw*100)}%"></span></div>
+            <div class="alc-cards">${ps.length?ps.map(cardHtml).join(""):`<div class="alc-empty">비어 있음</div>`}</div>
+          </div>`;
+        };
+        const unassigned=a.plants.filter(p=>!p.team||!teams.includes(p.team));
+        let boardCols=teams.map(t=>colHtml(t,a.plants.filter(p=>p.team===t),false)).join("");
+        boardCols+=colHtml("미배정",unassigned,true);
+        const summary=teams.map(t=>{const tot=a.plants.filter(p=>p.team===t).reduce((s,p)=>s+(+p.kw||0),0);return `<span class="alc-chip">${esc(t)} ${tot.toFixed(0)}kW</span>`;}).join("")+(unassigned.length?`<span class="alc-chip" style="background:#fff1e6;border-color:#fdd0a8;color:#c2410c">미배정 ${unassigned.length}건</span>`:"");
+        host.innerHTML=`<div class="alc-shell">
+          <div class="alc-toolcard">
+            <div class="alc-tools">
+              <label style="font-size:12px;font-weight:800;color:var(--muted)">대상 월</label>
+              <input type="month" id="allocMonth" value="${esc(a.month||"")}">
+              <button class="btn primary" id="allocPasteBtn" type="button">📋 발전소 붙여넣기</button>
+              <button class="btn" id="allocAutoBtn" type="button" style="background:#ecfdf5;border-color:var(--teal);color:var(--teal);font-weight:800">⚖ 자동 배분</button>
+              <button class="btn" id="allocCopyBtn" type="button">📄 결과 복사</button>
+              <button class="btn danger" id="allocClearBtn" type="button" style="margin-left:auto">전체 초기화</button>
+            </div>
+            <div class="alc-summary"><span class="alc-chip" style="background:#eef6ff;border-color:#bcd6f7;color:#1d4ed8">전체 ${a.plants.length}건 · ${totAll.toFixed(1)}kW</span>${summary}</div>
+          </div>
+          ${a.plants.length?`<div class="alc-board">${boardCols}</div>`:`<div class="alc-toolcard alc-empty">발전소 붙여넣기로 다음 달 시공 대상을 추가한 뒤 <b>자동 배분</b>을 눌러보세요.<br><span style="font-size:12px">생산관리 시트에서 [발전소명 / 용량(kW) / 지역 / (선택)계열사] 형식으로 복사해 붙여넣으면 됩니다.</span></div>`}
+        </div>`;
+      }
+
+      function openAllocPasteModal(){
+        let modal=document.getElementById("allocPasteOverlay");
+        if(!modal){
+          document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="allocPasteOverlay"><div class="modal" style="max-width:680px;width:96vw"><div class="modal-head"><h2>발전소 붙여넣기</h2><button class="btn icon" data-close="allocPasteOverlay" type="button">×</button></div>
+            <p class="meta" style="margin:0 0 8px">생산관리 시트에서 복사해 붙여넣으세요. 한 줄에 발전소 하나씩, 열은 탭/쉼표로 구분합니다.<br><b>형식: 발전소명 [탭] 용량(kW) [탭] 지역 [탭] (선택)계열사</b></p>
+            <textarea class="field" id="allocPasteText" style="min-height:200px;font-family:monospace;font-size:12px" placeholder="예)\n우암\t99.96\t경상북도 영천시\t파루\n성광2호\t442.9\t경남 밀양시\t키움"></textarea>
+            <div id="allocPastePreview" class="meta" style="margin-top:8px"></div>
+            <div class="toolbar" style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="allocPreviewBtn" type="button">미리보기</button><button class="btn primary" id="allocApplyBtn" type="button">추가</button></div>
+          </div></div>`);
+        }
+        document.getElementById("allocPasteText").value="";
+        document.getElementById("allocPastePreview").textContent="";
+        document.getElementById("allocPasteOverlay").classList.add("open");
+      }
+
+      /* ── 렌더링 훅 ── */
+      const baseRV_alc=renderView;
+      renderView=function(){
+        if(currentView==="alloc"){
+          ensureAllocChrome();renderAllocView();
+          document.getElementById("allocationView")?.classList.remove("hidden");
+          const toHide=[els.mainGrid,els.dashboardView,els.adminView,$("#kpis"),
+            ...(["fieldworkView","meetingView","messageView","reportView","dbView","epcView","inspectionView"].map(id=>document.getElementById(id))),
+            $("#sharedNotice")];
+          toHide.forEach(el=>{if(el)el.style.setProperty("display","none","important")});
+          document.body.className=document.body.className.replace(/\bview-\S+/g,"").trim();
+          document.body.classList.add("view-alloc");
+          renderNav?.();updateTopButtons?.();syncViewChrome?.();
+          return;
+        }
+        document.getElementById("allocationView")?.classList.add("hidden");
+        [els.mainGrid,els.dashboardView,els.adminView,$("#kpis"),
+         ...(["fieldworkView","meetingView","messageView","reportView","dbView","epcView","inspectionView"].map(id=>document.getElementById(id))),
+         $("#sharedNotice")].forEach(el=>{if(el&&el.style.getPropertyValue("display")==="none"&&currentView!=="structureInspect")el.style.removeProperty("display")});
+        baseRV_alc();
+      };
+      const baseRC_alc=renderCurrentContent;
+      renderCurrentContent=function(){if(currentView==="alloc"){renderAllocView();return}baseRC_alc();};
+      const baseSVC_alc=syncViewChrome;
+      syncViewChrome=function(){baseSVC_alc();if(currentView==="alloc"){els.pageTitle.textContent="시공배분";els.pageSub.textContent="다음 달 시공 대상을 시공사별로 균등·근접 배분합니다.";const b=document.getElementById("addProjectBtn");if(b)b.textContent="📋 발전소 붙여넣기";}};
+
+      /* ── 이벤트 ── */
+      document.addEventListener("click",e=>{
+        const t=e.target.closest("button")||e.target;
+        if(currentView==="alloc"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openAllocPasteModal();return;}
+        if(t.id==="allocPasteBtn"){e.preventDefault();e.stopImmediatePropagation();openAllocPasteModal();return;}
+        if(t.id==="allocAutoBtn"){e.preventDefault();e.stopImmediatePropagation();allocAutoDistribute();return;}
+        if(t.id==="allocClearBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm("배분 목록을 전체 삭제할까요?")){state.allocation.plants=[];saveState("초기화했습니다.");renderAllocView();}return;}
+        if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
+        if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b> — ${items.slice(0,5).map(p=>`${esc(p.name)}(${p.kw}kW)`).join(", ")}${items.length>5?" …":""}`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
+        if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가했습니다.`);renderAllocView();return;}
+        if(t.dataset.allocLock!==undefined){e.preventDefault();e.stopImmediatePropagation();const p=state.allocation.plants.find(x=>x.id===t.dataset.allocLock);if(p){if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();}return;}
+        if(t.dataset.allocDel!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=state.allocation.plants.findIndex(x=>x.id===t.dataset.allocDel);if(i>=0){state.allocation.plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();}return;}
+      },true);
+
+      document.addEventListener("change",e=>{
+        const t=e.target;
+        if(t.dataset.allocTeam!==undefined){const p=state.allocation.plants.find(x=>x.id===t.dataset.allocTeam);if(p){p.team=t.value;if(p.lockTeam&&p.lockTeam!==t.value)p.lockTeam=t.value?t.value:"";saveState("배정을 변경했습니다.");renderAllocView();}return;}
+        if(t.id==="allocMonth"){ensureAllocState();state.allocation.month=t.value;saveState("대상 월을 변경했습니다.");return;}
+      },true);
+
+      ensureAllocChrome();ensureAllocState();
     })();
 
     (function patchSearchIme(){
