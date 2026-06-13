@@ -3502,7 +3502,7 @@ document.addEventListener("change",e=>{
             contentPart={fileData:{mimeType,fileUri:uri}};
           }
           setStatus("🤖 Gemini AI 분석 중... (30초~1분 소요)");
-          const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[contentPart,{text:prompt}]}],generationConfig:{temperature:0.1}})});
+          const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[contentPart,{text:prompt}]}],generationConfig:{temperature:0.1}})});
           if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||`API 오류 (${resp.status})`)}
           const data=await resp.json();
           const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
@@ -6203,7 +6203,7 @@ document.addEventListener("change",e=>{
           const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
           const prompt="이 이미지는 태양광 발전소 시공 배분 목록 표입니다. 표에서 발전소명, 용량(kW 숫자만), 지역(주소), 계열사(시공사)를 추출해서 탭으로 구분된 텍스트로만 출력하세요. 헤더 행 없이 데이터 행만, 각 행을 줄바꿈으로 구분해서 출력하세요. 값이 없으면 빈칸으로 두세요.";
           const body={contents:[{parts:[{text:prompt},{inlineData:{mimeType:file.type||"image/png",data:b64}}]}]};
-          const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+          const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
           if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`API 오류 (${r.status})`);}
           const d=await r.json();
           const txt=(d.candidates?.[0]?.content?.parts?.[0]?.text||"").trim();
