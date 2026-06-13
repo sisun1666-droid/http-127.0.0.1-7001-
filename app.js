@@ -6026,7 +6026,7 @@ document.addEventListener("change",e=>{
 
       function allocAutoDistribute(){
         const a=state.allocation;if(!a||!a.plants.length){toast("배분할 발전소가 없습니다.");return;}
-        const teams=["동광","다온","남해","다호"]; /* 고정 4개 팀 */
+        const teams=["동광","다온","남해","다호"];
 
         /* 지역 판별 */
         function isGN(r){return /경남|창원|진주|통영|사천|김해|밀양|거제|양산|함안|창녕|고성|남해|하동|산청|함양|거창|합천/.test(r||"");}
@@ -6034,33 +6034,44 @@ document.addEventListener("change",e=>{
         function isGB(r){return /경북|안동|구미|영주|영천|상주|문경|경산|군위|의성|청도|고령|성주|칠곡|예천|봉화|울릉|포항|경주|울진|영덕|영양|청송/.test(r||"");}
         function isCC(r){return /충청|충북|충남|대전|세종|청주|천안|공주|보령|아산|서산|논산|계룡|당진|금산|부여|서천|청양|홍성|예산|태안|음성|진천|괴산|증평|충주|제천|보은|옥천|영동/.test(r||"");}
 
-        /* 팀 목표 비율: 다호는 60% 배려 */
-        function wt(t){return t==="다호"?0.6:1;}
-
-        /* 지역 선호 점수 (단위 곱 적용, 음수=선호) */
-        function rScore(t,r){
-          const gn=isGN(r),gbe=isGBeast(r),gb=isGB(r),cc=isCC(r);
-          if(t==="다호") return gn?-3:4;
-          if(t==="동광") return gn?-2:gbe?-1.5:0;
-          if(t==="다온") return gb?-2:cc?-1.5:0;
-          if(t==="남해") return(!gn&&!gb&&!cc)?-2:0;
-          return 0;
-        }
+        /* 팀 가중치: 다호 60% */
+        const WT={동광:1,다온:1,남해:1,다호:0.6};
+        const totalKw=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
+        const wtSum=Object.values(WT).reduce((a,b)=>a+b,0); /* 3.6 */
+        const target=Object.fromEntries(teams.map(t=>[t,totalKw*WT[t]/wtSum]));
 
         const load=Object.fromEntries(teams.map(t=>[t,0]));
         a.plants.forEach(p=>{if(!p.lockTeam)p.team="";});
         a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);}});
 
         const rest=a.plants.filter(p=>!p.team).sort((x,y)=>(+y.kw||0)-(+x.kw||0));
-        const unit=rest.reduce((s,p)=>s+(+p.kw||0),0)/Math.max(rest.length,1);
+
+        /* ── 지역 선호 점수 ──
+         * 지역 데이터가 없으면 0(중립) — 빈 지역을 남해 선호로 처리하던 버그 수정.
+         * 지역이 있으면: 1차 담당 지역 선호 → 부족 시 인접 팀이 cascade로 흡수.
+         * cascade 체인: 경남(다호→동광→다온→남해) / 경북(다온→동광→남해) / 기타(남해→다온→동광) */
+        function rScore(t,r){
+          if(!r||!r.trim())return 0; /* 지역 미입력: 순수 kW 균등 배분 */
+          const gn=isGN(r),gbe=isGBeast(r),gb=isGB(r),cc=isCC(r);
+          const other=!gn&&!gb&&!cc;
+          if(t==="다호") return gn?-3:other?1:2;   /* 경남 강선호, 기타 소폭 페널티 */
+          if(t==="동광") return gn?-2:gbe?-1.5:other?0.5:0; /* 경남·경북동부 선호, cascade로 다호 넘침 흡수 */
+          if(t==="다온") return gb?-2:cc?-1.5:gn?0.3:other?0.2:0; /* 경북·충청 선호, cascade로 동광 넘침 흡수 */
+          if(t==="남해") return other?-1.5:gn?0.5:0.2; /* 기타지역 선호, cascade로 다온 넘침도 흡수 */
+          return 0;
+        }
 
         for(const p of rest){
-          let best=teams[0],score=Infinity;
+          const kw=+p.kw||0;
+          /* 효과적 부하비율(load/target)로 과부하 팀 억제 + 지역 보정 */
+          let best=teams[0],bestScore=Infinity;
           for(const t of teams){
-            const s=(load[t]/wt(t))+(rScore(t,p.region||"")*unit);
-            if(s<score){score=s;best=t;}
+            const loadRatio=(load[t]+kw*0.5)/Math.max(target[t],1);
+            const rs=rScore(t,p.region||"");
+            const score=loadRatio+rs*0.35; /* 지역 보정 강도 조절 */
+            if(score<bestScore){bestScore=score;best=t;}
           }
-          p.team=best;load[best]+=(+p.kw||0);
+          p.team=best;load[best]+=kw;
         }
         saveState("자동 배분했습니다.");renderAllocView();
       }
