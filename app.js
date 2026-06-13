@@ -6166,6 +6166,13 @@ document.addEventListener("change",e=>{
           </div>
           ${a.plants.length?`<div class="alc-board">${boardCols}</div>`:`<div class="alc-toolcard alc-empty">발전소 붙여넣기로 다음 달 시공 대상을 추가한 뒤 <b>자동 배분</b>을 눌러보세요.<br><span style="font-size:12px">생산관리 시트에서 [발전소명 / 용량(kW) / 지역 / (선택)계열사] 형식으로 복사해 붙여넣으면 됩니다.</span></div>`}
         </div>`;
+        /* 전체 초기화 직접 바인딩 */
+        const clearBtn=host.querySelector("#allocClearBtn");
+        if(clearBtn)clearBtn.onclick=function(e){e.stopPropagation();if(confirm("배분 목록을 전체 삭제할까요?")){state.allocation.plants=[];saveState("초기화했습니다.");renderAllocView();}};
+        /* X(삭제) 버튼 직접 바인딩 */
+        host.querySelectorAll("[data-alloc-del]").forEach(function(btn){
+          btn.onclick=function(e){e.stopPropagation();const id=btn.dataset.allocDel;const i=state.allocation.plants.findIndex(function(x){return x.id===id;});if(i>=0){state.allocation.plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();}};
+        });
       }
 
       function openAllocPasteModal(){
