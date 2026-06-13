@@ -6222,12 +6222,10 @@ document.addEventListener("change",e=>{
         if(currentView==="alloc"&&t.id==="addProjectBtn"){e.preventDefault();e.stopImmediatePropagation();openAllocPasteModal();return;}
         if(t.id==="allocPasteBtn"){e.preventDefault();e.stopImmediatePropagation();openAllocPasteModal();return;}
         if(t.id==="allocAutoBtn"){e.preventDefault();e.stopImmediatePropagation();allocAutoDistribute();return;}
-        if(t.id==="allocClearBtn"){e.preventDefault();e.stopImmediatePropagation();if(confirm("배분 목록을 전체 삭제할까요?")){state.allocation.plants=[];saveState("초기화했습니다.");renderAllocView();}return;}
         if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
         if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b> — ${items.slice(0,5).map(p=>`${esc(p.name)}(${p.kw}kW)`).join(", ")}${items.length>5?" …":""}`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
         if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가했습니다.`);renderAllocView();return;}
         if(t.dataset.allocLock!==undefined){e.preventDefault();e.stopImmediatePropagation();const p=state.allocation.plants.find(x=>x.id===t.dataset.allocLock);if(p){if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();}return;}
-        if(t.dataset.allocDel!==undefined){e.preventDefault();e.stopImmediatePropagation();const i=state.allocation.plants.findIndex(x=>x.id===t.dataset.allocDel);if(i>=0){state.allocation.plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();}return;}
       },true);
 
       document.addEventListener("change",e=>{
