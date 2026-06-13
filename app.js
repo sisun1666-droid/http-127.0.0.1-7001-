@@ -6013,7 +6013,8 @@ document.addEventListener("change",e=>{
           if(!cols.length)continue;
           if(/발전소|용량|지역|계열사/.test(line)&&!/\d{2,}/.test(line))continue;
           let name=cols[0],kw=0,kwIdx=-1,region="",corp="";
-          for(let i=1;i<cols.length;i++){const v=parseFloat(cols[i].replace(/[^0-9.]/g,""));if(!isNaN(v)&&v>0&&/\d/.test(cols[i])){kw=v;kwIdx=i;break;}}
+          /* kW 탐색: 뒤에서부터, 한글 없고 숫자만인 컬럼 */
+          for(let i=cols.length-1;i>=1;i--){const c=cols[i];if(/[가-힣]/.test(c))continue;const stripped=c.replace(/[^0-9.]/g,"");const v=parseFloat(stripped);if(!isNaN(v)&&v>0&&stripped.length>=c.replace(/\s/g,"").length*0.5){kw=v;kwIdx=i;break;}}
           for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(REGION_RE.test(cols[i])||/(특별시|광역시|도|시|군|구)/.test(cols[i])){region=cols[i];break;}}
           for(let ci=1;ci<cols.length;ci++){if(ci===kwIdx||cols[ci]===region)continue;if(KNOWN_CORPS.includes(cols[ci])){corp=cols[ci];break;}}
           if(!corp){for(let i=1;i<cols.length;i++){if(i===kwIdx||cols[i]===region)continue;if(!/\d/.test(cols[i])){corp=cols[i];break;}}}
