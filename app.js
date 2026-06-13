@@ -6004,20 +6004,19 @@ document.addEventListener("change",e=>{
       }
 
       function parseAllocPaste(text){
-        const lines=String(text||"").split(/\r?\n/).map(l=>l.replace(/ /g," ").trim()).filter(Boolean);
+        const lines=String(text||"").split(/\r?\n/).map(l=>l.replace(/ /g," ").trim()).filter(Boolean);
         const out=[];
+        const REGION_RE=/경상남도|경상북도|충청북도|충청남도|전라남도|전라북도|강원도|경기도|제주|경남|경북|충북|충남|전남|전북|강원|경기|서울|부산|대구|인천|광주|대전|울산|세종|특별시|광역시|자치도/;
+        const KNOWN_CORPS=["동광","다온","남해","다호"];
         for(const line of lines){
           const cols=line.split(/\t|,|;|\s{2,}/).map(c=>c.trim()).filter(c=>c!=="");
           if(!cols.length)continue;
-          /* 헤더행 스킵 */
           if(/발전소|용량|지역|계열사/.test(line)&&!/\d{2,}/.test(line))continue;
           let name=cols[0],kw=0,kwIdx=-1,region="",corp="";
-          for(let i=1;i<cols.length;i++){const raw=cols[i].replace(/[^0-9.]/g,"");const v=parseFloat(raw);if(!isNaN(v)&&v>0&&/\d/.test(cols[i])){kw=v;kwIdx=i;break;}}
-          for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(/(특별시|광역시|도|시|군|구)/.test(cols[i])){region=cols[i];break;}}
-          for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(cols[i]===region)continue;if(!/\d/.test(cols[i])){corp=cols[i];break;}}
-          /* 계열사: 동광/다온/남해/다호 우선 인식 */
-          const KNOWN_CORPS=["동광","다온","남해","다호"];
+          for(let i=1;i<cols.length;i++){const v=parseFloat(cols[i].replace(/[^0-9.]/g,""));if(!isNaN(v)&&v>0&&/\d/.test(cols[i])){kw=v;kwIdx=i;break;}}
+          for(let i=1;i<cols.length;i++){if(i===kwIdx)continue;if(REGION_RE.test(cols[i])||/(특별시|광역시|도|시|군|구)/.test(cols[i])){region=cols[i];break;}}
           for(let ci=1;ci<cols.length;ci++){if(ci===kwIdx||cols[ci]===region)continue;if(KNOWN_CORPS.includes(cols[ci])){corp=cols[ci];break;}}
+          if(!corp){for(let i=1;i<cols.length;i++){if(i===kwIdx||cols[i]===region)continue;if(!/\d/.test(cols[i])){corp=cols[i];break;}}}
           if(!name)continue;
           out.push({id:uid("alc"),name,kw,region,corp,team:"",lockTeam:""});
         }
@@ -6188,8 +6187,8 @@ document.addEventListener("change",e=>{
         let modal=document.getElementById("allocPasteOverlay");
         if(!modal){
           document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="allocPasteOverlay"><div class="modal" style="max-width:680px;width:96vw"><div class="modal-head"><h2>발전소 붙여넣기</h2><button class="btn icon" data-close="allocPasteOverlay" type="button">×</button></div>
-            <p class="meta" style="margin:0 0 8px">생산관리 시트에서 복사해 붙여넣으세요. 한 줄에 발전소 하나씩, 열은 탭/쉼표로 구분합니다.<br><b>형식: 발전소명 [탭] 용량(kW) [탭] 지역 [탭] (선택)계열사</b></p>
-            <textarea class="field" id="allocPasteText" style="min-height:200px;font-family:monospace;font-size:12px" placeholder="예)\n우암\t99.96\t경상북도 영천시\t파루\n성광2호\t442.9\t경남 밀양시\t키움"></textarea>
+            <p class="meta" style="margin:0 0 8px">생산관리 시트에서 복사해 붙여넣으세요. 한 줄에 발전소 하나씩, 열은 탭/쉼표로 구분합니다.<br><b>형식: 발전소명 [탭] 용량(kW) [탭] 지역 [탭] (선택)계열사</b><br><span style="color:#059669">💡 지역을 입력하면 자동배분 정확도가 높아집니다. 경남·경북·충남 등 약칭도 인식합니다.</span></p>
+            <textarea class="field" id="allocPasteText" style="min-height:200px;font-family:monospace;font-size:12px" placeholder="예시 (탭으로 구분)&#10;발전소명&#9;용량(kW)&#9;지역&#9;계열사&#10;우암&#9;99.96&#9;경북 영천시&#10;성광2호&#9;442.9&#9;경남 밀양&#9;동광&#10;한솔&#9;3394&#9;충남 당진&#10;민&#9;4201&#9;경남&#10;&#10;※ 지역 없이도 사용 가능 (kW 균등배분)"></textarea>
             <div id="allocPastePreview" class="meta" style="margin-top:8px"></div>
             <div class="toolbar" style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="allocPreviewBtn" type="button">미리보기</button><button class="btn primary" id="allocApplyBtn" type="button">추가</button></div>
           </div></div>`);
@@ -6232,7 +6231,7 @@ document.addEventListener("change",e=>{
         if(t.id==="allocPasteBtn"){e.preventDefault();e.stopImmediatePropagation();openAllocPasteModal();return;}
         if(t.id==="allocAutoBtn"){e.preventDefault();e.stopImmediatePropagation();allocAutoDistribute();return;}
         if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
-        if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b> — ${items.slice(0,5).map(p=>`${esc(p.name)}(${p.kw}kW)`).join(", ")}${items.length>5?" …":""}`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
+        if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);const noRgn=items.filter(p=>!p.region).length;document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b>${noRgn?`<span style="color:#c2410c;margin-left:8px">⚠ 지역 미인식 ${noRgn}건 (자동배분 정확도 낮아짐)</span>`:` <span style="color:#059669">✓ 지역 모두 인식</span>`}<br><span style="font-size:11px;color:#6b7280">${items.slice(0,6).map(p=>`${esc(p.name)}(${p.kw}kW${p.region?" · "+esc(p.region):""})`).join(" / ")}${items.length>6?" …":""}</span>`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
         if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가됐습니다. 자동 배분을 시작합니다.`);allocAutoDistribute();return;}
       },true);
 
