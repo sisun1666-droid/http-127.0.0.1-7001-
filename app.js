@@ -6118,24 +6118,30 @@ document.addEventListener("change",e=>{
         </style>`);
       }
 
+      /* 전역 인라인 핸들러 — 이벤트 위임 충돌 완전 우회 */
+      window._allocDelPlant=function(id){const a=state.allocation;if(!a)return;const i=a.plants.findIndex(function(x){return x.id===id;});if(i>=0){a.plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();}};
+      window._allocClearAll=function(){if(confirm("전체 삭제할까요?")){state.allocation.plants=[];saveState("전체 삭제했습니다.");renderAllocView();}};
+      window._allocLockPlant=function(id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();};
+      window._allocSetTeam=function(sel,id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;p.team=sel.value;if(p.lockTeam&&p.lockTeam!==sel.value)p.lockTeam=sel.value?sel.value:"";saveState("배정을 변경했습니다.");renderAllocView();};
+
       function renderAllocView(){
         ensureAllocChrome();ensureAllocState();
         const host=document.getElementById("allocationView");if(!host)return;
         const a=state.allocation;const teams=["동광","다온","남해","다호"];
-        const teamOpts=name=>`<option value="">미배정</option>`+teams.map(t=>`<option value="${esc(t)}"${name===t?" selected":""}>${esc(t)}</option>`).join("");
+        const teamOpts=(name)=>`<option value="">미배정</option>`+teams.map(t=>`<option value="${esc(t)}"${name===t?" selected":""}>${esc(t)}</option>`).join("");
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
         const loads=teams.map(t=>({t,ps:a.plants.filter(p=>p.team===t)}));
         const maxKw=Math.max(1,...loads.map(l=>l.ps.reduce((s,p)=>s+(+p.kw||0),0)));
         function cardHtml(p){
           const rdy=dbReadiness(p.name);
           let rb="";if(rdy){const cls=rdy.done>=rdy.total?"ok":rdy.done>=rdy.total-2?"mid":"low";rb=`<span class="alc-rdy ${cls}" title="${esc((rdy.missing||[]).join(', ')||'완료')}">서류 ${rdy.done}/${rdy.total}</span>`;}
-          return `<div class="alc-card${p.lockTeam?" locked":""}" data-alc-id="${p.id}">
+          return `<div class="alc-card${p.lockTeam?" locked":""}">
             <div class="nm">${esc(p.name)} ${rb}</div>
             <div class="mt">${(+p.kw||0)}kW · ${esc(p.region||"지역 미입력")}${p.corp?` · ${esc(p.corp)}`:""}${p.lockTeam?` · 🔒한전협의(${esc(p.lockTeam)})`:""}</div>
             <div class="alc-card-row">
-              <select data-alloc-team="${p.id}">${teamOpts(p.team)}</select>
-              <button class="alc-icon${p.lockTeam?" on":""}" data-alloc-lock="${p.id}" title="한전협의 고정(이 시공사에서 꼭 시공)">🔒</button>
-              <button class="alc-icon" data-alloc-del="${p.id}" title="삭제">✕</button>
+              <select onchange="window._allocSetTeam(this,'${p.id}')">${teamOpts(p.team)}</select>
+              <button class="alc-icon${p.lockTeam?" on":""}" onclick="window._allocLockPlant('${p.id}')" title="한전협의 고정">🔒</button>
+              <button class="alc-icon" onclick="window._allocDelPlant('${p.id}')" title="삭제" style="color:#c2410c;font-weight:900">✕</button>
             </div>
           </div>`;
         }
@@ -6159,19 +6165,12 @@ document.addEventListener("change",e=>{
               <button class="btn primary" id="allocPasteBtn" type="button">📋 발전소 붙여넣기</button>
               <button class="btn" id="allocAutoBtn" type="button" style="background:#ecfdf5;border-color:var(--teal);color:var(--teal);font-weight:800">⚖ 자동 배분</button>
               <button class="btn" id="allocCopyBtn" type="button">📄 결과 복사</button>
-              <button class="btn danger" id="allocClearBtn" type="button" style="margin-left:auto">전체 초기화</button>
+              <button class="btn danger" onclick="window._allocClearAll()" type="button" style="margin-left:auto">전체 삭제</button>
             </div>
             <div class="alc-summary"><span class="alc-chip" style="background:#eef6ff;border-color:#bcd6f7;color:#1d4ed8">전체 ${a.plants.length}건 · ${totAll.toFixed(1)}kW</span>${summary}</div>
           </div>
           ${a.plants.length?`<div class="alc-board">${boardCols}</div>`:`<div class="alc-toolcard alc-empty">발전소 붙여넣기로 다음 달 시공 대상을 추가한 뒤 <b>자동 배분</b>을 눌러보세요.<br><span style="font-size:12px">생산관리 시트에서 [발전소명 / 용량(kW) / 지역 / (선택)계열사] 형식으로 복사해 붙여넣으면 됩니다.</span></div>`}
         </div>`;
-        /* 전체 초기화 직접 바인딩 */
-        const clearBtn=host.querySelector("#allocClearBtn");
-        if(clearBtn)clearBtn.onclick=function(e){e.stopPropagation();if(confirm("배분 목록을 전체 삭제할까요?")){state.allocation.plants=[];saveState("초기화했습니다.");renderAllocView();}};
-        /* X(삭제) 버튼 직접 바인딩 */
-        host.querySelectorAll("[data-alloc-del]").forEach(function(btn){
-          btn.onclick=function(e){e.stopPropagation();const id=btn.dataset.allocDel;const i=state.allocation.plants.findIndex(function(x){return x.id===id;});if(i>=0){state.allocation.plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();}};
-        });
       }
 
       function openAllocPasteModal(){
@@ -6224,12 +6223,10 @@ document.addEventListener("change",e=>{
         if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
         if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b> — ${items.slice(0,5).map(p=>`${esc(p.name)}(${p.kw}kW)`).join(", ")}${items.length>5?" …":""}`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
         if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가됐습니다. 자동 배분을 시작합니다.`);allocAutoDistribute();return;}
-        if(t.dataset.allocLock!==undefined){e.preventDefault();e.stopImmediatePropagation();const p=state.allocation.plants.find(x=>x.id===t.dataset.allocLock);if(p){if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();}return;}
       },true);
 
       document.addEventListener("change",e=>{
         const t=e.target;
-        if(t.dataset.allocTeam!==undefined){const p=state.allocation.plants.find(x=>x.id===t.dataset.allocTeam);if(p){p.team=t.value;if(p.lockTeam&&p.lockTeam!==t.value)p.lockTeam=t.value?t.value:"";saveState("배정을 변경했습니다.");renderAllocView();}return;}
         if(t.id==="allocMonth"){ensureAllocState();state.allocation.month=t.value;saveState("대상 월을 변경했습니다.");return;}
       },true);
 
