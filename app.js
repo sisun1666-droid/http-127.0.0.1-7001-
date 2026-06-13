@@ -6035,42 +6035,43 @@ document.addEventListener("change",e=>{
 
         /* 팀 가중치: 다호 60% */
         const WT={동광:1,다온:1,남해:1,다호:0.6};
-        const totalKw=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
-        const wtSum=Object.values(WT).reduce((a,b)=>a+b,0); /* 3.6 */
-        const target=Object.fromEntries(teams.map(t=>[t,totalKw*WT[t]/wtSum]));
+        const wtSum=Object.values(WT).reduce((a,b)=>a+b,0);
 
         const load=Object.fromEntries(teams.map(t=>[t,0]));
+        const cnt=Object.fromEntries(teams.map(t=>[t,0]));
         a.plants.forEach(p=>{if(!p.lockTeam)p.team="";});
-        a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);}});
+        a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);cnt[p.lockTeam]++;}});
 
         const rest=a.plants.filter(p=>!p.team).sort((x,y)=>(+y.kw||0)-(+x.kw||0));
+        const totalKw=rest.reduce((s,p)=>s+(+p.kw||0),0);
+        const totalCnt=rest.length;
+        const targetKw=Object.fromEntries(teams.map(t=>[t,totalKw*WT[t]/wtSum]));
+        const targetCnt=Object.fromEntries(teams.map(t=>[t,totalCnt*WT[t]/wtSum]));
 
-        /* ── 지역 선호 점수 ──
-         * 지역 데이터가 없으면 0(중립) — 빈 지역을 남해 선호로 처리하던 버그 수정.
-         * 지역이 있으면: 1차 담당 지역 선호 → 부족 시 인접 팀이 cascade로 흡수.
-         * cascade 체인: 경남(다호→동광→다온→남해) / 경북(다온→동광→남해) / 기타(남해→다온→동광) */
+        /* 지역 선호 점수 (미입력=0, 순수 균등배분) */
         function rScore(t,r){
-          if(!r||!r.trim())return 0; /* 지역 미입력: 순수 kW 균등 배분 */
+          if(!r||!r.trim())return 0;
           const gn=isGN(r),gbe=isGBeast(r),gb=isGB(r),cc=isCC(r);
           const other=!gn&&!gb&&!cc;
-          if(t==="다호") return gn?-3:other?1:2;   /* 경남 강선호, 기타 소폭 페널티 */
-          if(t==="동광") return gn?-2:gbe?-1.5:other?0.5:0; /* 경남·경북동부 선호, cascade로 다호 넘침 흡수 */
-          if(t==="다온") return gb?-2:cc?-1.5:gn?0.3:other?0.2:0; /* 경북·충청 선호, cascade로 동광 넘침 흡수 */
-          if(t==="남해") return other?-1.5:gn?0.5:0.2; /* 기타지역 선호, cascade로 다온 넘침도 흡수 */
+          if(t==="다호") return gn?-2:other?0.8:1.5;
+          if(t==="동광") return gn?-1.5:gbe?-1:other?0.4:0;
+          if(t==="다온") return gb?-1.5:cc?-1:gn?0.3:other?0.2:0;
+          if(t==="남해") return other?-1:gn?0.4:0.2;
           return 0;
         }
 
         for(const p of rest){
           const kw=+p.kw||0;
-          /* 효과적 부하비율(load/target)로 과부하 팀 억제 + 지역 보정 */
           let best=teams[0],bestScore=Infinity;
           for(const t of teams){
-            const loadRatio=(load[t]+kw*0.5)/Math.max(target[t],1);
+            /* kW비율 + 건수비율 혼합 → 초대형 발전소 1개로 팀이 포화되는 것 방지 */
+            const kwRatio=(load[t]+kw*0.5)/Math.max(targetKw[t],1);
+            const cntRatio=(cnt[t]+0.5)/Math.max(targetCnt[t],1);
             const rs=rScore(t,p.region||"");
-            const score=loadRatio+rs*0.35; /* 지역 보정 강도 조절 */
+            const score=(kwRatio+cntRatio)*0.5+rs*0.4;
             if(score<bestScore){bestScore=score;best=t;}
           }
-          p.team=best;load[best]+=kw;
+          p.team=best;load[best]+=kw;cnt[best]++;
         }
         saveState("자동 배분했습니다.");renderAllocView();
       }
