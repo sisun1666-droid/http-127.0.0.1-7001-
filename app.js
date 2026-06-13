@@ -6186,19 +6186,69 @@ document.addEventListener("change",e=>{
         </div>`;
       }
 
+      /* 스크린샷 → Gemini Vision → 텍스트 추출 */
+      async function extractAllocFromImage(file){
+        const key=(state.geminiKey||"").trim();
+        if(!key){toast("관리자 설정 > Gemini API 키를 입력해야 이미지 인식이 됩니다.");return;}
+        const statusEl=document.getElementById("allocPastePreview");
+        statusEl.innerHTML=`<span style="color:#6b7280">🔍 이미지 분석 중...</span>`;
+        try{
+          const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+          const prompt="이 이미지는 태양광 발전소 시공 배분 목록 표입니다. 표에서 발전소명, 용량(kW 숫자만), 지역(주소), 계열사(시공사)를 추출해서 탭으로 구분된 텍스트로만 출력하세요. 헤더 행 없이 데이터 행만, 각 행을 줄바꿈으로 구분해서 출력하세요. 값이 없으면 빈칸으로 두세요.";
+          const body={contents:[{parts:[{text:prompt},{inlineData:{mimeType:file.type||"image/png",data:b64}}]}]};
+          const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+          if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`API 오류 (${r.status})`);}
+          const d=await r.json();
+          const txt=(d.candidates?.[0]?.content?.parts?.[0]?.text||"").trim();
+          if(!txt)throw new Error("인식된 텍스트가 없습니다.");
+          document.getElementById("allocPasteText").value=txt;
+          const items=parseAllocPaste(txt);
+          const noRgn=items.filter(p=>!p.region).length;
+          statusEl.innerHTML=`<b style="color:var(--teal)">✅ AI 인식 완료: ${items.length}건</b>${noRgn?` <span style="color:#c2410c">⚠ 지역 미인식 ${noRgn}건</span>`:` <span style="color:#059669">✓ 지역 모두 인식</span>`}<br><span style="font-size:11px;color:#6b7280">${items.slice(0,5).map(p=>`${esc(p.name)}(${fmtKw(p.kw)}${p.region?" · "+esc(p.region):""})`).join(" / ")}${items.length>5?" …":""}</span>`;
+        }catch(err){statusEl.innerHTML=`<span style="color:#c2410c">❌ 오류: ${esc(err.message)}</span>`;}
+      }
+
       function openAllocPasteModal(){
         let modal=document.getElementById("allocPasteOverlay");
         if(!modal){
-          document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="allocPasteOverlay"><div class="modal" style="max-width:680px;width:96vw"><div class="modal-head"><h2>발전소 붙여넣기</h2><button class="btn icon" data-close="allocPasteOverlay" type="button">×</button></div>
-            <p class="meta" style="margin:0 0 8px">생산관리 시트에서 복사해 붙여넣으세요. 한 줄에 발전소 하나씩, 열은 탭/쉼표로 구분합니다.<br><b>형식: 발전소명 [탭] 용량(kW) [탭] 지역 [탭] (선택)계열사</b><br><span style="color:#059669">💡 지역을 입력하면 자동배분 정확도가 높아집니다. 경남·경북·충남 등 약칭도 인식합니다.</span></p>
-            <textarea class="field" id="allocPasteText" style="min-height:200px;font-family:monospace;font-size:12px" placeholder="예시 (탭으로 구분)&#10;발전소명&#9;용량(kW)&#9;지역&#9;계열사&#10;우암&#9;99.96&#9;경북 영천시&#10;성광2호&#9;442.9&#9;경남 밀양&#9;동광&#10;한솔&#9;3394&#9;충남 당진&#10;민&#9;4201&#9;경남&#10;&#10;※ 지역 없이도 사용 가능 (kW 균등배분)"></textarea>
-            <div id="allocPastePreview" class="meta" style="margin-top:8px"></div>
+          document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="allocPasteOverlay"><div class="modal" style="max-width:700px;width:96vw"><div class="modal-head"><h2>발전소 붙여넣기</h2><button class="btn icon" data-close="allocPasteOverlay" type="button">×</button></div>
+            <p class="meta" style="margin:0 0 10px">텍스트 또는 스크린샷을 붙여넣으세요.<br>
+            <b>텍스트 형식:</b> 발전소명 [탭] 용량(kW) [탭] 지역 [탭] (선택)계열사<br>
+            <b>이미지:</b> 스크린샷을 Ctrl+V 또는 아래 영역에 드래그앤드롭 → AI가 자동 추출 <span style="color:#6b7280;font-size:11px">(관리자>Gemini 키 필요)</span></p>
+            <div id="allocImgDrop" style="border:2px dashed #d1d5db;border-radius:8px;padding:14px 16px;margin-bottom:8px;text-align:center;color:#6b7280;font-size:13px;cursor:pointer;transition:border-color .15s">
+              📷 스크린샷을 여기에 드래그하거나 Ctrl+V로 붙여넣기
+              <div id="allocImgPreview" style="margin-top:8px"></div>
+            </div>
+            <textarea class="field" id="allocPasteText" style="min-height:160px;font-family:monospace;font-size:12px" placeholder="또는 텍스트를 직접 붙여넣기&#10;예) 우암&#9;99.96&#9;경북 영천시&#10;성광2호&#9;442.9&#9;경남 밀양&#9;동광"></textarea>
+            <div id="allocPastePreview" class="meta" style="margin-top:8px;min-height:20px"></div>
             <div class="toolbar" style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="allocPreviewBtn" type="button">미리보기</button><button class="btn primary" id="allocApplyBtn" type="button">추가</button></div>
           </div></div>`);
+
+          /* 드래그앤드롭 */
+          const drop=document.getElementById("allocImgDrop");
+          drop.addEventListener("dragover",e=>{e.preventDefault();drop.style.borderColor="var(--teal)";});
+          drop.addEventListener("dragleave",()=>{drop.style.borderColor="#d1d5db";});
+          drop.addEventListener("drop",e=>{e.preventDefault();drop.style.borderColor="#d1d5db";const f=e.dataTransfer.files[0];if(f&&f.type.startsWith("image/")){showAllocImgPreview(f);extractAllocFromImage(f);}});
+          drop.addEventListener("click",()=>{const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.onchange=e=>{const f=e.target.files[0];if(f){showAllocImgPreview(f);extractAllocFromImage(f);}};inp.click();});
+
+          /* Ctrl+V 이미지 붙여넣기 (모달 열려있을 때) */
+          document.addEventListener("paste",function allocImgPaste(e){
+            if(!document.getElementById("allocPasteOverlay")?.classList.contains("open"))return;
+            const img=Array.from(e.clipboardData?.items||[]).find(i=>i.type.startsWith("image/"));
+            if(!img)return;
+            e.preventDefault();
+            const f=img.getAsFile();showAllocImgPreview(f);extractAllocFromImage(f);
+          });
         }
         document.getElementById("allocPasteText").value="";
         document.getElementById("allocPastePreview").textContent="";
+        document.getElementById("allocImgPreview").innerHTML="";
         document.getElementById("allocPasteOverlay").classList.add("open");
+      }
+
+      function showAllocImgPreview(file){
+        const url=URL.createObjectURL(file);
+        document.getElementById("allocImgPreview").innerHTML=`<img src="${url}" style="max-width:100%;max-height:180px;border-radius:6px;margin-top:4px;border:1px solid #e5e7eb">`;
       }
 
       /* ── 렌더링 훅 ── */
