@@ -6026,7 +6026,7 @@ document.addEventListener("change",e=>{
 
       function allocAutoDistribute(){
         const a=state.allocation;if(!a||!a.plants.length){toast("배분할 발전소가 없습니다.");return;}
-        const teams=(state.constructionTeams||[]).slice();
+        const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
         if(!teams.length){toast("시공사가 없습니다. 관리자에서 추가해주세요.");return;}
 
         /* 지역 판별 */
@@ -6066,7 +6066,7 @@ document.addEventListener("change",e=>{
         saveState("자동 배분했습니다.");renderAllocView();
       }
       function allocExportText(){
-        const a=state.allocation;const teams=(state.constructionTeams||[]).slice();
+        const a=state.allocation;const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
         let out=`[${a.month||""} 시공 배분]\n`;
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
         out+=`총 ${a.plants.length}건 / ${totAll.toFixed(1)}kW\n`;
@@ -6122,7 +6122,7 @@ document.addEventListener("change",e=>{
       function renderAllocView(){
         ensureAllocChrome();ensureAllocState();
         const host=document.getElementById("allocationView");if(!host)return;
-        const a=state.allocation;const teams=(state.constructionTeams||[]).slice();
+        const a=state.allocation;const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
         const teamOpts=name=>`<option value="">미배정</option>`+teams.map(t=>`<option value="${esc(t)}"${name===t?" selected":""}>${esc(t)}</option>`).join("");
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
         const loads=teams.map(t=>({t,ps:a.plants.filter(p=>p.team===t)}));
