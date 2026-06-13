@@ -6068,7 +6068,7 @@ document.addEventListener("change",e=>{
             const kwRatio=(load[t]+kw*0.5)/Math.max(targetKw[t],1);
             const cntRatio=(cnt[t]+0.5)/Math.max(targetCnt[t],1);
             const rs=rScore(t,p.region||"");
-            const score=(kwRatio+cntRatio)*0.5+rs*0.4;
+            const score=kwRatio*0.7+cntRatio*0.3+rs*0.4;
             if(score<bestScore){bestScore=score;best=t;}
           }
           p.team=best;load[best]+=kw;cnt[best]++;
