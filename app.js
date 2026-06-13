@@ -6079,15 +6079,15 @@ document.addEventListener("change",e=>{
         const a=state.allocation;const teams=["동광","다온","남해","다호"];
         let out=`[${a.month||""} 시공 배분]\n`;
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
-        out+=`총 ${a.plants.length}건 / ${totAll.toFixed(1)}kW\n`;
+        out+=`총 ${a.plants.length}건 / ${fmtKw(totAll)}\n`;
         teams.forEach(t=>{
           const ps=a.plants.filter(p=>p.team===t);if(!ps.length)return;
           const tot=ps.reduce((s,p)=>s+(+p.kw||0),0);
-          out+=`\n● ${t} — ${ps.length}건 / ${tot.toFixed(1)}kW\n`;
-          ps.forEach(p=>{out+=`  · ${p.name} (${(+p.kw||0)}kW) ${p.region||""}${p.lockTeam?" [한전협의]":""}\n`;});
+          out+=`\n● ${t} — ${ps.length}건 / ${fmtKw(tot)}\n`;
+          ps.forEach(p=>{out+=`  · ${p.name} (${fmtKw(p.kw)}) ${p.region||""}${p.lockTeam?" [한전협의]":""}\n`;});
         });
         const un=a.plants.filter(p=>!p.team||!teams.includes(p.team));
-        if(un.length){out+=`\n● 미배정 — ${un.length}건\n`;un.forEach(p=>{out+=`  · ${p.name} (${(+p.kw||0)}kW) ${p.region||""}\n`;});}
+        if(un.length){out+=`\n● 미배정 — ${un.length}건\n`;un.forEach(p=>{out+=`  · ${p.name} (${fmtKw(p.kw)}) ${p.region||""}\n`;});}
         return out;
       }
 
@@ -6135,6 +6135,8 @@ document.addEventListener("change",e=>{
       window._allocLockPlant=function(id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();};
       window._allocSetTeam=function(sel,id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;p.team=sel.value;if(p.lockTeam&&p.lockTeam!==sel.value)p.lockTeam=sel.value?sel.value:"";saveState("배정을 변경했습니다.");renderAllocView();};
 
+      function fmtKw(v){const n=+v||0;return n>=1000?`${(n/1000).toFixed(n>=10000?1:2)}MW`:`${n%1===0?n:parseFloat(n.toFixed(2))}kW`;}
+
       function renderAllocView(){
         ensureAllocChrome();ensureAllocState();
         const host=document.getElementById("allocationView");if(!host)return;
@@ -6148,7 +6150,7 @@ document.addEventListener("change",e=>{
           let rb="";if(rdy){const cls=rdy.done>=rdy.total?"ok":rdy.done>=rdy.total-2?"mid":"low";rb=`<span class="alc-rdy ${cls}" title="${esc((rdy.missing||[]).join(', ')||'완료')}">서류 ${rdy.done}/${rdy.total}</span>`;}
           return `<div class="alc-card${p.lockTeam?" locked":""}">
             <div class="nm">${esc(p.name)} ${rb}</div>
-            <div class="mt">${(+p.kw||0)}kW · ${esc(p.region||"지역 미입력")}${p.corp?` · ${esc(p.corp)}`:""}${p.lockTeam?` · 🔒한전협의(${esc(p.lockTeam)})`:""}</div>
+            <div class="mt">${fmtKw(p.kw)} · ${esc(p.region||"지역 미입력")}${p.corp?` · ${esc(p.corp)}`:""}${p.lockTeam?` · 🔒한전협의(${esc(p.lockTeam)})`:""}</div>
             <div class="alc-card-row">
               <select onchange="window._allocSetTeam(this,'${p.id}')">${teamOpts(p.team)}</select>
               <button class="alc-icon${p.lockTeam?" on":""}" onclick="window._allocLockPlant('${p.id}')" title="한전협의 고정">🔒</button>
@@ -6159,7 +6161,7 @@ document.addEventListener("change",e=>{
         const colHtml=(name,ps,un)=>{
           const tot=ps.reduce((s,p)=>s+(+p.kw||0),0);
           return `<div class="alc-col${un?" un":""}">
-            <div class="alc-col-head"><h3>${esc(name)}</h3><span class="kw">${ps.length}건 · ${tot.toFixed(1)}kW</span></div>
+            <div class="alc-col-head"><h3>${esc(name)}</h3><span class="kw">${ps.length}건 · ${fmtKw(tot)}</span></div>
             <div class="alc-bar"><span style="width:${un?0:Math.round(tot/maxKw*100)}%"></span></div>
             <div class="alc-cards">${ps.length?ps.map(cardHtml).join(""):`<div class="alc-empty">비어 있음</div>`}</div>
           </div>`;
@@ -6167,7 +6169,7 @@ document.addEventListener("change",e=>{
         const unassigned=a.plants.filter(p=>!p.team||!teams.includes(p.team));
         let boardCols=teams.map(t=>colHtml(t,a.plants.filter(p=>p.team===t),false)).join("");
         boardCols+=colHtml("미배정",unassigned,true);
-        const summary=teams.map(t=>{const tot=a.plants.filter(p=>p.team===t).reduce((s,p)=>s+(+p.kw||0),0);return `<span class="alc-chip">${esc(t)} ${tot.toFixed(0)}kW</span>`;}).join("")+(unassigned.length?`<span class="alc-chip" style="background:#fff1e6;border-color:#fdd0a8;color:#c2410c">미배정 ${unassigned.length}건</span>`:"");
+        const summary=teams.map(t=>{const tot=a.plants.filter(p=>p.team===t).reduce((s,p)=>s+(+p.kw||0),0);return `<span class="alc-chip">${esc(t)} ${fmtKw(tot)}</span>`;}).join("")+(unassigned.length?`<span class="alc-chip" style="background:#fff1e6;border-color:#fdd0a8;color:#c2410c">미배정 ${unassigned.length}건</span>`:"");
         host.innerHTML=`<div class="alc-shell">
           <div class="alc-toolcard">
             <div class="alc-tools">
@@ -6178,7 +6180,7 @@ document.addEventListener("change",e=>{
               <button class="btn" id="allocCopyBtn" type="button">📄 결과 복사</button>
               <button class="btn danger" onclick="window._allocClearAll()" type="button" style="margin-left:auto">전체 삭제</button>
             </div>
-            <div class="alc-summary"><span class="alc-chip" style="background:#eef6ff;border-color:#bcd6f7;color:#1d4ed8">전체 ${a.plants.length}건 · ${totAll.toFixed(1)}kW</span>${summary}</div>
+            <div class="alc-summary"><span class="alc-chip" style="background:#eef6ff;border-color:#bcd6f7;color:#1d4ed8">전체 ${a.plants.length}건 · ${fmtKw(totAll)}</span>${summary}</div>
           </div>
           ${a.plants.length?`<div class="alc-board">${boardCols}</div>`:`<div class="alc-toolcard alc-empty">발전소 붙여넣기로 다음 달 시공 대상을 추가한 뒤 <b>자동 배분</b>을 눌러보세요.<br><span style="font-size:12px">생산관리 시트에서 [발전소명 / 용량(kW) / 지역 / (선택)계열사] 형식으로 복사해 붙여넣으면 됩니다.</span></div>`}
         </div>`;
