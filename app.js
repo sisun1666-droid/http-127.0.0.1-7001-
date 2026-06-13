@@ -6026,8 +6026,7 @@ document.addEventListener("change",e=>{
 
       function allocAutoDistribute(){
         const a=state.allocation;if(!a||!a.plants.length){toast("배분할 발전소가 없습니다.");return;}
-        const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
-        if(!teams.length){toast("시공사가 없습니다. 관리자에서 추가해주세요.");return;}
+        const teams=["동광","다온","남해","다호"]; /* 고정 4개 팀 */
 
         /* 지역 판별 */
         function isGN(r){return /경남|창원|진주|통영|사천|김해|밀양|거제|양산|함안|창녕|고성|남해|하동|산청|함양|거창|합천/.test(r||"");}
@@ -6035,8 +6034,8 @@ document.addEventListener("change",e=>{
         function isGB(r){return /경북|안동|구미|영주|영천|상주|문경|경산|군위|의성|청도|고령|성주|칠곡|예천|봉화|울릉|포항|경주|울진|영덕|영양|청송/.test(r||"");}
         function isCC(r){return /충청|충북|충남|대전|세종|청주|천안|공주|보령|아산|서산|논산|계룡|당진|금산|부여|서천|청양|홍성|예산|태안|음성|진천|괴산|증평|충주|제천|보은|옥천|영동/.test(r||"");}
 
-        /* 팀 목표 비율: 다호는 75% 배려 */
-        function wt(t){return t==="다호"?0.75:1;}
+        /* 팀 목표 비율: 다호는 60% 배려 */
+        function wt(t){return t==="다호"?0.6:1;}
 
         /* 지역 선호 점수 (단위 곱 적용, 음수=선호) */
         function rScore(t,r){
@@ -6066,7 +6065,7 @@ document.addEventListener("change",e=>{
         saveState("자동 배분했습니다.");renderAllocView();
       }
       function allocExportText(){
-        const a=state.allocation;const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
+        const a=state.allocation;const teams=["동광","다온","남해","다호"];
         let out=`[${a.month||""} 시공 배분]\n`;
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
         out+=`총 ${a.plants.length}건 / ${totAll.toFixed(1)}kW\n`;
@@ -6122,7 +6121,7 @@ document.addEventListener("change",e=>{
       function renderAllocView(){
         ensureAllocChrome();ensureAllocState();
         const host=document.getElementById("allocationView");if(!host)return;
-        const a=state.allocation;const teams=["동광","다온","남해","다호"].filter(t=>(state.constructionTeams||[]).includes(t));
+        const a=state.allocation;const teams=["동광","다온","남해","다호"];
         const teamOpts=name=>`<option value="">미배정</option>`+teams.map(t=>`<option value="${esc(t)}"${name===t?" selected":""}>${esc(t)}</option>`).join("");
         const totAll=a.plants.reduce((s,p)=>s+(+p.kw||0),0);
         const loads=teams.map(t=>({t,ps:a.plants.filter(p=>p.team===t)}));
@@ -6224,7 +6223,7 @@ document.addEventListener("change",e=>{
         if(t.id==="allocAutoBtn"){e.preventDefault();e.stopImmediatePropagation();allocAutoDistribute();return;}
         if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
         if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b> — ${items.slice(0,5).map(p=>`${esc(p.name)}(${p.kw}kW)`).join(", ")}${items.length>5?" …":""}`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
-        if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가했습니다.`);renderAllocView();return;}
+        if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가됐습니다. 자동 배분을 시작합니다.`);allocAutoDistribute();return;}
         if(t.dataset.allocLock!==undefined){e.preventDefault();e.stopImmediatePropagation();const p=state.allocation.plants.find(x=>x.id===t.dataset.allocLock);if(p){if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();}return;}
       },true);
 
