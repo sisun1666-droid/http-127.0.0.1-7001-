@@ -227,8 +227,8 @@
     /* ── 5분마다 주기적 자동 저장 ── */
     setInterval(()=>{if(state.__pendingCloudSync||Date.now()-(state.__updatedAt||0)<600000){pushSharedState()}},300000);
     /* refreshFromGoogleSheetsBeforeManualSave: 제거됨 (Google Sheets 비활성화) */
-    function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);localStorage.setItem(storageKey,JSON.stringify(state));sharedLoaded=true;scheduleSharedSave();scheduleSheetSync()}
-    function saveState(msg="저장되었습니다."){persistState();toast(msg)}
+    function persistState(){state.__updatedAt=Date.now();state.__pendingCloudSync=true;state.__deviceId=state.__deviceId||localStorage.getItem("solar-device-id")||uid("device");localStorage.setItem("solar-device-id",state.__deviceId);try{localStorage.setItem(storageKey,JSON.stringify(state));}catch(qe){try{legacyStorageKeys.forEach(k=>localStorage.removeItem(k));localStorage.setItem(storageKey,JSON.stringify(state));}catch(e2){console.warn("localStorage quota exceeded – Supabase 전용으로 저장합니다.",e2);}}sharedLoaded=true;scheduleSharedSave();scheduleSheetSync()}
+    function saveState(msg="저장되었습니다."){try{persistState();}catch(e){console.warn("saveState 오류",e);}toast(msg)}
 
     /* ── JSON 백업 내보내기 ── */
     function exportStateJson(){
@@ -6119,10 +6119,10 @@ document.addEventListener("change",e=>{
       }
 
       /* 전역 인라인 핸들러 — 이벤트 위임 충돌 완전 우회 */
-      window._allocDelPlant=function(id){const plants=state.allocation?.plants||[];const i=plants.findIndex(function(x){return x.id===id;});if(i<0){toast("X오류: 목록="+plants.length+"개 찾는="+id.slice(-6)+" 첫번째="+(plants[0]?plants[0].id.slice(-6):"없음"));return;}plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();};
-      window._allocClearAll=function(){try{if(confirm("전체 삭제할까요?")){state.allocation.plants=[];saveState("전체 삭제했습니다.");renderAllocView();}}catch(err){toast("초기화 오류: "+err.message);}};
-      window._allocLockPlant=function(id){try{const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();}catch(err){toast("잠금 오류: "+err.message);}};
-      window._allocSetTeam=function(sel,id){try{const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;p.team=sel.value;if(p.lockTeam&&p.lockTeam!==sel.value)p.lockTeam=sel.value?sel.value:"";saveState("배정을 변경했습니다.");renderAllocView();}catch(err){toast("배정 오류: "+err.message);}};
+      window._allocDelPlant=function(id){const plants=state.allocation?.plants||[];const i=plants.findIndex(function(x){return x.id===id;});if(i<0){toast("항목을 찾을 수 없습니다.");return;}plants.splice(i,1);saveState("삭제했습니다.");renderAllocView();};
+      window._allocClearAll=function(){if(confirm("전체 삭제할까요?")){state.allocation.plants=[];saveState("전체 삭제했습니다.");renderAllocView();}};
+      window._allocLockPlant=function(id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;if(p.lockTeam){p.lockTeam="";}else{if(!p.team){toast("먼저 시공사를 지정해주세요.");return;}p.lockTeam=p.team;}saveState(p.lockTeam?"한전협의 고정했습니다.":"고정 해제했습니다.");renderAllocView();};
+      window._allocSetTeam=function(sel,id){const a=state.allocation;if(!a)return;const p=a.plants.find(function(x){return x.id===id;});if(!p)return;p.team=sel.value;if(p.lockTeam&&p.lockTeam!==sel.value)p.lockTeam=sel.value?sel.value:"";saveState("배정을 변경했습니다.");renderAllocView();};
 
       function renderAllocView(){
         ensureAllocChrome();ensureAllocState();
