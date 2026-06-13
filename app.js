@@ -6028,21 +6028,43 @@ document.addEventListener("change",e=>{
         const a=state.allocation;if(!a||!a.plants.length){toast("배분할 발전소가 없습니다.");return;}
         const teams=(state.constructionTeams||[]).slice();
         if(!teams.length){toast("시공사가 없습니다. 관리자에서 추가해주세요.");return;}
+
+        /* 지역 판별 */
+        function isGN(r){return /경남|창원|진주|통영|사천|김해|밀양|거제|양산|함안|창녕|고성|남해|하동|산청|함양|거창|합천/.test(r||"");}
+        function isGBeast(r){return /포항|경주|울진|영덕|영양|청송/.test(r||"");}
+        function isGB(r){return /경북|안동|구미|영주|영천|상주|문경|경산|군위|의성|청도|고령|성주|칠곡|예천|봉화|울릉|포항|경주|울진|영덕|영양|청송/.test(r||"");}
+        function isCC(r){return /충청|충북|충남|대전|세종|청주|천안|공주|보령|아산|서산|논산|계룡|당진|금산|부여|서천|청양|홍성|예산|태안|음성|진천|괴산|증평|충주|제천|보은|옥천|영동/.test(r||"");}
+
+        /* 팀 목표 비율: 다호는 75% 배려 */
+        function wt(t){return t==="다호"?0.75:1;}
+
+        /* 지역 선호 점수 (단위 곱 적용, 음수=선호) */
+        function rScore(t,r){
+          const gn=isGN(r),gbe=isGBeast(r),gb=isGB(r),cc=isCC(r);
+          if(t==="다호") return gn?-3:4;
+          if(t==="동광") return gn?-2:gbe?-1.5:0;
+          if(t==="다온") return gb?-2:cc?-1.5:0;
+          if(t==="남해") return(!gn&&!gb&&!cc)?-2:0;
+          return 0;
+        }
+
         const load=Object.fromEntries(teams.map(t=>[t,0]));
-        const reg=Object.fromEntries(teams.map(t=>[t,new Set()]));
         a.plants.forEach(p=>{if(!p.lockTeam)p.team="";});
-        a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);const sr=shortRegion(p.region);if(sr)reg[p.lockTeam].add(sr);}});
+        a.plants.forEach(p=>{if(p.lockTeam&&teams.includes(p.lockTeam)){p.team=p.lockTeam;load[p.lockTeam]+=(+p.kw||0);}});
+
         const rest=a.plants.filter(p=>!p.team).sort((x,y)=>(+y.kw||0)-(+x.kw||0));
-        const avg=rest.length?rest.reduce((s,p)=>s+(+p.kw||0),0)/rest.length:0;
-        const bonus=avg*0.6;
+        const unit=rest.reduce((s,p)=>s+(+p.kw||0),0)/Math.max(rest.length,1);
+
         for(const p of rest){
-          const sr=shortRegion(p.region);let best=teams[0],score=Infinity;
-          for(const t of teams){let s=load[t];if(sr&&reg[t].has(sr))s-=bonus;if(s<score){score=s;best=t;}}
-          p.team=best;load[best]+=(+p.kw||0);if(sr)reg[best].add(sr);
+          let best=teams[0],score=Infinity;
+          for(const t of teams){
+            const s=(load[t]/wt(t))+(rScore(t,p.region||"")*unit);
+            if(s<score){score=s;best=t;}
+          }
+          p.team=best;load[best]+=(+p.kw||0);
         }
         saveState("자동 배분했습니다.");renderAllocView();
       }
-
       function allocExportText(){
         const a=state.allocation;const teams=(state.constructionTeams||[]).slice();
         let out=`[${a.month||""} 시공 배분]\n`;
