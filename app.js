@@ -3800,7 +3800,7 @@ document.addEventListener("change",e=>{
         const previous=state.onlineUsers.find(u=>u.id===payload.id);
         state.onlineUsers=[{...previous,...payload,loginAt:previous?.loginAt||Date.now()},...rows];
         state.__presenceUpdatedAt=Date.now();
-        localStorage.setItem(storageKey,JSON.stringify(state));
+        try{localStorage.setItem(storageKey,JSON.stringify(state));}catch(e){/* quota full – Supabase sync will carry state */}
         renderPresenceUi();
         if(sync)pushPresenceSilently();
       }
