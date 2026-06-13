@@ -6187,11 +6187,18 @@ document.addEventListener("change",e=>{
       }
 
       /* 스크린샷 → Gemini Vision → 텍스트 추출 */
+      let _allocImgBusy=false;
       async function extractAllocFromImage(file){
         const key=(state.geminiKey||"").trim();
-        if(!key){toast("관리자 설정 > Gemini API 키를 입력해야 이미지 인식이 됩니다.");return;}
         const statusEl=document.getElementById("allocPastePreview");
-        statusEl.innerHTML=`<span style="color:#6b7280">🔍 이미지 분석 중...</span>`;
+        const applyBtn=document.getElementById("allocApplyBtn");
+        if(!key){
+          statusEl.innerHTML=`<span style="color:#c2410c">⚠ Gemini API 키가 없습니다. <b>관리자 설정</b>에서 키를 입력하거나, 이미지 내용을 아래 텍스트 창에 직접 붙여넣으세요.</span>`;
+          return;
+        }
+        _allocImgBusy=true;
+        if(applyBtn)applyBtn.disabled=true;
+        statusEl.innerHTML=`<span style="color:#6b7280">🔍 AI 이미지 분석 중... 잠시 기다려 주세요.</span>`;
         try{
           const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
           const prompt="이 이미지는 태양광 발전소 시공 배분 목록 표입니다. 표에서 발전소명, 용량(kW 숫자만), 지역(주소), 계열사(시공사)를 추출해서 탭으로 구분된 텍스트로만 출력하세요. 헤더 행 없이 데이터 행만, 각 행을 줄바꿈으로 구분해서 출력하세요. 값이 없으면 빈칸으로 두세요.";
@@ -6204,8 +6211,9 @@ document.addEventListener("change",e=>{
           document.getElementById("allocPasteText").value=txt;
           const items=parseAllocPaste(txt);
           const noRgn=items.filter(p=>!p.region).length;
-          statusEl.innerHTML=`<b style="color:var(--teal)">✅ AI 인식 완료: ${items.length}건</b>${noRgn?` <span style="color:#c2410c">⚠ 지역 미인식 ${noRgn}건</span>`:` <span style="color:#059669">✓ 지역 모두 인식</span>`}<br><span style="font-size:11px;color:#6b7280">${items.slice(0,5).map(p=>`${esc(p.name)}(${fmtKw(p.kw)}${p.region?" · "+esc(p.region):""})`).join(" / ")}${items.length>5?" …":""}</span>`;
+          statusEl.innerHTML=`<b style="color:var(--teal)">✅ AI 인식 완료: ${items.length}건</b>${noRgn?` <span style="color:#c2410c">⚠ 지역 미인식 ${noRgn}건</span>`:` <span style="color:#059669">✓ 지역 모두 인식</span>`}<br><span style="font-size:11px;color:#6b7280">${items.slice(0,5).map(p=>`${esc(p.name)}(${fmtKw(p.kw)}${p.region?" · "+esc(p.region):""})`).join(" / ")}${items.length>5?" …":""}</span><br><span style="color:#059669;font-weight:600">▶ 이제 "추가" 버튼을 누르세요</span>`;
         }catch(err){statusEl.innerHTML=`<span style="color:#c2410c">❌ 오류: ${esc(err.message)}</span>`;}
+        finally{_allocImgBusy=false;if(applyBtn)applyBtn.disabled=false;}
       }
 
       function openAllocPasteModal(){
@@ -6285,7 +6293,7 @@ document.addEventListener("change",e=>{
         if(t.id==="allocAutoBtn"){e.preventDefault();e.stopImmediatePropagation();allocAutoDistribute();return;}
         if(t.id==="allocCopyBtn"){e.preventDefault();e.stopImmediatePropagation();const txt=allocExportText();navigator.clipboard?.writeText(txt).then(()=>toast("결과를 복사했습니다."),()=>toast("복사 실패"));return;}
         if(t.id==="allocPreviewBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);const noRgn=items.filter(p=>!p.region).length;document.getElementById("allocPastePreview").innerHTML=items.length?`<b style="color:var(--teal)">${items.length}건 인식됨</b>${noRgn?`<span style="color:#c2410c;margin-left:8px">⚠ 지역 미인식 ${noRgn}건 (자동배분 정확도 낮아짐)</span>`:` <span style="color:#059669">✓ 지역 모두 인식</span>`}<br><span style="font-size:11px;color:#6b7280">${items.slice(0,6).map(p=>`${esc(p.name)}(${p.kw}kW${p.region?" · "+esc(p.region):""})`).join(" / ")}${items.length>6?" …":""}</span>`:`<span style="color:#c2410c">인식된 항목이 없습니다. 형식을 확인해주세요.</span>`;return;}
-        if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가됐습니다. 자동 배분을 시작합니다.`);allocAutoDistribute();return;}
+        if(t.id==="allocApplyBtn"){e.preventDefault();e.stopImmediatePropagation();if(_allocImgBusy){toast("AI 분석 중입니다. 완료 후 다시 눌러주세요.");return;}const items=parseAllocPaste(document.getElementById("allocPasteText").value);if(!items.length){toast("인식된 발전소가 없습니다. 텍스트를 붙여넣거나 이미지 분석을 기다려주세요.");return;}ensureAllocState();state.allocation.plants.push(...items);document.getElementById("allocPasteOverlay").classList.remove("open");saveState(`${items.length}건 추가됐습니다. 자동 배분을 시작합니다.`);allocAutoDistribute();return;}
       },true);
 
       document.addEventListener("change",e=>{
