@@ -88,15 +88,14 @@
       '</div>';
   }
 
-  /* 발전소 목록: state의 시공일정/현장 데이터에서 추출, 없으면 기본값 */
+  /* 발전소 목록: state의 시공일정 데이터에서 추출 */
   function getPlantList() {
     var st = getState();
     var names = [];
     if (st) {
-      var sites = st.sites || st.projects || st.fields || [];
-      sites.forEach(function(s){ if (s.name && names.indexOf(s.name)<0) names.push(s.name); });
+      var sites = st.sites || st.projects || st.fields || st.constructions || [];
+      sites.forEach(function(s){ var n = s.name||s.site||s.title; if (n && names.indexOf(n)<0) names.push(n); });
     }
-    if (!names.length) names = ['대구 태양광','왜관 현장','경주 발전소'];
     names.push('기타');
     return names;
   }
