@@ -1,4 +1,4 @@
-﻿<!doctype html>
+﻿﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -47,7 +47,7 @@
   <div class="app">
     <aside><div class="brand"><div class="mark">S</div><span class="kiwoom-wordmark" aria-label="KIWOOM">KIW<span class="kiwoom-loop"></span>M</span><span id="brandName" class="brand-text">1577-1577</span></div><nav id="nav"></nav></aside>
     <main>
-      <header><div><h1 id="pageTitle">할일관리</h1><div class="sub" id="pageSub">작게 쪼개면 일도 덜 무서워 보입니다.</div></div><div class="header-actions"><div class="login-info" id="loginInfo">로그인 확인 중</div><div class="toolbar"><button class="btn" id="adminTopBtn">관리자</button><button class="btn" id="googleLogoutBtn" type="button">로그아웃</button><button class="btn primary" id="maskToggleBtn" data-mask-toggle="1" type="button">마스킹 OFF</button><button class="btn primary" id="addProjectBtn">신규 현장</button></div></div></header>
+      <header><div><h1 id="pageTitle">할일관리</h1><div class="sub" id="pageSub">작게 쪼개면 일도 덜 무서워 보입니다.</div></div><div class="header-actions"><div class="login-info" id="loginInfo">로그인 확인 중</div><div class="toolbar"><button class="btn primary" id="worklogBtn">업무일지</button><button class="btn" id="adminTopBtn">관리자</button><button class="btn" id="googleLogoutBtn" type="button">로그아웃</button><button class="btn primary" id="maskToggleBtn" data-mask-toggle="1" type="button">마스킹 OFF</button><button class="btn primary" id="addProjectBtn">신규 현장</button></div></div></header>
       <section class="kpis" id="kpis"></section>
       <section class="panel hidden" id="dashboardView"><div class="panel-title"><h2>월간 업무 달력</h2><div class="filters"><select id="calendarYear"></select><select id="calendarMonth"></select><button class="btn primary" id="calendarAddAssignmentBtn">업무지시 추가</button></div></div><div class="calendar-grid" id="calendarGrid"></div></section>
       <section class="panel hidden" id="adminView"><div class="panel-title"><h2>관리자 설정</h2><div class="row-actions"><button class="btn" id="exportBtn">내보내기</button><button class="btn" id="editAdminBasicBtn">수정 시작</button><button class="btn primary" id="saveAdminBasicBtn" disabled>저장</button></div></div><div class="form-grid"><div class="form-row"><label>브랜드명</label><input class="field" id="adminBrand" readonly></div><div class="form-row"><label>화면 제목</label><input class="field" id="adminTitle" readonly></div><div class="form-row full"><label>설명 문구</label><input class="field" id="adminSubtitle" readonly></div><div class="form-row"><label>관리자 PIN</label><input class="field" id="adminPin" readonly></div></div><div class="admin-grid"><div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list" id="adminNavList"></div></div><div class="card"><div class="panel-title"><h2>현장 업무단계</h2><button class="btn" id="adminAddPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminPhaseList"></div></div><div class="card"><div class="panel-title"><h2>시공일정 단계</h2><button class="btn" id="adminAddConstructionPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminConstructionPhaseList"></div></div><div class="card"><div class="panel-title"><h2>직원 업무상태</h2><button class="btn" id="adminAddAssignmentStatusBtn">상태 추가</button></div><div class="admin-list" id="adminAssignmentStatusList"></div></div><div class="card"><div class="panel-title"><h2>시공사</h2><button class="btn" id="adminAddTeamBtn">시공사 추가</button></div><div class="admin-list" id="adminTeamList"></div></div><div class="card"><div class="panel-title"><h2>구조물팀</h2><button class="btn" id="adminAddStructureTeamBtn">팀 추가</button></div><div class="admin-list" id="adminStructureTeamList"></div></div></div></section>
@@ -67,11 +67,50 @@
   <div class="overlay" id="todoModal"><div class="modal"><div class="modal-head"><h2>할일 수정</h2><button class="btn icon" data-close="todoModal">×</button></div><div class="form-grid"><div class="form-row full"><label>할일 제목 *</label><input class="field" id="todoTitle" placeholder="할일 제목"></div><div class="form-row"><label>담당</label><select id="todoOwner"></select></div><div class="form-row"><label>현장/프로젝트</label><select id="todoProject"></select></div><div class="form-row full"><label>공동 담당자</label><div class="helper-grid" id="todoHelpers"></div></div><div class="form-row"><label>구분</label><select id="todoType"></select></div><div class="form-row"><label>우선순위</label><select id="todoPriority"></select></div><div class="form-row"><label>상태</label><select id="todoStatus"></select></div><div class="form-row"><label><input type="checkbox" id="todoAllDay"> 종일</label></div><div class="form-row"><label>시작</label><div class="time-grid"><input class="field" type="date" id="todoStart"><input class="field" type="time" id="todoStartTime"></div></div><div class="form-row"><label>종료/마감</label><div class="time-grid"><input class="field" type="date" id="todoDue"><input class="field" type="time" id="todoEndTime"></div></div><div class="form-row full"><label>빠른 시간</label><div class="quick-durations"><button class="btn" type="button" data-todo-duration-min="10">10분</button><button class="btn" type="button" data-todo-duration-min="30">30분</button><button class="btn primary" type="button" data-todo-duration-min="60">1시간</button><button class="btn" type="button" data-todo-duration-min="120">2시간</button><button class="btn" type="button" data-todo-duration-min="180">3시간</button><button class="btn" type="button" data-todo-duration-all-day="1">종일</button></div></div><div class="form-row full"><label>반복</label><select id="todoRepeat"><option>반복 없음</option><option>매일</option><option>매주</option><option>매월</option></select></div><div class="form-row full"><label>장소/주소</label><input class="field" id="todoLocation" placeholder="주소 또는 장소"></div><div class="form-row full"><label>진행 단계</label><div class="todo-steps" id="todoSteps"></div></div><div class="form-row full"><label>상세 내용</label><textarea class="field" id="todoDetail"></textarea></div><div class="form-row full"><label>처리 결과</label><textarea class="field" id="todoResult"></textarea></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveTodoBtn">저장</button><button class="btn" id="kakaoTodoBtn" type="button">카톡 메시지</button><button class="btn danger hidden" id="deleteTodoInModalBtn">삭제</button></div></div></div>
   <div class="overlay" id="kakaoTodoModal"><div class="modal"><div class="modal-head"><h2>카톡 메시지</h2><button class="btn icon" data-close="kakaoTodoModal">×</button></div><div class="form-row full"><label>아래 내용을 복사해서 카톡에 붙여넣으세요</label><textarea class="field" id="kakaoTodoText" style="min-height:240px"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoTodoBtn" type="button">복사</button><button class="btn" id="openKakaoTodoBtn" type="button">카톡 열기</button></div></div></div>
   <div class="overlay" id="kakaoConstructionModal"><div class="modal"><div class="modal-head"><h2>재무팀 카톡메세지</h2><button class="btn icon" data-close="kakaoConstructionModal">×</button></div><div class="form-row full"><textarea class="kakao-message-box" id="kakaoConstructionText"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoConstructionBtn" type="button">복사</button><button class="btn" id="openKakaoConstructionBtn" type="button">카톡 열기</button></div></div></div>
+  <!-- 업무일지 모달 -->
+  <div class="overlay" id="worklogModal">
+    <div class="modal" style="max-width:720px;width:95vw">
+      <div class="modal-head">
+        <h2>일일 업무일지</h2>
+        <button class="btn icon" data-close="worklogModal">×</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label>날짜</label><input class="field" type="date" id="wlDate"></div>
+        <div class="form-row"><label>작성자</label><input class="field" id="wlAuthor" placeholder="이름"></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="panel-title"><h2 style="font-size:14px">■ 발전소별 핵심 업무</h2><button class="btn" id="wlAddPlant">+ 추가</button></div>
+        <div style="display:grid;grid-template-columns:140px 120px 1fr 36px;gap:4px 8px;margin-bottom:4px;font-size:12px;color:#888"><span>발전소</span><span>업무분류</span><span>내용</span><span></span></div>
+        <div id="wlPlantList"></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="panel-title"><h2 style="font-size:14px">■ 프리랜서 영업자 소통</h2><button class="btn" id="wlAddSales">+ 추가</button></div>
+        <div style="display:grid;grid-template-columns:160px 1fr 36px;gap:4px 8px;margin-bottom:4px;font-size:12px;color:#888"><span>영업자명</span><span>소통 내용</span><span></span></div>
+        <div id="wlSalesList"></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="panel-title"><h2 style="font-size:14px">■ 현장 소모자재</h2><button class="btn" id="wlAddMat">+ 추가</button></div>
+        <div style="display:grid;grid-template-columns:150px 110px 1fr 36px;gap:4px 8px;margin-bottom:4px;font-size:12px;color:#888"><span>자재명</span><span>재고상태</span><span>조치내용</span><span></span></div>
+        <div id="wlMatList"></div>
+      </div>
+      <div style="margin-top:14px">
+        <label style="font-size:13px;font-weight:500">■ 특이사항 및 내일 할 일</label>
+        <textarea class="field" id="wlRemarks" style="margin-top:6px;min-height:70px" placeholder="내일 할 일, 특이사항 등"></textarea>
+      </div>
+      <div class="toolbar" style="margin-top:16px">
+        <button class="btn primary" id="wlSaveSheet">구글 시트에 저장</button>
+        <button class="btn" id="wlCopyKakao">카톡 복사</button>
+      </div>
+      <div id="wlStatus" style="font-size:12px;color:#888;margin-top:8px;min-height:18px"></div>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
     <script src="epc_data.js"></script>
     <script src="app.js"></script>
+    <script src="worklog.js"></script>
 </body>
 </html>
+
 
 
 
