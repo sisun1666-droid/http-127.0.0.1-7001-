@@ -1,6 +1,18 @@
 (function () {
   const SHEET_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL';
 
+  /* ── localStorage nav에 업무일지 항목 주입 (app.js가 읽기 전에 실행) ── */
+  try {
+    var saved = localStorage.getItem('solar-admin-state-v1');
+    if (saved) {
+      var st = JSON.parse(saved);
+      if (st.nav && !st.nav.some(function(n){ return n.label === '업무일지'; })) {
+        st.nav.push({ icon: '✎', label: '업무일지' });
+        localStorage.setItem('solar-admin-state-v1', JSON.stringify(st));
+      }
+    }
+  } catch(e) {}
+
   /* ── 모달 HTML 동적 생성 (index.html 건드리지 않음) ── */
   function injectModal() {
     if (document.getElementById('worklogModal')) return;
