@@ -397,7 +397,7 @@
 
     var st = getState();
     var savedForDate = (st && st._fieldDiary && st._fieldDiary[diaryDate]) || null;
-    var saved = savedForDate || loadSavedForm() || autoFillFromTodos(diaryDate);
+    var saved = savedForDate || autoFillFromTodos(diaryDate);
 
     var wrapDiv = document.createElement('div');
     wrapDiv.innerHTML = buildSectionsHtml(saved, diaryDate);
