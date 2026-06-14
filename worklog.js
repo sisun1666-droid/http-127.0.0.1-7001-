@@ -230,12 +230,11 @@
 
     fetch(SHEET_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).then(function(res){ return res.json(); })
-      .then(function(json){
-        if (!json.ok) throw new Error(json.error||'저장 실패');
-        onSuccess(json);
+    }).then(function(){
+        onSuccess({ ok: true });
       })
       .catch(function(err){ onError(err); });
   }
