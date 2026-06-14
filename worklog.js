@@ -1,15 +1,13 @@
 (function () {
   /* ═══════════════════════════════════════════════════
      현장 업무일지 — 할일관리 > 업무일지 탭에 섹션 주입
-     • 발전소별 핵심 업무
-     • 프리랜서 영업자 소통
-     • 현장 소모자재
-     • 특이사항 및 내일 할 일
+     ★ 구글 시트 URL을 아래에 입력하세요
   ═══════════════════════════════════════════════════ */
+
+  const SHEET_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // 구글 Apps Script 배포 URL
 
   const SESSION_KEY = 'worklog-form-v1';
 
-  /* ── 유틸 ── */
   function today() { return new Date().toISOString().slice(0, 10); }
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -27,24 +25,20 @@
     localStorage.setItem('solar-admin-state-v1', JSON.stringify(st));
   }
 
-  function toast(msg) {
+  function showToast(msg) {
     const el = document.getElementById('toast');
     if (el) { el.textContent = msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'), 3000); }
   }
 
-  /* ── 세션 저장/복원 (탭 재렌더링 시 입력 유지) ── */
   function saveForm() {
-    try {
-      const form = collectForm();
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(form));
-    } catch(e) {}
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(collectForm())); } catch(e) {}
   }
 
   function loadSavedForm() {
     try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null'); } catch(e){ return null; }
   }
 
-  /* ── 행 생성 ── */
+  /* ── 행 HTML ── */
   function plantRowHtml(plant, type, content) {
     const plants = ['대구 태양광','왜관 현장','경주 발전소','기타'];
     const types  = ['사업주 소통','시공팀 조율','현장 점검','영업','행정'];
@@ -81,7 +75,6 @@
     </div>`;
   }
 
-  /* ── 섹션 헤더 HTML ── */
   function sectionHead(icon, title, addId, addLabel) {
     return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-weight:700;font-size:13px;color:#08245c">${icon} ${title}</div>
@@ -89,15 +82,34 @@
     </div>`;
   }
 
-  /* ── 메인 섹션 HTML 생성 ── */
-  function buildSectionsHtml(saved) {
+  /* ── 구글 시트 연동 상태 표시 ── */
+  function sheetConnected() { return SHEET_URL && SHEET_URL !== 'YOUR_APPS_SCRIPT_WEB_APP_URL'; }
+
+  function buildSectionsHtml(saved, diaryDate) {
     const s = saved || {};
     const plants   = s.plants   || [{}];
     const sales    = s.sales    || [{}];
     const mats     = s.mats     || [{}];
     const remarks  = s.remarks  || '';
+    const author   = getCurrentUser();
+
+    const sheetBadge = sheetConnected()
+      ? `<span style="background:#1a8c4e;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px">✅ 구글 시트 연동됨</span>`
+      : `<span style="background:#e44;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px" title="worklog.js의 SHEET_URL을 설정해주세요">⚠ 구글 시트 미연동</span>`;
 
     return `<div id="wlFormWrap" style="margin-top:16px;border-top:2px solid #087d8f;padding-top:16px">
+
+      <!-- 헤더 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e0ecef">
+        <div style="font-size:15px;font-weight:700;color:#08245c">
+          📅 일일 업무일지 (공무/현장 통합)
+          ${sheetBadge}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#65737d">
+          <span>날짜: <strong>${esc(diaryDate||today())}</strong></span>
+          <span>작성자: <strong>${esc(author||'—')}</strong></span>
+        </div>
+      </div>
 
       <!-- ① 발전소별 핵심 업무 -->
       <div class="wl-section" style="background:#f7fbff;border:1px solid #c8dff0;border-radius:8px;padding:14px;margin-bottom:12px">
@@ -105,50 +117,45 @@
         <div style="display:grid;grid-template-columns:130px 110px 1fr 32px;gap:4px 6px;margin-bottom:6px;font-size:11px;color:#8aacbe;padding:0 2px">
           <span>발전소</span><span>업무 분류</span><span>내용</span><span></span>
         </div>
-        <div id="wlPlantList">
-          ${plants.map(p=>plantRowHtml(p.plant,p.type,p.content)).join('')}
-        </div>
+        <div id="wlPlantList">${plants.map(p=>plantRowHtml(p.plant,p.type,p.content)).join('')}</div>
       </div>
 
-      <!-- ② 프리랜서 영업자 소통 -->
+      <!-- ② 영업자 소통 -->
       <div class="wl-section" style="background:#f7fff8;border:1px solid #b8e6c0;border-radius:8px;padding:14px;margin-bottom:12px">
-        ${sectionHead('🤝','프리랜서 영업자 소통','wlAddSales','+ 영업 소통 추가')}
+        ${sectionHead('🤝','영업자 소통','wlAddSales','+ 소통 추가')}
         <div style="display:grid;grid-template-columns:130px 1fr 32px;gap:4px 6px;margin-bottom:6px;font-size:11px;color:#8aacbe;padding:0 2px">
           <span>영업자명</span><span>소통 내용</span><span></span>
         </div>
-        <div id="wlSalesList">
-          ${sales.map(r=>salesRowHtml(r.name,r.content)).join('')}
-        </div>
+        <div id="wlSalesList">${sales.map(r=>salesRowHtml(r.name,r.content)).join('')}</div>
       </div>
 
       <!-- ③ 현장 소모자재 -->
       <div class="wl-section" style="background:#fffaf5;border:1px solid #f0d8b0;border-radius:8px;padding:14px;margin-bottom:12px">
-        ${sectionHead('📦','현장 소모자재 관리 (재고 및 발주)','wlAddMat','+ 자재 항목 추가')}
+        ${sectionHead('📦','현장 소모자재 관리 (재고 및 발주)','wlAddMat','+ 자재 추가')}
         <div style="display:grid;grid-template-columns:120px 110px 1fr 32px;gap:4px 6px;margin-bottom:6px;font-size:11px;color:#8aacbe;padding:0 2px">
           <span>자재명</span><span>재고 상태</span><span>조치 내용</span><span></span>
         </div>
-        <div id="wlMatList">
-          ${mats.map(m=>matRowHtml(m.name,m.status,m.action)).join('')}
-        </div>
+        <div id="wlMatList">${mats.map(m=>matRowHtml(m.name,m.status,m.action)).join('')}</div>
       </div>
 
       <!-- ④ 특이사항 및 내일 할 일 -->
       <div class="wl-section" style="background:#fafafa;border:1px solid #dde;border-radius:8px;padding:14px;margin-bottom:12px">
         <div style="font-weight:700;font-size:13px;color:#08245c;margin-bottom:8px">📝 특이사항 및 내일 할 일</div>
-        <textarea id="wlRemarks" class="field" style="min-height:80px;font-size:13px;line-height:1.6" placeholder="- 내일 오전 10시 지자체 담당자 인허가 보완 서류 통화 필요&#10;- 한 줄씩 작성하면 [내일 할일 추가] 버튼으로 할일관리에 자동 등록됩니다">${esc(remarks)}</textarea>
+        <textarea id="wlRemarks" class="field"
+          style="width:100%;box-sizing:border-box;min-height:120px;font-size:13px;line-height:1.7;resize:vertical;display:block"
+          placeholder="- 내일 오전 10시 지자체 담당자 인허가 보완 서류 통화 필요&#10;- 줄 단위로 작성 → [➕ 내일 할일 자동 추가] 버튼으로 할일관리에 등록됩니다">${esc(remarks)}</textarea>
       </div>
 
-      <!-- ⑤ 하단 버튼 -->
+      <!-- ⑤ 버튼 -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 8px">
-        <button id="wlSaveAll" style="flex:1;min-width:140px;padding:10px 0;background:#08245c;color:#fff;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">💾 오늘 일지 저장</button>
-        <button id="wlKakao" style="flex:1;min-width:140px;padding:10px 0;background:#FEE500;color:#3C1E1E;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">💬 카톡 보고용 텍스트 복사</button>
-        <button id="wlAddTodoBtn" style="flex:1;min-width:140px;padding:10px 0;background:#087d8f;color:#fff;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">➕ 내일 할일 자동 추가</button>
+        <button id="wlSaveAll" style="flex:1;min-width:150px;padding:11px 0;background:#08245c;color:#fff;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">💾 오늘 일지 저장${sheetConnected()?'':'  (로컬)'}</button>
+        <button id="wlKakao" style="flex:1;min-width:150px;padding:11px 0;background:#FEE500;color:#3C1E1E;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">💬 카톡 보고용 텍스트 복사</button>
+        <button id="wlAddTodoBtn" style="flex:1;min-width:150px;padding:11px 0;background:#087d8f;color:#fff;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer">➕ 내일 할일 자동 추가</button>
       </div>
-      <div id="wlMsg" style="font-size:12px;color:#2a7;min-height:16px;padding:2px 4px"></div>
+      <div id="wlMsg" style="font-size:12px;min-height:18px;padding:2px 4px"></div>
     </div>`;
   }
 
-  /* ── 폼 데이터 수집 ── */
   function collectForm() {
     const plants = Array.from(document.querySelectorAll('#wlPlantList .wl-row')).map(r=>({
       plant:   r.querySelector('.wl-plant-name')?.value||'',
@@ -171,57 +178,75 @@
     return { plants, sales, mats, remarks };
   }
 
-  /* ── 카톡 텍스트 생성 ── */
+  /* ── 카톡 텍스트 ── */
   function buildKakao(diaryDate) {
     const st = getState(); if (!st) return '';
     const date = diaryDate || today();
     const person = getCurrentUser();
-
-    // 할일관리 오늘 할일
     const todos = (st.todos||[]).filter(t=>(t.due===date||t.start===date));
     const form = collectForm();
 
-    let text = `[현장 업무일지] ${date}${person?' / '+person:''}\n`;
-    text += '─'.repeat(34) + '\n\n';
+    let text = `[현장 업무일지] ${date}${person?' / '+person:''}\n${'─'.repeat(32)}\n\n`;
 
-    // 발전소별
     if (form.plants.length) {
       text += '🔘 발전소별 핵심 업무\n';
       form.plants.forEach(p=>{ text += `  · ${p.plant} | ${p.type} | ${p.content}\n`; });
       text += '\n';
     }
 
-    // 할일관리 연계 (완료/진행중)
-    const done = todos.filter(t=>t.status==='완료');
+    const done  = todos.filter(t=>t.status==='완료');
     const doing = todos.filter(t=>t.status==='진행중');
     if (done.length||doing.length) {
-      text += '☑ 할일관리 연계\n';
-      done.forEach(t=>{ text += `  · [완료] ${t.title}\n`; });
-      doing.forEach(t=>{ text += `  · [진행] ${t.title}\n`; });
+      text += '☑ 할일 현황\n';
+      done.forEach(t=>{ text += `  ✅ ${t.title}\n`; });
+      doing.forEach(t=>{ text += `  🔄 ${t.title}\n`; });
       text += '\n';
     }
 
-    // 영업자 소통
     if (form.sales.length) {
-      text += '🤝 프리랜서 영업자 소통\n';
+      text += '🤝 영업자 소통\n';
       form.sales.forEach(s=>{ text += `  · ${s.name} — ${s.content}\n`; });
       text += '\n';
     }
 
-    // 소모자재
     if (form.mats.length) {
       text += '📦 현장 소모자재\n';
       form.mats.forEach(m=>{ text += `  · ${m.name} [${m.status}] ${m.action}\n`; });
       text += '\n';
     }
 
-    // 특이사항
     if (form.remarks) {
       text += '📝 특이사항 및 내일 할 일\n';
       form.remarks.split('\n').forEach(l=>{ if(l.trim()) text += `  ${l}\n`; });
     }
-
     return text;
+  }
+
+  /* ── 구글 시트 저장 ── */
+  async function saveToSheet(diaryDate) {
+    const st = getState();
+    const date = diaryDate || today();
+    const person = getCurrentUser();
+    const todos = (st?.todos||[]).filter(t=>(t.due===date||t.start===date));
+    const form = collectForm();
+
+    const payload = {
+      date, person,
+      plants:    form.plants,
+      sales:     form.sales,
+      materials: form.mats,
+      remarks:   form.remarks,
+      todos: todos.map(t=>({ title:t.title, status:t.status, priority:t.priority||'보통', owner:t.owner||'' }))
+    };
+
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error||'저장 실패');
+    return json;
   }
 
   /* ── 이벤트 바인딩 ── */
@@ -229,11 +254,9 @@
     const wrap = document.getElementById('wlFormWrap');
     if (!wrap) return;
 
-    // 입력 변화 시 세션 저장
-    wrap.addEventListener('input', saveForm);
+    wrap.addEventListener('input',  saveForm);
     wrap.addEventListener('change', saveForm);
 
-    // 행 삭제
     wrap.addEventListener('click', function(e) {
       if (e.target.classList.contains('wl-del-row')) {
         e.target.closest('.wl-row').remove();
@@ -241,39 +264,48 @@
       }
     });
 
-    // 행 추가
-    document.getElementById('wlAddPlant')?.addEventListener('click', function() {
+    document.getElementById('wlAddPlant')?.addEventListener('click', ()=>{
       document.getElementById('wlPlantList').insertAdjacentHTML('beforeend', plantRowHtml());
     });
-    document.getElementById('wlAddSales')?.addEventListener('click', function() {
+    document.getElementById('wlAddSales')?.addEventListener('click', ()=>{
       document.getElementById('wlSalesList').insertAdjacentHTML('beforeend', salesRowHtml());
     });
-    document.getElementById('wlAddMat')?.addEventListener('click', function() {
+    document.getElementById('wlAddMat')?.addEventListener('click', ()=>{
       document.getElementById('wlMatList').insertAdjacentHTML('beforeend', matRowHtml());
     });
 
-    // 저장
-    document.getElementById('wlSaveAll')?.addEventListener('click', function() {
+    /* 💾 저장 */
+    document.getElementById('wlSaveAll')?.addEventListener('click', async function() {
       saveForm();
       const st = getState();
       if (st) {
         if (!st._fieldDiary) st._fieldDiary = {};
-        st._fieldDiary[diaryDate || today()] = collectForm();
+        st._fieldDiary[diaryDate||today()] = collectForm();
         saveAppState(st);
       }
-      setMsg('✔ 현장 일지가 저장됐습니다!', '#2a7');
-      setTimeout(()=>setMsg(''), 3000);
+
+      if (sheetConnected()) {
+        setMsg('구글 시트에 저장 중...', '#087d8f');
+        try {
+          await saveToSheet(diaryDate);
+          setMsg('✅ 구글 시트 + 로컬에 저장됐습니다!', '#1a8c4e');
+        } catch(err) {
+          setMsg('⚠ 로컬 저장 완료 (시트 저장 실패: ' + err.message + ')', '#b86d13');
+        }
+      } else {
+        setMsg('✅ 로컬에 저장됐습니다 (구글 시트 미연동)', '#2a7');
+      }
+      setTimeout(()=>setMsg(''), 4000);
     });
 
-    // 카톡 복사
+    /* 💬 카톡 복사 */
     document.getElementById('wlKakao')?.addEventListener('click', function() {
-      const text = buildKakao(diaryDate);
-      navigator.clipboard.writeText(text)
-        .then(()=>{ setMsg('✔ 카톡용 텍스트가 복사됐어요!', '#2a7'); setTimeout(()=>setMsg(''), 3000); })
+      navigator.clipboard.writeText(buildKakao(diaryDate))
+        .then(()=>{ setMsg('✅ 카톡용 텍스트가 복사됐어요!', '#2a7'); setTimeout(()=>setMsg(''), 3000); })
         .catch(()=>setMsg('복사 실패 — 클립보드 권한 확인', '#e44'));
     });
 
-    // 내일 할일 추가
+    /* ➕ 내일 할일 추가 */
     document.getElementById('wlAddTodoBtn')?.addEventListener('click', function() {
       const remarks = document.getElementById('wlRemarks')?.value.trim()||'';
       if (!remarks) { setMsg('특이사항/내일 할 일란에 내용을 입력해주세요.', '#e44'); return; }
@@ -285,7 +317,7 @@
       const tmr = new Date(); tmr.setDate(tmr.getDate()+1);
       const tomorrowStr = tmr.toISOString().slice(0,10);
       const author = getCurrentUser();
-      lines.forEach(function(line) {
+      lines.forEach(line=>{
         st.todos.push({
           id: 'todo_wl_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
           title: line, owner: author, status: '할 일',
@@ -294,7 +326,7 @@
       });
       saveAppState(st);
       if (typeof render === 'function') setTimeout(render, 100);
-      setMsg(`✔ ${lines.length}개 항목을 내일(${tomorrowStr}) 할일에 추가했어요!`, '#2a7');
+      setMsg(`✅ ${lines.length}개 항목을 내일(${tomorrowStr}) 할일에 추가했어요!`, '#2a7');
       setTimeout(()=>setMsg(''), 4000);
     });
   }
@@ -305,67 +337,42 @@
   }
 
   /* ── 다이어리 패널에 섹션 주입 ── */
-  let lastInjectedAt = '';
-
   function injectIntoPanel() {
-    // 구버전 다이어리 패널 감지: diarySyncBtn 또는 diaryExportBtn 존재
     const syncBtn = document.getElementById('diarySyncBtn');
     if (!syncBtn) return;
-
-    // 이미 주입됐으면 스킵
     if (document.getElementById('wlFormWrap')) return;
 
-    // 다이어리 날짜 파악
-    const dateLabel = document.querySelector('.diary-date-label, strong[style*="min-width:110px"]');
+    const dateLabel = document.querySelector('strong[style*="min-width:110px"]') ||
+                      document.querySelector('.diary-date-label');
     const diaryDate = dateLabel ? dateLabel.textContent.trim() : today();
 
-    // 저장된 폼 데이터 (날짜별 저장 우선, 없으면 세션 데이터)
     const st = getState();
     const savedForDate = st?._fieldDiary?.[diaryDate] || null;
     const saved = savedForDate || loadSavedForm();
 
-    // 패널에서 삽입할 위치: 구글 시트 바로가기 버튼 영역 바로 뒤
-    const sheetViewerWrap = document.getElementById('sheetViewerBtn')?.closest('div[style*="margin-top:20px"]');
-    const insertTarget = sheetViewerWrap || syncBtn.closest('.todo-toolbar')?.nextElementSibling;
-
     const wrapDiv = document.createElement('div');
-    wrapDiv.innerHTML = buildSectionsHtml(saved);
+    wrapDiv.innerHTML = buildSectionsHtml(saved, diaryDate);
     const sectionsEl = wrapDiv.firstElementChild;
 
-    if (sheetViewerWrap && sheetViewerWrap.parentElement) {
+    const sheetViewerWrap = document.getElementById('sheetViewerBtn')?.closest('div[style*="margin-top:20px"]');
+    if (sheetViewerWrap?.parentElement) {
       sheetViewerWrap.parentElement.insertBefore(sectionsEl, sheetViewerWrap.nextSibling);
     } else {
-      // fallback: body 맨 뒤 패널에 append
       const panel = document.getElementById('todoBoardPanel');
       if (panel) panel.appendChild(sectionsEl);
     }
 
     bindSectionEvents(diaryDate);
-    lastInjectedAt = diaryDate;
   }
 
-  /* ── 업무일지 탭 toolbar에 카톡복사 + 내일할일 버튼 추가 (board/list 모드용) ── */
-  function injectToolbarButtons() {
-    const toolbars = document.querySelectorAll('.todo-toolbar');
-    toolbars.forEach(function(toolbar) {
-      if (toolbar.querySelector('[data-wl-tb-btn]')) return;
-      if (!toolbar.querySelector('[data-todo-view="diary"]') && !toolbar.querySelector('#diarySyncBtn')) return;
-      // diary 모드(panel 주입)에서는 패널 내 버튼으로 충분하므로 toolbar 버튼은 생략
-    });
-  }
-
-  /* ── MutationObserver로 다이어리 패널 변화 감지 ── */
-  let observerTimer = null;
+  /* ── MutationObserver ── */
+  let debounceTimer = null;
   function watch() {
     injectIntoPanel();
-    const observer = new MutationObserver(function() {
-      clearTimeout(observerTimer);
-      observerTimer = setTimeout(function() {
-        injectIntoPanel();
-        injectToolbarButtons();
-      }, 80);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(injectIntoPanel, 80);
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
