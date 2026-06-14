@@ -38,15 +38,22 @@
   }
 
   /* ── 행 HTML ── */
+  var WL_TYPES = ['사업주 소통','A/S 처리','현장 점검','시공 조율','인허가/행정','한전 업무','자재/발주','영업','기타'];
+
   function plantRowHtml(plant, type, content) {
-    var plants = ['대구 태양광','왜관 현장','경주 발전소','기타'];
-    var types  = ['사업주 소통','시공팀 조율','현장 점검','영업','행정'];
-    return '<div class="wl-row" style="display:grid;grid-template-columns:130px 110px 1fr 32px;gap:4px 6px;margin-bottom:5px;align-items:center">' +
+    var plants = getPlantList();
+    var types  = WL_TYPES;
+    var selPlant = plant || (plants[0] || '기타');
+    var selType  = type  || '사업주 소통';
+    /* 드롭다운에 없는 값이면 기타 앞에 동적으로 추가 */
+    var plantOpts = plants.slice();
+    if (plant && plantOpts.indexOf(plant) < 0) plantOpts.unshift(plant);
+    return '<div class="wl-row" style="display:grid;grid-template-columns:140px 120px 1fr 32px;gap:4px 6px;margin-bottom:5px;align-items:center">' +
       '<select class="field wl-plant-name" style="font-size:12px;padding:4px 6px">' +
-      plants.map(function(v){ return '<option'+(v===(plant||'대구 태양광')?' selected':'')+'>'+esc(v)+'</option>'; }).join('') +
+      plantOpts.map(function(v){ return '<option'+(v===selPlant?' selected':'')+'>'+esc(v)+'</option>'; }).join('') +
       '</select>' +
       '<select class="field wl-plant-type" style="font-size:12px;padding:4px 6px">' +
-      types.map(function(v){ return '<option'+(v===(type||'사업주 소통')?' selected':'')+'>'+esc(v)+'</option>'; }).join('') +
+      types.map(function(v){ return '<option'+(v===selType?' selected':'')+'>'+esc(v)+'</option>'; }).join('') +
       '</select>' +
       '<input class="field wl-plant-content" style="font-size:12px;padding:4px 6px" placeholder="내용 입력" value="'+esc(content||'')+'">' +
       '<button class="btn icon wl-del-row" style="font-size:14px;padding:2px 7px;color:#e44;background:none;border:1px solid #e44">×</button>' +
@@ -79,6 +86,25 @@
       '<div style="font-weight:700;font-size:13px;color:#08245c">'+icon+' '+title+'</div>' +
       '<button class="btn" id="'+addId+'" style="font-size:12px;padding:4px 10px">'+addLabel+'</button>' +
       '</div>';
+  }
+
+  /* 발전소 목록: state의 시공일정/현장 데이터에서 추출, 없으면 기본값 */
+  function getPlantList() {
+    var st = getState();
+    var names = [];
+    if (st) {
+      var sites = st.sites || st.projects || st.fields || [];
+      sites.forEach(function(s){ if (s.name && names.indexOf(s.name)<0) names.push(s.name); });
+    }
+    if (!names.length) names = ['대구 태양광','왜관 현장','경주 발전소'];
+    names.push('기타');
+    return names;
+  }
+
+  /* 할일 제목에서 발전소명 추출: "코윈테크발전소 업무확인" → "코윈테크발전소" */
+  function extractPlant(title) {
+    var m = title.match(/^([^\s]+(?:발전소|현장|태양광|농장|목장|ESS|에너지|파워))/);
+    return m ? m[1] : null;
   }
 
   function sheetConnected() { return SHEET_URL && SHEET_URL !== 'YOUR_APPS_SCRIPT_WEB_APP_URL'; }
@@ -351,13 +377,18 @@
       return t.due === tomorrowStr && t.status !== '취소' && t.status !== '완료';
     });
 
-    var typeMap = { '현장확인':'현장 점검', '시공':'시공팀 조율', '영업':'영업', '한전':'행정', '인허가':'행정', '서류요청':'행정', '회의':'사업주 소통' };
+    var typeMap = {
+      '현장확인':'현장 점검', '시공':'시공 조율', '영업':'영업',
+      '한전':'한전 업무', '인허가':'인허가/행정', '서류요청':'인허가/행정',
+      '회의':'사업주 소통', '정산':'인허가/행정'
+    };
 
     var plants = todayTodos.map(function(t) {
       var icon = t.status==='완료' ? '✅' : t.status==='진행중' ? '🔄' : '📌';
       var content = icon + ' ' + t.title + (t.result ? ' → ' + t.result : '');
       var type = (t.type && typeMap[t.type]) || '사업주 소통';
-      return { plant: '기타', type: type, content: content };
+      var plantName = extractPlant(t.title) || (t.site && t.site !== '일반업무' ? t.site : null) || '기타';
+      return { plant: plantName, type: type, content: content };
     });
 
     var remarks = '';
