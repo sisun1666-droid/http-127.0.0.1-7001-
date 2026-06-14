@@ -333,10 +333,62 @@
     if (el) { el.textContent = msg; el.style.color = color||'#2a7'; }
   }
 
+  /* ── 오늘 할일에서 자동 채우기 ── */
+  function autoFillFromTodos(diaryDate) {
+    var st = getState();
+    if (!st || !st.todos) return null;
+    var person = getCurrentUser();
+
+    var todayTodos = st.todos.filter(function(t) {
+      var matchDate = t.due === diaryDate || t.start === diaryDate;
+      var matchPerson = !person || !t.owner || t.owner.indexOf(person) >= 0;
+      return matchDate && matchPerson && t.status !== '취소';
+    });
+
+    var tmr = new Date(diaryDate); tmr.setDate(tmr.getDate()+1);
+    var tomorrowStr = tmr.toISOString().slice(0,10);
+    var tomorrowTodos = (st.todos||[]).filter(function(t) {
+      return t.due === tomorrowStr && t.status !== '취소' && t.status !== '완료';
+    });
+
+    var typeMap = { '현장확인':'현장 점검', '시공':'시공팀 조율', '영업':'영업', '한전':'행정', '인허가':'행정', '서류요청':'행정', '회의':'사업주 소통' };
+
+    var plants = todayTodos.map(function(t) {
+      var icon = t.status==='완료' ? '✅' : t.status==='진행중' ? '🔄' : '📌';
+      var content = icon + ' ' + t.title + (t.result ? ' → ' + t.result : '');
+      var type = (t.type && typeMap[t.type]) || '사업주 소통';
+      return { plant: '기타', type: type, content: content };
+    });
+
+    var remarks = '';
+    if (tomorrowTodos.length) {
+      remarks = '[ 내일 할 일 ]\n' + tomorrowTodos.map(function(t){ return '- ' + t.title; }).join('\n');
+    }
+
+    if (!plants.length && !remarks) return null;
+    return { plants: plants.length ? plants : [{}], sales: [{}], mats: [{}], remarks: remarks };
+  }
+
+  /* ── 기존 메모 섹션 숨기기 ── */
+  function hideOriginalMemo() {
+    var labels = document.querySelectorAll('label');
+    for (var i = 0; i < labels.length; i++) {
+      if (labels[i].textContent.indexOf('오늘 업무 메모') >= 0) {
+        var wrap = labels[i].parentElement;
+        while (wrap && wrap.tagName !== 'DIV') wrap = wrap.parentElement;
+        if (wrap) wrap.style.display = 'none';
+        break;
+      }
+    }
+  }
+
   /* ── 다이어리 패널에 섹션 주입 ── */
   function injectIntoPanel() {
     var syncBtn = document.getElementById('diarySyncBtn');
     if (!syncBtn) return;
+
+    hideOriginalMemo();
+
     if (document.getElementById('wlFormWrap')) return;
 
     var dateLabel = document.querySelector('strong[style*="min-width:110px"]') ||
@@ -345,7 +397,7 @@
 
     var st = getState();
     var savedForDate = (st && st._fieldDiary && st._fieldDiary[diaryDate]) || null;
-    var saved = savedForDate || loadSavedForm();
+    var saved = savedForDate || loadSavedForm() || autoFillFromTodos(diaryDate);
 
     var wrapDiv = document.createElement('div');
     wrapDiv.innerHTML = buildSectionsHtml(saved, diaryDate);
