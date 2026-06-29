@@ -174,7 +174,7 @@
     .todo-column[data-todo-drop-status="완료"]   .todo-column-head{background:#dcfce7;color:#15803d}
     .todo-column[data-todo-drop-status="취소"]   .todo-column-head{background:#fee2e2;color:#991b1b}
     .todo-column-head .count{font-size:11px;background:rgba(0,0,0,.10);padding:1px 7px;border-radius:999px}
-    .todo-card{border:1px solid #e5e7eb;border-radius:9px;background:#fff;padding:9px 10px;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid #cbd5e1}
+    .todo-card{border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:6px 9px;margin-bottom:5px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid #cbd5e1}
     .todo-card.todo-backlog{border-left-color:#8b5cf6;background:#fdfcff}
     .todo-card.todo-ready  {border-left-color:#f59e0b;background:#fffdf7}
     .todo-card.todo-doing  {border-left-color:#3b82f6;background:#fafcff}
@@ -182,7 +182,7 @@
     .todo-card.todo-cancel {border-left-color:#ef4444;background:#fffafa;opacity:.7}
     .todo-card[draggable=true]{cursor:grab}.todo-card.dragging{opacity:.45;transform:scale(.98)}.todo-column.drag-over{outline:2px dashed var(--teal);outline-offset:-4px}
     .todo-drag-hint{font-size:11px;color:var(--muted);font-weight:800;margin-left:6px}
-    .todo-card-title{font-weight:700;font-size:13px;line-height:1.35;margin-bottom:5px}.todo-card-meta{color:var(--muted);font-size:11px;line-height:1.5}
+    .todo-card-title{font-weight:700;font-size:12px;line-height:1.3;margin-bottom:3px}.todo-card-meta{color:var(--muted);font-size:10.5px;line-height:1.4}
     .share-badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:900;border:1px solid var(--line);margin-left:4px}
     .share-badge.shared{background:#e9f8ef;color:#137b46;border-color:#b9e4c9}
     .share-badge.unshared{background:#fff7e6;color:#8a4b00;border-color:#f5d08b}
@@ -195,7 +195,7 @@
     #kakaoConstructionModal .toolbar{border-top:1px solid #edf2f4;padding-top:14px}
     .due-badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:900;border:1px solid var(--line);margin-left:4px}
     .due-badge.soon{background:#fff1dc;color:#8a4b00;border-color:#f5c46b}.due-badge.late{background:#fde8e4;color:#b91c1c;border-color:#f0b2a9}
-    .todo-card .row-actions{margin-top:8px!important;gap:5px}
+    .todo-card .row-actions{margin-top:5px!important;gap:4px}
     .todo-card .btn.icon,.todo-list-row .btn.icon,.linked-item .btn.icon,.today-item .btn.icon,.row-actions .btn.icon{width:26px;min-height:26px;border-radius:7px;padding:0;font-size:12px}
     .btn.icon[data-edit-todo]::before,.btn.icon[data-edit-assignment]::before,.btn.icon[data-edit-project]::before,.btn.icon[data-edit-construction]::before,.btn.icon[data-edit-person]::before{content:"수정";font-size:11px}
     .btn.icon[data-edit-todo],.btn.icon[data-edit-assignment],.btn.icon[data-edit-project],.btn.icon[data-edit-construction],.btn.icon[data-edit-person]{font-size:0;width:40px}
@@ -420,8 +420,8 @@
     .todo-step-toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
     .todo-progress{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;color:var(--muted);font-size:12px;font-weight:900}
     .todo-progress-track{height:8px;border-radius:999px;background:#e8eef1;overflow:hidden}.todo-progress-fill{height:100%;border-radius:999px;background:var(--teal)}
-    .todo-card-progress{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;margin-top:8px;font-size:11px;color:var(--muted);font-weight:900}
-    .todo-card-progress .todo-progress-track{height:7px}
+    .todo-card-progress{display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center;margin-top:5px;font-size:10px;color:var(--muted);font-weight:900}
+    .todo-card-progress .todo-progress-track{height:5px}
     @media(max-width:620px){
       main{padding:12px 10px 24px;overflow-x:hidden}
       .todo-page header{margin-bottom:10px}
@@ -825,11 +825,11 @@ body.todo-page{overflow-y:auto}
       }
       .todo-card{
         border:1px solid #e8eee8;
-        border-left:5px solid var(--teal);
-        border-radius:18px;
+        border-left:4px solid var(--teal);
+        border-radius:12px;
         background:rgba(255,255,255,.92);
-        box-shadow:0 12px 24px rgba(45,10,28,.07);
-        padding:14px;
+        box-shadow:0 4px 12px rgba(45,10,28,.06);
+        padding:7px 10px;
         transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
       }
       .todo-card:hover{
@@ -837,7 +837,7 @@ body.todo-page{overflow-y:auto}
         box-shadow:0 18px 34px rgba(45,10,28,.11);
       }
       .todo-card-title{
-        font-size:15px;
+        font-size:12.5px;
       }
       .todo-card-meta{
         color:#728075;
