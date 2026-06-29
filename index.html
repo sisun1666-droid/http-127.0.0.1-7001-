@@ -2,7 +2,17 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d9488">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="업무관리">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
   <title>기술지원팀 업무관리</title>
   <meta name="description" content="기술지원팀 업무관리 사이트입니다.">
   <meta property="og:type" content="website">
@@ -16,9 +26,9 @@
 
     <!-- lectureMaskingStyle: fullTextMaskingStyle로 통합됨 (중복 제거) -->
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260629f">
 </head>
-<body class="auth-pending">
+<body>
   <div class="auth-gate" id="authGate">
     <div class="auth-card">
       <div class="brand"><span class="kiwoom-wordmark" aria-label="KIWOOM">KIW<span class="kiwoom-loop"></span>M</span></div>
@@ -40,7 +50,7 @@
         <input class="field" id="staffLoginPin" type="password" inputmode="numeric" placeholder="개인 PIN">
       </div>
       <div class="auth-actions">
-        <button class="btn primary" id="staffLoginBtn" type="button">업무관리 로그인</button>
+        <button class="btn primary" id="staffLoginBtn" type="button" onclick="staffLogin()">업무관리 로그인</button>
       </div>
     </div>
   </div>
@@ -50,7 +60,7 @@
       <header><div><h1 id="pageTitle">할일관리</h1><div class="sub" id="pageSub">작게 쪼개면 일도 덜 무서워 보입니다.</div></div><div class="header-actions"><div class="login-info" id="loginInfo">로그인 확인 중</div><div class="toolbar"><button class="btn" id="adminTopBtn">관리자</button><button class="btn" id="googleLogoutBtn" type="button">로그아웃</button><button class="btn primary" id="maskToggleBtn" data-mask-toggle="1" type="button">마스킹 OFF</button><button class="btn primary" id="addProjectBtn">신규 현장</button></div></div></header>
       <section class="kpis" id="kpis"></section>
       <section class="panel hidden" id="dashboardView"><div class="panel-title"><h2>월간 업무 달력</h2><div class="filters"><select id="calendarYear"></select><select id="calendarMonth"></select><button class="btn primary" id="calendarAddAssignmentBtn">업무지시 추가</button></div></div><div class="calendar-grid" id="calendarGrid"></div></section>
-      <section class="panel hidden" id="adminView"><div class="panel-title"><h2>관리자 설정</h2><div class="row-actions"><button class="btn" id="exportBtn">내보내기</button><button class="btn" id="editAdminBasicBtn">수정 시작</button><button class="btn primary" id="saveAdminBasicBtn" disabled>저장</button></div></div><div class="form-grid"><div class="form-row"><label>브랜드명</label><input class="field" id="adminBrand" readonly></div><div class="form-row"><label>화면 제목</label><input class="field" id="adminTitle" readonly></div><div class="form-row full"><label>설명 문구</label><input class="field" id="adminSubtitle" readonly></div><div class="form-row"><label>관리자 PIN</label><input class="field" id="adminPin" readonly></div></div><div class="admin-grid"><div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list" id="adminNavList"></div></div><div class="card"><div class="panel-title"><h2>현장 업무단계</h2><button class="btn" id="adminAddPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminPhaseList"></div></div><div class="card"><div class="panel-title"><h2>시공일정 단계</h2><button class="btn" id="adminAddConstructionPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminConstructionPhaseList"></div></div><div class="card"><div class="panel-title"><h2>직원 업무상태</h2><button class="btn" id="adminAddAssignmentStatusBtn">상태 추가</button></div><div class="admin-list" id="adminAssignmentStatusList"></div></div><div class="card"><div class="panel-title"><h2>시공사</h2><button class="btn" id="adminAddTeamBtn">시공사 추가</button></div><div class="admin-list" id="adminTeamList"></div></div><div class="card"><div class="panel-title"><h2>구조물팀</h2><button class="btn" id="adminAddStructureTeamBtn">팀 추가</button></div><div class="admin-list" id="adminStructureTeamList"></div></div></div></section>
+      <section class="panel hidden" id="adminView"><div class="panel-title"><h2>관리자 설정</h2><div class="row-actions"><button class="btn" id="exportBtn">내보내기</button><button class="btn" id="editAdminBasicBtn">수정 시작</button><button class="btn primary" id="saveAdminBasicBtn" disabled>저장</button></div></div><div class="form-grid"><div class="form-row"><label>브랜드명</label><input class="field" id="adminBrand" readonly></div><div class="form-row"><label>화면 제목</label><input class="field" id="adminTitle" readonly></div><div class="form-row full"><label>설명 문구</label><input class="field" id="adminSubtitle" readonly></div><div class="form-row"><label>관리자 PIN</label><input class="field" id="adminPin" type="password" readonly></div></div><div class="admin-grid"><div class="card"><div class="panel-title"><h2>메뉴 카테고리</h2><button class="btn" id="adminAddNavBtn">카테고리 추가</button></div><div class="admin-list" id="adminNavList"></div></div><div class="card"><div class="panel-title"><h2>현장 업무단계</h2><button class="btn" id="adminAddPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminPhaseList"></div></div><div class="card"><div class="panel-title"><h2>시공일정 단계</h2><button class="btn" id="adminAddConstructionPhaseBtn">단계 추가</button></div><div class="admin-list" id="adminConstructionPhaseList"></div></div><div class="card"><div class="panel-title"><h2>직원 업무상태</h2><button class="btn" id="adminAddAssignmentStatusBtn">상태 추가</button></div><div class="admin-list" id="adminAssignmentStatusList"></div></div><div class="card"><div class="panel-title"><h2>시공사</h2><button class="btn" id="adminAddTeamBtn">시공사 추가</button></div><div class="admin-list" id="adminTeamList"></div></div><div class="card"><div class="panel-title"><h2>구조물팀</h2><button class="btn" id="adminAddStructureTeamBtn">팀 추가</button></div><div class="admin-list" id="adminStructureTeamList"></div></div></div></section>
       <section class="grid" id="mainGrid">
         <div class="panel"><div class="panel-title"><h2 id="tableTitle">현장·공무 진행표</h2><div class="row-actions"><button class="btn hidden" id="dbPasteBtn">DB 붙여넣기</button><button class="btn danger hidden" id="undoDbImportBtn">가져오기 취소</button><button class="btn primary" id="addContentBtn">현장 추가</button></div></div><div class="filters" id="tableFilters"><input class="search" id="search" placeholder="전체 검색"><select id="phaseFilter"></select></div><div class="table-wrap" id="tableWrap"><table><thead id="tableHead"></thead><tbody id="rows"></tbody></table></div><div id="assignmentCalendarPanel" class="hidden"><div class="schedule-toolbar"><div class="schedule-left"><button class="btn icon" id="assignmentPrevMonth">‹</button><button class="btn" id="assignmentTodayBtn">오늘</button><button class="btn icon" id="assignmentNextMonth">›</button><div class="schedule-month"><select id="assignmentCalendarYear"></select><select id="assignmentCalendarMonth"></select></div></div><div class="schedule-right"><div class="schedule-view"><button class="active" data-schedule-view="month">월</button><button data-schedule-view="week">주</button><button data-schedule-view="day">일</button></div><button class="btn primary" id="assignmentCalendarAddBtn">일정 등록</button></div></div><div class="schedule-people" id="assignmentPeopleChips"></div><div class="calendar-grid" id="assignmentCalendarGrid"></div></div><div id="todoBoardPanel" class="hidden"></div></div>
         <div class="stack"><div class="tabs hidden" id="employeeTabs"><button class="tab-btn active" data-employee-tab="assignments">업무지시</button><button class="tab-btn" data-employee-tab="workload">직원별 업무량</button><button class="tab-btn" data-employee-tab="kpi">직원 KPI</button></div><div class="panel" id="peoplePanel"><div class="panel-title"><h2>직원별 업무량</h2><button class="btn" id="addPersonBtn">직원 추가</button></div><div id="people"></div></div><div class="panel" id="employeeKpiPanel"><div class="panel-title"><h2>직원 KPI</h2><button class="btn" id="exportKpiBtn">KPI 내보내기</button></div><div class="filters"><select id="kpiYear"></select><select id="kpiMonth"><option value="all">연간</option><option value="01">1월</option><option value="02">2월</option><option value="03">3월</option><option value="04">4월</option><option value="05">5월</option><option value="06">6월</option><option value="07">7월</option><option value="08">8월</option><option value="09">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div><div class="stack" id="employeeKpis"></div></div><div class="panel" id="assignmentsPanel"><div class="panel-title"><h2>직원 업무지시</h2><button class="btn primary" id="addAssignmentBtn">업무 지시</button></div><div class="stack" id="assignments"></div></div><div class="panel" id="todosPanel"><div class="panel-title"><h2>오늘 확인할 항목</h2><button class="btn" id="addTodoBtn">항목 추가</button></div><div class="stack" id="todos"></div></div><div class="panel hidden" id="currentPlantsPanel"><div class="panel-title"><h2>현재 시공중인 발전소</h2></div><div class="stack" id="currentPlants"></div></div><div class="panel hidden" id="upcomingPlantsPanel"><div class="panel-title"><h2>시공 예정 발전소</h2></div><div class="stack" id="upcomingPlants"></div></div><div class="panel hidden" id="constructionReportPanel"><div class="panel-title"><h2>월간 시공 보고서</h2></div><div class="filters"><select id="constructionReportYear"></select><select id="constructionReportMonth"></select><button class="btn primary" id="openConstructionReportBtn">보고서 보기</button></div></div></div>
@@ -68,7 +78,14 @@
   <div class="overlay" id="kakaoTodoModal"><div class="modal"><div class="modal-head"><h2>카톡 메시지</h2><button class="btn icon" data-close="kakaoTodoModal">×</button></div><div class="form-row full"><label>아래 내용을 복사해서 카톡에 붙여넣으세요</label><textarea class="field" id="kakaoTodoText" style="min-height:240px"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoTodoBtn" type="button">복사</button><button class="btn" id="openKakaoTodoBtn" type="button">카톡 열기</button></div></div></div>
   <div class="overlay" id="kakaoConstructionModal"><div class="modal"><div class="modal-head"><h2>재무팀 카톡메세지</h2><button class="btn icon" data-close="kakaoConstructionModal">×</button></div><div class="form-row full"><textarea class="kakao-message-box" id="kakaoConstructionText"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoConstructionBtn" type="button">복사</button><button class="btn" id="openKakaoConstructionBtn" type="button">카톡 열기</button></div></div></div>
   <div class="toast" id="toast"></div>
-    <script src="app.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async onload="if(window._onGisLoaded)_onGisLoaded()"></script>
+    <script src="epc_data.js"></script>
+    <script src="app.js?v=20260629g"></script>
+    <script>
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/http-127.0.0.1-7001-/sw.js',{scope:'/http-127.0.0.1-7001-/'}).catch(()=>{});
+      }
+    </script>
 </body>
 </html>
 

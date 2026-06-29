@@ -1,0 +1,26 @@
+{
+  "name": "기술지원팀 업무관리",
+  "short_name": "업무관리",
+  "description": "기술지원팀 업무를 한 화면에서 관리합니다.",
+  "start_url": "/http-127.0.0.1-7001-/",
+  "scope": "/http-127.0.0.1-7001-/",
+  "display": "standalone",
+  "background_color": "#ecfdf5",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
