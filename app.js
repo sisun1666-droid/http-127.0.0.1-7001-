@@ -1358,6 +1358,7 @@ document.addEventListener("change",e=>{
     function dashboardDefaultDate(){return assignmentCalendarDefaultDate()}
     function resetDashboardToToday(){dashboardDate=dashboardDefaultDate();setCalendarMonth(els.calendarYear,els.calendarMonth,dashboardDate)}
     function syncViewChrome(){
+      const _apb=$("#addProjectBtn");if(_apb)_apb.style.display="";
       if(currentView==="dashboard"){
         els.pageTitle.textContent="대시보드";els.pageSub.textContent="시공 일정과 할일, 날씨를 한 화면에서 확인합니다.";els.tableTitle.textContent="시공일정";
         $("#addProjectBtn").textContent="현장 추가";$("#addContentBtn").textContent="추가";
@@ -1372,8 +1373,10 @@ document.addEventListener("change",e=>{
         const b=$("#addProjectBtn");if(b)b.textContent="시공일정 추가";
       }else if(currentView==="admin"){
         els.pageTitle.textContent="관리자";els.pageSub.textContent="팀 설정, 직원, 카테고리, 연동 등을 관리합니다.";
+        const ab=$("#addProjectBtn");if(ab){ab.textContent="내보내기";ab.style.display="none"}
       }else if(currentView==="projects"){
         els.pageTitle.textContent=state.title||"업무관리";els.pageSub.textContent=state.subtitle||"";
+        const ab=$("#addProjectBtn");if(ab)ab.style.display="";
       }
     }
     function assignmentCalendarDefaultDate(){
