@@ -1367,6 +1367,13 @@ document.addEventListener("change",e=>{
       }else if(currentView==="todos"){
         els.pageTitle.textContent="할일관리";els.pageSub.textContent="작게 쪼개면 일도 덜 무서워 보입니다.";els.tableTitle.textContent="할일관리";
         $("#addProjectBtn").textContent="할일 추가";$("#addContentBtn").textContent="할일 추가";
+      }else if(currentView==="construction"){
+        els.pageTitle.textContent="시공일정";els.pageSub.textContent="현장별 시공 단계와 진행 현황을 관리합니다.";
+        const b=$("#addProjectBtn");if(b)b.textContent="시공일정 추가";
+      }else if(currentView==="admin"){
+        els.pageTitle.textContent="관리자";els.pageSub.textContent="팀 설정, 직원, 카테고리, 연동 등을 관리합니다.";
+      }else if(currentView==="projects"){
+        els.pageTitle.textContent=state.title||"업무관리";els.pageSub.textContent=state.subtitle||"";
       }
     }
     function assignmentCalendarDefaultDate(){
