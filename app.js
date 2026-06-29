@@ -1062,7 +1062,6 @@ document.addEventListener("change",e=>{
     todoListHtml=function(rows){return teamKpiHtml(rows)+oldTodoListHtml(rows)}
     document.addEventListener("click",e=>{const t=e.target.closest("button")||e.target;if(t.dataset.dashboardConstruction){openConstructionModal(Number(t.dataset.dashboardConstruction))}if(t.dataset.dashboardGoConstruction!==undefined){goToView("construction","시공일정")}if(t.dataset.refreshWeather!==undefined){updateClock();updateWeather()}},true);
     let maskingMode=localStorage.getItem("solar-mask-mode")==="on";
-    function applyMasking(){document.body.classList.toggle("masking-mode",maskingMode);const b=$("#addProjectBtn")||$("#maskToggleBtn");if(b&&currentView==="dashboard"){b.id="maskToggleBtn";b.textContent=maskingMode?"마스킹 ON":"마스킹 OFF";b.classList.toggle("primary",!maskingMode);b.dataset.maskToggle="1"}}
     const renderBaseForMask=render;
     render=function(){renderBaseForMask();applyMasking()}
     const cityWeather=[
