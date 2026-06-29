@@ -1,11 +1,11 @@
 ﻿/* ======== Block 1 ======== */
 :root{
-  --bg:#f5f5f7;--panel:#ffffff;--ink:#1d1d1f;--muted:#707070;--line:#e8e8ed;
+  --bg:#e5e5ea;--panel:#ffffff;--ink:#1d1d1f;--muted:#6e6e73;--line:#d2d2d7;
   --teal:#0d9488;--teal-light:#f0fdfa;--red:#ef4444;--amber:#f59e0b;--green:#10b981;--blue:#3b82f6;
   --nav-bg:#0a1f1a;--nav-text:#7bbcaa;--nav-active:#f8fafc;
-  --shadow:0 1px 0 rgba(0,0,0,.04);
-  --shadow-lg:0 2px 12px rgba(0,0,0,.06);
-  --radius:16px;--radius-lg:22px
+  --shadow:0 2px 8px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
+  --radius:20px;--radius-lg:28px
 }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -24,14 +24,14 @@
     .nav-btn.active{background:rgba(255,255,255,.12);color:#f8fafc;font-weight:700}
     .nav-btn span:first-child{width:18px;text-align:center;font-size:15px;opacity:.85}
     /* ── 메인 ── */
-    main{padding:22px 28px 40px;min-width:0;background:var(--bg)}
+    main{padding:28px 32px 48px;min-width:0;background:var(--bg)}
     header{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px;align-items:flex-start}
-    h1{font-size:24px;margin:0 0 4px;font-weight:700;letter-spacing:-.8px;color:var(--ink)}
+    h1{font-size:28px;margin:0 0 4px;font-weight:700;letter-spacing:-1px;color:var(--ink)}
     h2{font-size:15px;margin:0;font-weight:600;letter-spacing:-.3px}
     .sub,.meta{color:var(--muted);font-size:13px;line-height:1.5;letter-spacing:-.1px}
     /* ── 버튼 ── */
     .toolbar,.row-actions,.filters,.tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .btn,.tab-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);min-height:34px;border-radius:999px;padding:0 14px;font-weight:500;font-size:13px;transition:.15s;letter-spacing:-.1px}
+    .btn,.tab-btn{border:1px solid rgba(0,0,0,.1);background:var(--panel);color:var(--ink);min-height:36px;border-radius:999px;padding:0 16px;font-weight:500;font-size:13px;transition:.15s;letter-spacing:-.1px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
     .btn:hover{background:#f5f5f7;border-color:#d2d2d7}
     .btn.primary,.tab-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
     .btn.primary:hover{background:#0f766e}
@@ -44,7 +44,7 @@
     .dash-top-grid{display:grid;grid-template-columns:1fr 360px;gap:12px;height:100%}
     @media(max-width:980px){.dash-top-grid{grid-template-columns:1fr;height:auto}}
     @media(max-width:620px){.dash-top-grid{grid-template-columns:1fr;height:auto;gap:10px}}
-    .kpi,.panel,.card,.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:none}
+    .kpi,.panel,.card,.modal{background:var(--panel);border:1px solid rgba(0,0,0,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
     .kpi{padding:18px}
     .label{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
     .value{margin-top:6px;font-size:28px;font-weight:700;letter-spacing:-1.2px}
@@ -1408,10 +1408,10 @@ body {
    다크모드
 ══════════════════════════════════════ */
 [data-theme="dark"]{
-  --bg:#0d1a16;--panel:#172420;--ink:#e8f4f0;--muted:#8aaba3;--line:#2a3830;
+  --bg:#0d1a16;--panel:#1c2e28;--ink:#e8f4f0;--muted:#8aaba3;--line:#2a3830;
   --teal-light:#1a2e29;--nav-bg:#08120f;--nav-text:#6a9e8e;--nav-active:#f0fdf8;
-  --shadow:0 1px 0 rgba(0,0,0,.3);
-  --shadow-lg:0 2px 12px rgba(0,0,0,.4)
+  --shadow:0 2px 8px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.2);
+  --shadow-lg:0 8px 28px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3)
 }
 [data-theme="dark"] body{background:var(--bg)}
 [data-theme="dark"] .btn,[data-theme="dark"] .tab-btn{background:#1e2e29;border-color:var(--line);color:var(--ink)}
