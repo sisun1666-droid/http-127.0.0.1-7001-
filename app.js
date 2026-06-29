@@ -3270,10 +3270,10 @@ document.addEventListener("change",e=>{
         if(!$("#myWorkPopupStyle"))document.head.insertAdjacentHTML("beforeend",`<style id="myWorkPopupStyle">
           .my-work-modal{width:min(460px,calc(100vw - 36px));padding:18px;border-radius:10px}
           .my-work-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-          .my-work-stat{border:1px solid var(--line);border-radius:8px;background:#fbfdfe;padding:10px}
+          .my-work-stat{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px}
           .my-work-stat .value{font-size:22px;margin-top:4px}
           .my-work-list{display:grid;gap:7px;margin-top:10px;max-height:260px;overflow:auto}
-          .my-work-item{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 10px;display:grid;gap:4px;text-align:left}
+          .my-work-item{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:9px 10px;display:grid;gap:4px;text-align:left}
           .my-work-item strong{font-size:13px}.my-work-actions{justify-content:flex-end;margin-top:14px}
           @media(max-width:520px){.my-work-summary{grid-template-columns:1fr}}
         #sharedNotice[data-sync="ok"]{border-color:#b7e2cf;background:#f7fffb}#sharedNotice[data-sync="saving"]{border-color:#bee3f8;background:#f7fbff}#sharedNotice[data-sync="warn"]{border-color:#ffd2a8;background:#fffaf2}</style>`);

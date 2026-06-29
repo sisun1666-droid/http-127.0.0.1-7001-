@@ -1511,6 +1511,21 @@ body {
 [data-theme="dark"]::-webkit-scrollbar-track{background:var(--bg)}
 [data-theme="dark"]::-webkit-scrollbar-thumb{background:#2e4840}
 [data-theme="dark"] *{scrollbar-color:#2e4840 var(--bg)}
+/* 드라이브 뷰 */
+[data-theme="dark"] .drive-side,[data-theme="dark"] .drive-main,[data-theme="dark"] .drive-card{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] .drive-empty{background:var(--bg);border-color:var(--line)}
+/* DB 뷰 */
+[data-theme="dark"] .db-card,[data-theme="dark"] .db-main{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] .db-drop{background:var(--bg);border-color:#2e4840}
+[data-theme="dark"] .db-stat{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] .db-result,[data-theme="dark"] .report-db-result{background:var(--panel);border-color:var(--line)}
+/* 보고서 뷰 */
+[data-theme="dark"] .report-form,[data-theme="dark"] .report-card{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] .report-tabs button{background:var(--panel);border-color:var(--line);color:var(--ink)}
+[data-theme="dark"] .report-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}
+/* 구조물 검수 뷰 */
+[data-theme="dark"] .insp-header-card,[data-theme="dark"] .insp-cat,[data-theme="dark"] .insp-list{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] .insp-memo{background:var(--panel);border-color:var(--line);color:var(--ink)}
 /* ══════════════════════════════════════
    모바일 사이드바 (햄버거 메뉴)
 ══════════════════════════════════════ */
