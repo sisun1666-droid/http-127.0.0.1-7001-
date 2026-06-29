@@ -1480,8 +1480,9 @@ body {
 /* 마감 뱃지 */
 [data-theme="dark"] .due-badge.late{background:#2a0d0d;color:#fca5a5;border-color:#4a1f1f}
 [data-theme="dark"] .due-badge.soon{background:#1e190a;color:#fcd34d;border-color:#3a2d0a}
-/* 진행중 업무 팝업 stat */
+/* 진행중 업무 팝업 stat + 리스트 */
 [data-theme="dark"] .my-work-stat{background:#1a2822;border-color:var(--line)}
+[data-theme="dark"] .my-work-item{background:#1a2822;border-color:var(--line)}
 /* 할일·일정 추가 모달 */
 [data-theme="dark"] #assignmentModal .modal,[data-theme="dark"] #todoModal .modal{background:#172420;border-color:var(--line)}
 [data-theme="dark"] #assignmentModal .modal-head h2,[data-theme="dark"] #todoModal .modal-head h2{color:var(--ink)}
