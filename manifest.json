@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#ecfdf5",
   "theme_color": "#0d9488",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "lang": "ko",
   "icons": [
     {
@@ -22,5 +22,12 @@
       "type": "image/svg+xml",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {"name":"할일관리","short_name":"할일","url":"/http-127.0.0.1-7001-/#todos","icons":[{"src":"icon.svg","sizes":"any"}]},
+    {"name":"일정관리","short_name":"일정","url":"/http-127.0.0.1-7001-/#assignments","icons":[{"src":"icon.svg","sizes":"any"}]},
+    {"name":"시공일정","short_name":"시공","url":"/http-127.0.0.1-7001-/#construction","icons":[{"src":"icon.svg","sizes":"any"}]},
+    {"name":"보고서","short_name":"보고서","url":"/http-127.0.0.1-7001-/#reports","icons":[{"src":"icon.svg","sizes":"any"}]}
+  ],
+  "categories": ["business", "productivity"]
 }

@@ -30,7 +30,7 @@
     })}
     function staffPin(p){return String(p?.pin||p?.staffPin||p?.loginPin||"")}
     const fallbackStaff=[
-      {name:"이재강",role:"과장",pin:"0217"}
+      {name:"이재강",role:"과장",pin:""}
     ];
     function ensureDefaultStaffPins(){
       state.people=Array.isArray(state.people)?state.people:[];
@@ -947,7 +947,7 @@ document.addEventListener("change",e=>{
       const panel=$("#todoBoardPanel"),statuses=state.todoStatuses,q=$("#todoSearch")?.value||"",owners=[KR.all,...state.people.map(p=>p.name)];
       const filtered=state.todos.map((t,i)=>({t:normalizeTodo(t),i})).filter(({t})=>(todoStatusFilter===KR.all||t.status===todoStatusFilter)&&(todoOwnerFilter===KR.all||taskPeople(t).includes(todoOwnerFilter))&&todoMatches(t,q));
       const chips=`<div class="todo-chips"><button class="todo-chip ${todoStatusFilter===KR.all?"active":""}" data-todo-status-filter="${KR.all}">${KR.all} <strong>${state.todos.length}</strong></button>${statuses.map(s=>`<button class="todo-chip ${todoStatusFilter===s?"active":""}" data-todo-status-filter="${esc(s)}">${esc(s)} <strong>${state.todos.filter(t=>normalizeTodo(t).status===s).length}</strong></button>`).join("")}</div><div class="todo-chips">${owners.map(o=>`<button class="todo-chip ${todoOwnerFilter===o?"active":""}" data-todo-owner-filter="${esc(o)}">${o===KR.all?"":`<span class="color-dot" style="background:${esc(personColor(o))}"></span>`}${esc(o)} <strong>${o===KR.all?state.todos.length:state.todos.filter(t=>taskPeople(t).includes(o)).length}</strong></button>`).join("")}</div>`;
-      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s).sort(todoProgressCompare);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column" data-todo-drop-status="${esc(s)}"><div class="todo-column-head"><span>${esc(s)}</span><span class="count">${rows.length}</span></div>${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" draggable="true" data-todo-drag-index="${i}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)} ${todoShareBadge(t)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn" data-toggle-todo-share="${i}">${t.kakaoSharedAt?"미공유로":"공유처리"}</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div>`}).join("")}</div>`;
+      const board=`<div class="todo-board">${statuses.map(s=>{const rows=filtered.filter(x=>x.t.status===s).sort(todoProgressCompare);const visible=s===KR.done?rows.slice(0,5):rows;const hidden=rows.length-visible.length;return`<div class="todo-column" data-todo-drop-status="${esc(s)}" data-status="${esc(s)}"><div class="todo-column-head todo-column-toggle"><span class="todo-column-toggle-icon">${s===KR.done?"▶":"▼"}</span><span>${esc(s)}</span><span class="count">${rows.length}</span></div><div class="todo-cards-wrap">${visible.length?visible.map(({t,i})=>`<div class="todo-card ${todoStatusClass(t.status)}" draggable="true" data-todo-drag-index="${i}" style="${esc(todoCardStyle(t))}"><div class="todo-card-title">${esc(t.title)} ${todoShareBadge(t)}</div><div class="todo-card-meta"><span class="color-dot" style="background:${esc(personColor(t.owner))}"></span>${esc(peopleText(t))} · ${esc(t.priority||KR.normal)} · ${esc(t.due||"")}</div><div class="todo-card-meta">${esc(t.project||KR.general)} · ${esc(t.type||KR.general)}</div><div class="todo-card-meta">${esc(t.detail||"")}</div><div class="row-actions"><button class="btn icon" data-edit-todo="${i}">✎</button><button class="btn" data-toggle-todo-share="${i}">${t.kakaoSharedAt?"미공유로":"공유처리"}</button><button class="btn icon danger" data-delete-todo="${i}">×</button></div></div>`).join(""):`<div class="meta">비어 있음</div>`}${hidden>0?`<button class="btn todo-complete-more" data-show-completed-list>완료 ${hidden}건 더보기</button>`:""}${s!==KR.done?`<button class="btn" data-add-todo-status="${esc(s)}">+ 빠른 추가</button>`:""}</div></div>`}).join("")}</div>`;
       panel.classList.remove("hidden");
       if(todoPanelTab==="diary"){renderDiaryView(panel);return;}
       panel.innerHTML=`<div class="todo-toolbar"><div class="todo-view"><button class="${todoViewMode==="board"?"active":""}" data-todo-view="board">보드</button><button class="${todoViewMode==="list"?"active":""}" data-todo-view="list">목록</button></div><button class="btn primary" id="todoAddBtn">할일 추가</button></div><div class="todo-filters"><input class="search" id="todoSearch" placeholder="제목, 설명, 담당자, 우선순위 검색" value="${esc(q)}">${chips}</div>${todoViewMode==="list"?todoListHtml(filtered):board}`;
@@ -4832,7 +4832,7 @@ document.addEventListener("change",e=>{
           scheduleSharedSave=()=>{};
           pushSharedState=async()=>true;
           saveToSupabase=async()=>true;
-          state.people=state.people?.length?state.people:[{name:"이재강",role:"과장",pin:"0217",accessRole:"admin"}];
+          state.people=state.people?.length?state.people:[{name:"이재강",role:"과장",pin:"",accessRole:"admin"}];
           state.todos=[{id:"selftest-todo",title:"자체점검 할일",owner:state.people[0].name,status:"할 일",priority:"보통",due:today,detail:"자동 점검"}];
           state.assignments=[{id:"selftest-assignment",title:"자체점검 일정",owner:state.people[0].name,project:"일반업무",type:"회의",status:"지시",priority:"보통",start:today,due:today}];
           state.construction=[];
@@ -7497,4 +7497,189 @@ function saveSchedItem(){
   if(typeof renderNav==='function') try{ renderNav(); }catch(e){}
 
 })();
+
+/* ══════════════════════════════════════
+   다크모드
+══════════════════════════════════════ */
+(function initDarkMode(){
+  const btn=document.getElementById("darkModeBtn");
+  const apply=()=>{
+    const dark=localStorage.getItem("solar-dark")==="1";
+    document.documentElement.setAttribute("data-theme",dark?"dark":"light");
+    if(btn)btn.textContent=dark?"☀️":"🌙";
+    if(btn)btn.title=dark?"라이트모드":"다크모드";
+  };
+  apply();
+  if(btn)btn.addEventListener("click",()=>{
+    localStorage.setItem("solar-dark",localStorage.getItem("solar-dark")==="1"?"0":"1");
+    apply();
+  });
+})();
+
+/* ══════════════════════════════════════
+   모바일 사이드바 (햄버거 메뉴)
+══════════════════════════════════════ */
+(function initMobileMenu(){
+  const menuBtn=document.getElementById("mobileMenuBtn");
+  const sidebar=document.querySelector("aside");
+  const overlay=document.getElementById("sidebarOverlay");
+  if(!menuBtn||!sidebar||!overlay)return;
+  const open=()=>{sidebar.classList.add("mobile-open");overlay.classList.add("show");};
+  const close=()=>{sidebar.classList.remove("mobile-open");overlay.classList.remove("show");};
+  menuBtn.addEventListener("click",open);
+  overlay.addEventListener("click",close);
+  sidebar.addEventListener("click",e=>{if(e.target.closest(".nav-btn"))close();});
+})();
+
+/* ══════════════════════════════════════
+   오프라인 감지
+══════════════════════════════════════ */
+(function initOffline(){
+  const banner=document.getElementById("offlineBanner");
+  if(!banner)return;
+  const update=()=>banner.classList.toggle("show",!navigator.onLine);
+  window.addEventListener("online",update);
+  window.addEventListener("offline",update);
+  update();
+})();
+
+/* ══════════════════════════════════════
+   전체 검색 (Ctrl+K / 검색 버튼)
+══════════════════════════════════════ */
+(function initGlobalSearch(){
+  const overlay=document.getElementById("searchOverlay");
+  const input=document.getElementById("searchInput");
+  const results=document.getElementById("searchResults");
+  const searchBtn=document.getElementById("searchBtn");
+  if(!overlay||!input||!results)return;
+
+  let focusIdx=-1;
+  const close=()=>{overlay.classList.remove("open");input.value="";results.innerHTML="";focusIdx=-1;};
+  const open=()=>{overlay.classList.add("open");results.innerHTML=`<div class="search-empty">검색어를 입력하세요 (Ctrl+K)</div>`;setTimeout(()=>input.focus(),60);};
+
+  document.addEventListener("keydown",e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==="k"){e.preventDefault();open();return;}
+    if(!overlay.classList.contains("open"))return;
+    if(e.key==="Escape"){close();return;}
+    if(e.key==="ArrowDown"){e.preventDefault();moveFocus(1);}
+    else if(e.key==="ArrowUp"){e.preventDefault();moveFocus(-1);}
+    else if(e.key==="Enter"){e.preventDefault();selectFocused();}
+  });
+  overlay.addEventListener("click",e=>{if(e.target===overlay)close();});
+  if(searchBtn)searchBtn.addEventListener("click",open);
+
+  function moveFocus(dir){
+    const items=results.querySelectorAll(".search-result-item");
+    if(!items.length)return;
+    if(focusIdx>=0)items[focusIdx]?.classList.remove("focused");
+    focusIdx=(focusIdx+dir+items.length)%items.length;
+    items[focusIdx]?.classList.add("focused");
+    items[focusIdx]?.scrollIntoView({block:"nearest"});
+  }
+  function selectFocused(){
+    results.querySelectorAll(".search-result-item")[focusIdx]?.click();
+  }
+
+  const NAV_VIEWS=[
+    {k:"dashboard",l:"대시보드",i:"🏠"},{k:"todos",l:"할일관리",i:"✅"},
+    {k:"assignments",l:"일정관리",i:"📅"},{k:"messages",l:"메시지",i:"💬"},
+    {k:"reports",l:"보고서",i:"📄"},{k:"meetings",l:"회의록",i:"📝"},
+    {k:"construction",l:"시공일정",i:"🔧"},{k:"alloc",l:"시공배분",i:"👷"},
+    {k:"epc",l:"MW",i:"⚡"},{k:"structureInspect",l:"구조물 검수",i:"🔍"},
+    {k:"admin",l:"관리자",i:"⚙️"},{k:"db",l:"DB",i:"📊"},{k:"drive",l:"프로젝트 파일",i:"📁"}
+  ];
+
+  input.addEventListener("input",()=>{
+    const q=input.value.trim().toLowerCase();
+    focusIdx=-1;
+    if(!q){results.innerHTML=`<div class="search-empty">검색어를 입력하세요</div>`;return;}
+
+    const hits=[];
+    try{
+      (state.todos||[]).forEach(t=>{
+        if([t.title,t.project,t.detail].filter(Boolean).join(" ").toLowerCase().includes(q))
+          hits.push({icon:"✅",title:t.title||"",meta:`할일 · ${t.status||""}${t.project?" · "+t.project:""}`,view:"todos"});
+      });
+      (state.assignments||[]).forEach(a=>{
+        if([a.title,a.detail,a.owner].filter(Boolean).join(" ").toLowerCase().includes(q))
+          hits.push({icon:"📅",title:a.title||"",meta:`일정 · ${a.owner||""}`,view:"assignments"});
+      });
+      (state.meetings||[]).forEach(m=>{
+        if([m.title,m.attendees,m.summary].filter(Boolean).join(" ").toLowerCase().includes(q))
+          hits.push({icon:"📝",title:m.title||"회의록",meta:`회의록 · ${m.date||""}`,view:"meetings"});
+      });
+      (state.construction||[]).forEach(c=>{
+        if([c.site,c.customer,c.company].filter(Boolean).join(" ").toLowerCase().includes(q))
+          hits.push({icon:"🔧",title:c.site||"",meta:`시공 · ${c.company||""}`,view:"construction"});
+      });
+    }catch(e){}
+
+    NAV_VIEWS.filter(v=>v.l.toLowerCase().includes(q))
+      .forEach(v=>hits.push({icon:v.i,title:v.l,meta:"메뉴 이동",view:v.k}));
+
+    if(!hits.length){results.innerHTML=`<div class="search-empty">"${q}" 검색 결과 없음</div>`;return;}
+
+    const limited=hits.slice(0,20);
+    results.innerHTML=limited.map((h,i)=>
+      `<div class="search-result-item" data-idx="${i}">
+        <span class="search-result-icon">${h.icon}</span>
+        <span class="search-result-title">${h.title||"(제목 없음)"}</span>
+        <span class="search-result-meta">${h.meta||""}</span>
+      </div>`
+    ).join("");
+    results.querySelectorAll(".search-result-item").forEach((el,i)=>{
+      el.addEventListener("click",()=>{
+        try{if(typeof goToView==="function")goToView(limited[i].view);}catch(e){}
+        close();
+      });
+    });
+  });
+})();
+
+/* ══════════════════════════════════════
+   마감일 푸시 알림
+══════════════════════════════════════ */
+(function initPushNotifications(){
+  if(!("Notification" in window))return;
+
+  function checkDeadlines(){
+    if(Notification.permission!=="granted")return;
+    const today=new Date().toISOString().slice(0,10);
+    const tomorrow=new Date(Date.now()+86400000).toISOString().slice(0,10);
+    const urgent=[];
+    try{
+      (state.todos||[]).filter(t=>t.status!=="완료"&&t.status!=="취소"&&t.dueDate).forEach(t=>{
+        if(t.dueDate===today)urgent.push(`📌 오늘 마감: ${t.title}`);
+        else if(t.dueDate===tomorrow)urgent.push(`⏰ 내일 마감: ${t.title}`);
+      });
+    }catch(e){}
+    if(urgent.length){
+      new Notification("업무관리 마감 알림",{
+        body:urgent.slice(0,3).join("\n"),
+        icon:"/http-127.0.0.1-7001-/icon.svg",
+        tag:"deadline-"+today
+      });
+    }
+  }
+
+  // 최초 클릭 시 권한 요청
+  document.addEventListener("click",function reqOnce(){
+    if(Notification.permission==="default")
+      Notification.requestPermission().then(p=>{if(p==="granted")checkDeadlines();});
+    document.removeEventListener("click",reqOnce);
+  },{once:true});
+
+  if(Notification.permission==="granted")checkDeadlines();
+  setInterval(()=>checkDeadlines(),3600000);
+})();
+
+/* ══════════════════════════════════════
+   완료 칸반 컬럼 접기 (성능)
+══════════════════════════════════════ */
+document.addEventListener("click",e=>{
+  const toggle=e.target.closest(".todo-column-toggle");
+  if(!toggle)return;
+  const col=toggle.closest(".todo-column");
+  if(col)col.classList.toggle("expanded");
+});
 
