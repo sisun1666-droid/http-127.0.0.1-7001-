@@ -160,8 +160,8 @@
     .todo-chips{display:flex;gap:8px;overflow:auto;white-space:nowrap;padding-bottom:2px}
     .todo-chip{border:0;background:#ecfdf5;border-radius:999px;min-height:32px;padding:0 12px;font-weight:850;color:#52636b}
     .todo-chip.active{background:var(--teal);color:#fff}
-    .todo-board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:14px;overflow:auto;padding-bottom:4px}
-    .todo-column{min-height:320px;border:1.5px solid var(--line);border-radius:14px;background:#f8f9fa;padding:14px;border-top:3px solid var(--line)}
+    .todo-board{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:10px;overflow:auto;padding-bottom:4px}
+    .todo-column{min-height:280px;border:1.5px solid var(--line);border-radius:12px;background:#f8f9fa;padding:11px;border-top:3px solid var(--line)}
     .todo-column[data-todo-drop-status="백로그"]{background:#f5f3ff;border-color:#c4b5fd;border-top-color:#7c3aed}
     .todo-column[data-todo-drop-status="할 일"]{background:#fffbeb;border-color:#fcd34d;border-top-color:#f59e0b}
     .todo-column[data-todo-drop-status="진행중"]{background:#eff6ff;border-color:#93c5fd;border-top-color:#3b82f6}
@@ -578,7 +578,7 @@ body.todo-page{overflow-y:auto}
       }
       @media(min-width:981px){
         body.todo-page #todoBoardPanel .todo-board{
-          grid-template-columns:repeat(5,minmax(180px,1fr));
+          grid-template-columns:repeat(5,minmax(190px,1fr));
         }
       }
 
@@ -790,13 +790,13 @@ body.todo-page{overflow-y:auto}
         box-shadow:0 8px 18px rgba(13,148,136,.16);
       }
       .todo-board{
-        gap:16px;
+        gap:12px;
       }
       .todo-column{
-        border-radius:20px;
-        padding:16px;
-        box-shadow:0 12px 26px rgba(45,10,28,.05);
-        border-top-width:4px;
+        border-radius:16px;
+        padding:12px;
+        box-shadow:0 8px 20px rgba(45,10,28,.05);
+        border-top-width:3px;
       }
       .todo-column[data-todo-drop-status="백로그"]{background:rgba(245,243,255,.88);border-color:#c4b5fd;border-top-color:#7c3aed}
       .todo-column[data-todo-drop-status="할 일"]{background:rgba(255,251,235,.88);border-color:#fcd34d;border-top-color:#f59e0b}
