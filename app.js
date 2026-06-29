@@ -1,8 +1,8 @@
 ﻿﻿﻿
     function localDateString(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-    const today=localDateString(),appBuildVersion="2026-06-07-0605-operational-rehearsal",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
+    const today=localDateString(),appBuildVersion="2026-06-29",storageKey="solar-admin-state-v1",viewStorageKey="solar-admin-current-view",legacyStorageKeys=["solar-admin-prototype-v3","solar-admin-prototype-v2"];
     const SUPABASE_URL="https://cldlugowplsswabyqxdh.supabase.co",SUPABASE_ANON_KEY="sb_publishable_Lik-AfYlzrW4eCWTZaPW5Q_OP1r0yk6",SUPABASE_STATE_URL=`${SUPABASE_URL}/rest/v1/app_state?id=eq.main`;
-    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"☑",label:"할일관리"},{icon:"📅",label:"일정관리"},{icon:"✉",label:"메세지"},{icon:"▣",label:"보고서"},{icon:"▤",label:"회의록"},{icon:"◉",label:"시공일정"},{icon:"⚖",label:"시공배분"},{icon:"▦",label:"DB"},{icon:"▤",label:"프로젝트 파일"},{icon:"▣",label:"MW"},{icon:"◉",label:"구조물 검수"},{icon:"⚙",label:"관리자"},],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광","금태양","JW","보강"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","보강공사","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
+    const defaults={brand:"1577-1577",title:"기술지원팀 업무관리",subtitle:"기술지원팀 업무를 한 화면에서 관리합니다.",adminPin:"1234",nav:[{icon:"⌂",label:"대시보드"},{icon:"☑",label:"할일관리"},{icon:"📅",label:"일정관리"},{icon:"✉",label:"메시지"},{icon:"▣",label:"보고서"},{icon:"▤",label:"회의록"},{icon:"◉",label:"시공일정"},{icon:"⚖",label:"시공배분"},{icon:"▦",label:"DB"},{icon:"▤",label:"프로젝트 파일"},{icon:"▣",label:"MW"},{icon:"◉",label:"구조물 검수"},{icon:"⚙",label:"관리자"},],phases:["고객상담","현장조사","인허가","한전접수","설계검토","자재발주","시공중","준공"],statuses:["정상","대기","보완","지연","완료"],constructionTeams:["남해","다온","다호","동광","금태양","JW","보강"],structureTeams:["보틸","쇼후르","잠시드","일고르","아와즈벡","마흐무드","살도르벡","자모르딘","시로즈벡","도스톤","아지즈","JW1팀","JW2팀"],constructionPhases:["자재입고완료","구조물시공","전기시공","보강공사","완료"],people:[{name:"이재강",role:"과장",area:"담당업무 미입력",monthlyTarget:30,yearlyTarget:360,pin:"0217"}],projects:[],construction:[],assignments:[],todos:[],assignmentStatuses:["지시","진행","검토요청","완료","보류"],geminiKey:"",sheetsUrl:"",sheetsSecret:""};
     const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),els={nav:$("#nav"),kpis:$("#kpis"),brandName:$("#brandName"),pageTitle:$("#pageTitle"),pageSub:$("#pageSub"),dashboardView:$("#dashboardView"),adminView:$("#adminView"),mainGrid:$("#mainGrid"),tableTitle:$("#tableTitle"),tableHead:$("#tableHead"),rows:$("#rows"),search:$("#search"),phaseFilter:$("#phaseFilter"),tableFilters:$("#tableFilters"),tableWrap:$("#tableWrap"),assignmentCalendarPanel:$("#assignmentCalendarPanel"),assignmentCalendarGrid:$("#assignmentCalendarGrid"),assignmentCalendarYear:$("#assignmentCalendarYear"),assignmentCalendarMonth:$("#assignmentCalendarMonth"),dbPasteBtn:$("#dbPasteBtn"),undoDbImportBtn:$("#undoDbImportBtn"),dbPasteText:$("#dbPasteText"),dbImportPreview:$("#dbImportPreview"),calendarGrid:$("#calendarGrid"),calendarYear:$("#calendarYear"),calendarMonth:$("#calendarMonth"),employeeTabs:$("#employeeTabs"),peoplePanel:$("#peoplePanel"),employeeKpiPanel:$("#employeeKpiPanel"),assignmentsPanel:$("#assignmentsPanel"),todosPanel:$("#todosPanel"),constructionReportPanel:$("#constructionReportPanel"),constructionReportYear:$("#constructionReportYear"),constructionReportMonth:$("#constructionReportMonth"),constructionReport:$("#constructionReport"),currentPlantsPanel:$("#currentPlantsPanel"),upcomingPlantsPanel:$("#upcomingPlantsPanel"),currentPlants:$("#currentPlants"),upcomingPlants:$("#upcomingPlants"),people:$("#people"),employeeKpis:$("#employeeKpis"),assignments:$("#assignments"),todos:$("#todos"),kpiYear:$("#kpiYear"),kpiMonth:$("#kpiMonth"),toast:$("#toast")};
     let state=loadState();loadSvrIds();let currentView=["dashboard","admin","assignments","construction","todos","projects","drive","reports","db","fieldwork","meetings","epc","messages","alloc","structureInspect"].includes(localStorage.getItem(viewStorageKey))?localStorage.getItem(viewStorageKey):"dashboard",employeeSubView="assignments",assignmentPersonFilter="전체",assignmentCalendarView="month",todoStatusFilter="\uC804\uCCB4",todoOwnerFilter="\uC804\uCCB4",todoViewMode="board",todoPanelTab="tasks",diaryDateCursor=today,editingTodoIndex=null,adminUnlocked=false,adminBasicEditMode=false,editingProjectIndex=null,editingAssignmentIndex=null,editingPersonIndex=null,editingConstructionIndex=null,sharedLoaded=false,columnFilters={projects:{},assignments:{},construction:{}},sortState={projects:{key:"",dir:"asc"},assignments:{key:"",dir:"asc"},construction:{key:"",dir:"asc"}},pendingDbImport=[];if(!adminUnlocked&&["admin","construction","db","drive"].includes(currentView)){currentView="dashboard";localStorage.setItem(viewStorageKey,currentView)}
     let authUser=null,authReady=false;
@@ -1288,7 +1288,7 @@ document.addEventListener("change",e=>{
         const head=$("#constructionModal .modal-head");
         if(!head||$("#kakaoConstructionBtn"))return;
         const search=head.querySelector(".construction-db-search")||head.querySelector("[data-close='constructionModal']");
-        search?.insertAdjacentHTML("beforebegin",`<button class="btn primary" id="kakaoConstructionBtn" type="button">카톡메세지</button>`);
+        search?.insertAdjacentHTML("beforebegin",`<button class="btn primary" id="kakaoConstructionBtn" type="button">카톡 메시지</button>`);
       }
       const baseOpenConstructionForKakao=openConstructionModal;
       openConstructionModal=function(...args){baseOpenConstructionForKakao(...args);ensureConstructionKakaoButton()};
@@ -1339,8 +1339,8 @@ document.addEventListener("change",e=>{
         if(t.id==="copyKakaoConstructionBtn"){
           e.preventDefault();
           const text=$("#kakaoConstructionText").value;
-          try{await navigator.clipboard.writeText(text);toast("재무팀 카톡메세지를 복사했습니다.")}
-          catch{$("#kakaoConstructionText").focus();$("#kakaoConstructionText").select();document.execCommand("copy");toast("재무팀 카톡메세지를 복사했습니다.")}
+          try{await navigator.clipboard.writeText(text);toast("재무팀 카톡 메시지를 복사했습니다.")}
+          catch{$("#kakaoConstructionText").focus();$("#kakaoConstructionText").select();document.execCommand("copy");toast("재무팀 카톡 메시지를 복사했습니다.")}
         }
         if(t.id==="openKakaoConstructionBtn"){
           e.preventDefault();
@@ -3393,9 +3393,9 @@ document.addEventListener("change",e=>{
         if(!m)return `<div class="meeting-empty"><strong>등록된 회의록이 없습니다.</strong><span>회의록 추가 버튼으로 새 회의록을 작성할 수 있습니다.</span></div>`;
         return `<div class="meeting-detail"><div class="meeting-detail-head"><div><h2>${esc(m.title)}</h2><p>${esc(m.date)} ${esc(m.time)} · 주관 ${esc(m.host)} · ${esc(m.project)} / ${esc(m.type)}</p></div><div class="row-actions"><button class="btn" data-edit-meeting="${esc(m.id)}">수정</button><button class="btn" id="printMeetingA4Btn">A4 회의록</button><button class="btn subtle-danger" data-delete-meeting="${esc(m.id)}">삭제</button><button class="btn" id="addMeetingBtn">회의록 추가</button></div></div><div class="meeting-section"><h3>참석자</h3><div class="meeting-chips">${(m.attendees||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div></div><div class="meeting-section"><h3>회의 요약</h3><p>${esc(m.summary)}</p></div><div class="meeting-section"><h3>결정사항</h3><ul>${(m.decisions||[]).map(x=>`<li>${esc(x)}</li>`).join("")||`<li>결정사항이 없습니다.</li>`}</ul></div></div>`
       }
-      function meetingFormPeopleOptions(){return (state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("")||`<option>이재강</option>`}
-      function renderMeetingAttendeeChecks(selected=[]){const names=(state.people||[]).map(p=>p.name);const picked=new Set((selected||[]).filter(Boolean));if(!picked.size){const fallback=loginName()||names[0]||"이재강";picked.add(fallback)}$("#meetingAttendees").innerHTML=(names.length?names:["이재강"]).map(name=>`<label><input type="checkbox" value="${esc(name)}" ${picked.has(name)?"checked":""}>${esc(name)}</label>`).join("")}
-      function readMeetingAttendeeChecks(){const checked=Array.from($$("#meetingAttendees input:checked")).map(x=>x.value);return checked.length?checked:[$("#meetingHost")?.value||loginName()||"이재강"]}
+      function meetingFormPeopleOptions(){return (state.people||[]).map(p=>`<option>${esc(p.name)}</option>`).join("")}
+      function renderMeetingAttendeeChecks(selected=[]){const names=(state.people||[]).map(p=>p.name);const picked=new Set((selected||[]).filter(Boolean));if(!picked.size){const fallback=loginName()||names[0]||"";if(fallback)picked.add(fallback)}if($("#meetingAttendees"))$("#meetingAttendees").innerHTML=names.map(name=>`<label><input type="checkbox" value="${esc(name)}" ${picked.has(name)?"checked":""}>${esc(name)}</label>`).join("")}
+      function readMeetingAttendeeChecks(){const checked=Array.from($$("#meetingAttendees input:checked")).map(x=>x.value);return checked.length?checked:[$("#meetingHost")?.value||loginName()||""].filter(Boolean)}
       function meetingAiLabels(){return ["회의 제목","제목","회의일","날짜","일자","시간","회의 시간","주관자","주관","참석자","참석","현장/프로젝트","현장","프로젝트","구분","회의 구분","회의 요약","요약","결정사항","결정 사항"]}
       function meetingAiSection(text,label){
         const safeLabel=label.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
@@ -3714,12 +3714,12 @@ document.addEventListener("change",e=>{
       staffLogin();
     },true);
     (function lockPreferredNavOrder(){
-      const preferredNavOrder=["대시보드","할일관리","일정관리","메세지","보고서","회의록","시공일정","DB","프로젝트 파일","MW","구조물 검수","관리자"];
+      const preferredNavOrder=["대시보드","할일관리","일정관리","메시지","보고서","회의록","시공일정","DB","프로젝트 파일","MW","구조물 검수","관리자"];
       const preferredNavDefaults={
         "대시보드":{icon:"⌂",label:"대시보드",access:"member"},
         "할일관리":{icon:"☑",label:"할일관리",access:"member"},
         "일정관리":{icon:"📅",label:"일정관리",access:"member"},
-        "메세지":{icon:"✉",label:"메세지",access:"member"},
+        "메시지":{icon:"✉",label:"메시지",access:"member"},
         "보고서":{icon:"▣",label:"보고서",access:"member"},
         "회의록":{icon:"▤",label:"회의록",access:"member"},
         "시공일정":{icon:"◉",label:"시공일정",access:"admin"},
@@ -4457,11 +4457,11 @@ document.addEventListener("change",e=>{
       ];
       function ensureMessageNav(){
         state.nav=Array.isArray(state.nav)?state.nav:[];
-        if(!state.nav.some(n=>String(n.label||"").replace(/\s/g,"")==="메세지")){
+        if(!state.nav.some(n=>String(n.label||"").replace(/\s/g,"")==="메시지")){
           const reportIndex=state.nav.findIndex(n=>String(n.label||"").includes("보고서"));
           const adminIndex=state.nav.findIndex(n=>String(n.label||"").includes("관리자"));
           const insertAt=reportIndex>=0?reportIndex:(adminIndex>=0?adminIndex:state.nav.length);
-          state.nav.splice(insertAt,0,{icon:"✉",label:"메세지",access:"member"});
+          state.nav.splice(insertAt,0,{icon:"✉",label:"메시지",access:"member"});
         }
         state.messages=Array.isArray(state.messages)?state.messages:[];
       }
@@ -4583,7 +4583,7 @@ document.addEventListener("change",e=>{
         const a=currentMessageAnalysis();
         const siteVal=$("#messageSite")?.value||"";
         const rows=(state.messages||[]).slice(0,30).map((m,i)=>`<div class="message-row"><div><span class="badge ${esc(m.badge||"blue")}">${esc(m.type||"일반 문의")}</span></div><div><strong>${esc(m.sender||"고객")} ${m.site?`· ${esc(m.site)}`:""}</strong><p>${esc(m.incoming||"")}</p></div><span class="badge ${m.status==="완료"?"green":"amber"}">${esc(m.status||"대기")}</span><span class="meta">${esc(m.date||"")}</span><div class="row-actions"><button class="btn icon" data-copy-message="${i}">복사</button><button class="btn icon" data-done-message="${i}">완료</button><button class="btn icon danger" data-delete-message="${i}">삭제</button></div></div>`).join("");
-        els.messageView.innerHTML=`<div class="message-shell"><section class="message-card message-form"><div class="panel-title"><h2>메세지 자동응답</h2><button class="btn primary" id="saveMessageBtn" type="button">접수 저장</button></div><input class="field" id="messageSender" placeholder="고객명 또는 업체명" value="${esc($("#messageSender")?.value||"")}"><div><input class="field" id="messageSite" placeholder="현장/발전소명 (입력 시 DB 자동 조회)" value="${esc(siteVal)}">${buildSiteInfoHtml(siteVal)}</div><select class="field" id="messageTone"><option value="기본" ${$("#messageTone")?.value==="기본"?"selected":""}>기본 응대</option><option value="간단" ${$("#messageTone")?.value==="간단"?"selected":""}>간단 답변</option><option value="강한사과" ${$("#messageTone")?.value==="강한사과"?"selected":""}>불만/사과 강조</option></select><textarea class="field" id="messageIncoming" placeholder="고객 민원, 카톡, 문자 내용을 붙여넣으세요.">${esc($("#messageIncoming")?.value||"")}</textarea><div class="toolbar"><button class="btn" id="clearMessageBtn" type="button">비우기</button><button class="btn primary" id="copyMessageReplyBtn" type="button">답변 복사</button></div></section><section class="message-card message-result"><div class="panel-title"><h2>자동 인식 결과</h2><span class="badge ${esc(a.badge)}" id="messageTypeBadge">${esc(a.type)}</span></div><div class="message-meta-grid"><div><div class="label">긴급도</div><div class="value" style="font-size:22px" id="messageUrgencyValue">${esc(a.urgency)}</div></div><div><div class="label">필요 조치</div><strong id="messageActionValue">${esc(a.actions[0]||"확인")}</strong></div><div><div class="label">응대 방식</div><strong id="messageToneValue">${esc($("#messageTone")?.value||"기본")}</strong></div><div><div class="label">저장 건수</div><div class="value" style="font-size:22px">${state.messages.length}</div></div></div><div class="label">답변 초안</div><div class="message-output" id="messageReplyOutput">${esc(reply)}</div><div class="message-card" style="box-shadow:none"><div class="panel-title"><h2>접수 이력</h2><span class="meta">최근 30건</span></div><div class="message-history">${rows||`<div class="meta">저장된 메세지가 없습니다.</div>`}</div></div></section></div>`;
+        els.messageView.innerHTML=`<div class="message-shell"><section class="message-card message-form"><div class="panel-title"><h2>메시지 자동응답</h2><button class="btn primary" id="saveMessageBtn" type="button">접수 저장</button></div><input class="field" id="messageSender" placeholder="고객명 또는 업체명" value="${esc($("#messageSender")?.value||"")}"><div><input class="field" id="messageSite" placeholder="현장/발전소명 (입력 시 DB 자동 조회)" value="${esc(siteVal)}">${buildSiteInfoHtml(siteVal)}</div><select class="field" id="messageTone"><option value="기본" ${$("#messageTone")?.value==="기본"?"selected":""}>기본 응대</option><option value="간단" ${$("#messageTone")?.value==="간단"?"selected":""}>간단 답변</option><option value="강한사과" ${$("#messageTone")?.value==="강한사과"?"selected":""}>불만/사과 강조</option></select><textarea class="field" id="messageIncoming" placeholder="고객 민원, 카톡, 문자 내용을 붙여넣으세요.">${esc($("#messageIncoming")?.value||"")}</textarea><div class="toolbar"><button class="btn" id="clearMessageBtn" type="button">비우기</button><button class="btn primary" id="copyMessageReplyBtn" type="button">답변 복사</button></div></section><section class="message-card message-result"><div class="panel-title"><h2>자동 인식 결과</h2><span class="badge ${esc(a.badge)}" id="messageTypeBadge">${esc(a.type)}</span></div><div class="message-meta-grid"><div><div class="label">긴급도</div><div class="value" style="font-size:22px" id="messageUrgencyValue">${esc(a.urgency)}</div></div><div><div class="label">필요 조치</div><strong id="messageActionValue">${esc(a.actions[0]||"확인")}</strong></div><div><div class="label">응대 방식</div><strong id="messageToneValue">${esc($("#messageTone")?.value||"기본")}</strong></div><div><div class="label">저장 건수</div><div class="value" style="font-size:22px">${state.messages.length}</div></div></div><div class="label">답변 초안</div><div class="message-output" id="messageReplyOutput">${esc(reply)}</div><div class="message-card" style="box-shadow:none"><div class="panel-title"><h2>접수 이력</h2><span class="meta">최근 30건</span></div><div class="message-history">${rows||`<div class="meta">저장된 메시지가 없습니다.</div>`}</div></div></section></div>`;
       }
       function updateMessagePreview(){
         const a=currentMessageAnalysis();
@@ -4605,26 +4605,26 @@ document.addEventListener("change",e=>{
       }
       function saveMessageFromForm(){
         const incoming=$("#messageIncoming")?.value.trim();
-        if(!incoming){toast("먼저 메세지 내용을 입력해 주세요.");return}
+        if(!incoming){toast("먼저 메시지 내용을 입력해 주세요.");return}
         const a=analyzeMessage(incoming);
         state.messages=Array.isArray(state.messages)?state.messages:[];
         state.messages.unshift({id:uid("message"),date:today,time:new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}),sender:$("#messageSender")?.value.trim()||"고객",site:$("#messageSite")?.value.trim(),incoming,reply:buildMessageReply(),type:a.type,badge:a.badge,urgency:a.urgency,actions:a.actions,status:"대기",owner:loginName?.()||""});
-        saveState("메세지 접수와 답변 초안을 저장했습니다.");
+        saveState("메시지 접수와 답변 초안을 저장했습니다.");
         renderMessageView();
       }
       async function copyText(text){try{await navigator.clipboard.writeText(text);toast("복사했습니다.")}catch{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("복사했습니다.")}}
       const baseNormalizeForMessages=normalizeState;
       normalizeState=function(){baseNormalizeForMessages();ensureMessageNav()};
       const baseViewForLabelForMessages=viewForLabel;
-      viewForLabel=function(label){return String(label||"").replace(/\s/g,"").includes("메세지")?"messages":baseViewForLabelForMessages(label)};
+      viewForLabel=function(label){return String(label||"").replace(/\s/g,"").includes("메시지")?"messages":baseViewForLabelForMessages(label)};
       const baseIsActiveForMessages=isActive;
-      isActive=function(label){return currentView==="messages"?String(label||"").replace(/\s/g,"").includes("메세지"):baseIsActiveForMessages(label)};
+      isActive=function(label){return currentView==="messages"?String(label||"").replace(/\s/g,"").includes("메시지"):baseIsActiveForMessages(label)};
       const baseRenderViewForMessages=renderView;
       renderView=function(){injectMessageChrome();baseRenderViewForMessages();const isMessages=currentView==="messages";els.messageView.classList.toggle("hidden",!isMessages);$("#kpis")?.classList.toggle("hidden",isMessages||currentView==="dashboard"||currentView==="assignments"||currentView==="todos"||currentView==="epc");els.dashboardView?.classList.toggle("hidden",currentView!=="dashboard");els.adminView?.classList.toggle("hidden",currentView!=="admin");els.mainGrid?.classList.toggle("hidden",isMessages||currentView==="dashboard"||currentView==="admin"||currentView==="epc");document.body.classList.toggle("message-page",isMessages)};
       const baseRenderCurrentForMessages=renderCurrentContent;
       renderCurrentContent=function(){if(currentView==="messages"){syncViewChrome();renderMessageView();return}baseRenderCurrentForMessages()};
       const baseSyncForMessages=syncViewChrome;
-      syncViewChrome=function(){baseSyncForMessages();if(currentView==="messages"){els.pageTitle.textContent="메세지";els.pageSub.textContent="민원, 문의, 요청 내용을 자동 분류하고 답변 초안을 만듭니다.";const top=$("#addProjectBtn");if(top){top.textContent="접수 저장";top.disabled=false;top.classList.add("primary")}}};
+      syncViewChrome=function(){baseSyncForMessages();if(currentView==="messages"){els.pageTitle.textContent="메시지";els.pageSub.textContent="민원, 문의, 요청 내용을 자동 분류하고 답변 초안을 만듭니다.";const top=$("#addProjectBtn");if(top){top.textContent="접수 저장";top.disabled=false;top.classList.add("primary")}}};
       document.addEventListener("input",e=>{if(currentView==="messages"&&["messageSender","messageSite","messageIncoming"].includes(e.target?.id))updateMessagePreview()},true);
       document.addEventListener("change",e=>{if(currentView==="messages"&&e.target?.id==="messageTone")updateMessagePreview()},true);
       document.addEventListener("click",e=>{
@@ -4634,8 +4634,8 @@ document.addEventListener("change",e=>{
         if(t.id==="copyMessageReplyBtn"){e.preventDefault();e.stopImmediatePropagation();copyText($("#messageReplyOutput")?.textContent||buildMessageReply());return}
         if(t.id==="clearMessageBtn"){e.preventDefault();e.stopImmediatePropagation();["messageSender","messageSite","messageIncoming"].forEach(id=>{const el=$("#"+id);if(el)el.value=""});renderMessageView();return}
         if(t.dataset.copyMessage!==undefined){const m=state.messages[Number(t.dataset.copyMessage)];if(m)copyText(m.reply||"");return}
-        if(t.dataset.doneMessage!==undefined){const m=state.messages[Number(t.dataset.doneMessage)];if(m){m.status="완료";saveState("메세지를 완료 처리했습니다.");renderMessageView()}return}
-        if(t.dataset.deleteMessage!==undefined){const i=Number(t.dataset.deleteMessage);if(confirm("이 메세지 이력을 삭제할까요?")){state.messages.splice(i,1);saveState("메세지를 삭제했습니다.");renderMessageView()}return}
+        if(t.dataset.doneMessage!==undefined){const m=state.messages[Number(t.dataset.doneMessage)];if(m){m.status="완료";saveState("메시지를 완료 처리했습니다.");renderMessageView()}return}
+        if(t.dataset.deleteMessage!==undefined){const i=Number(t.dataset.deleteMessage);if(confirm("이 메시지 이력을 삭제할까요?")){state.messages.splice(i,1);saveState("메시지를 삭제했습니다.");renderMessageView()}return}
       },true);
       ensureMessageNav();
     })();
@@ -4845,7 +4845,7 @@ document.addEventListener("change",e=>{
           results.push(expect("할일관리: KPI 숨김",$("#kpis")?.classList.contains("hidden")));
 
           currentView="messages";render();await wait(30);
-          results.push(expect("메세지: 자동응답 화면 표시",visible($("#messageView"))&&document.body.innerText.includes("메세지 자동응답")));
+          results.push(expect("메시지: 자동응답 화면 표시",visible($("#messageView"))&&document.body.innerText.includes("메시지 자동응답")));
 
           currentView="reports";render();await wait(30);
           results.push(expect("보고서: 보고서 화면 표시",visible($("#reportView"))&&document.body.innerText.includes("시공월별보고서")));
@@ -7176,7 +7176,7 @@ function detectSchedType(text){
 function renderSchedule(){
   const today=new Date();
   const year=schedYear,month=schedMonth;
-  const todos=(state.todos||[]).filter(t=>t.dueDate||t.date);
+  const todos=(state.todos||[]).filter(t=>t.due||t.dueDate||t.date);
   const constructions=(state.construction||[]).filter(c=>c.start).map(c=>({
     id:c.id,title:(c.site||'현장')+(c.phase?' - '+c.phase:''),dueDate:c.start,_src:'con'
   }));
@@ -7216,33 +7216,33 @@ function renderSchedule(){
   const html=`<div class="sched-main-view">
     <div class="sched-header">
       <div class="sched-nav">
-        <button class="btn-icon" onclick="schedMonth--;if(schedMonth<0){schedMonth=11;schedYear--;}renderSchedule()">◀</button>
+        <button class="btn icon" onclick="schedMonth--;if(schedMonth<0){schedMonth=11;schedYear--;}renderSchedule()">◀</button>
         <h2>${year}년 ${month+1}월</h2>
-        <button class="btn-icon" onclick="schedMonth++;if(schedMonth>11){schedMonth=0;schedYear++;}renderSchedule()">▶</button>
-        <button class="btn-sm" onclick="schedYear=new Date().getFullYear();schedMonth=new Date().getMonth();renderSchedule()">오늘</button>
+        <button class="btn icon" onclick="schedMonth++;if(schedMonth>11){schedMonth=0;schedYear++;}renderSchedule()">▶</button>
+        <button class="btn" onclick="schedYear=new Date().getFullYear();schedMonth=new Date().getMonth();renderSchedule()">오늘</button>
       </div>
-      <button class="btn btn-primary" onclick="openSchedAddModal()" style="padding:7px 16px;font-size:.88rem">+ 일정 추가</button>
+      <button class="btn primary" onclick="openSchedAddModal()">+ 일정 추가</button>
     </div>
     <div class="sched-stats">${statsHtml}</div>
     <div class="sched-calendar">${calCells}</div>
     <div class="sched-section"><h3>🚗 외근 자동집계 <span class="sched-badge">${외근Items.length}건</span></h3>${외근Html}</div>
     <div class="sched-section"><h3>📋 ${month+1}월 전체 일정 <span class="sched-badge">${monthItems.length}건</span></h3>${listHtml}</div>
-    <div id="schedAddModal" class="modal"><div class="modal-box" style="max-width:460px">
-      <div class="modal-header"><h3>📅 일정 추가</h3><button class="modal-close" onclick="closeModal('schedAddModal')">×</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
-        <div><label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:6px">일정 유형</label>
+    <div id="schedAddModal" class="overlay"><div class="modal" style="max-width:460px">
+      <div class="modal-head"><h3 style="font-size:16px;font-weight:700;margin:0">📅 일정 추가</h3><button class="btn icon" onclick="closeModal('schedAddModal')">×</button></div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div><label class="form-label">일정 유형</label>
           <div class="sched-type-btns">
             ${[{t:'외근',i:'🚗'},{t:'현장방문',i:'📍'},{t:'한전연계',i:'⚡'},{t:'인허가/준공',i:'📋'},{t:'구조물검수',i:'🔩'},{t:'회의',i:'👥'},{t:'보고',i:'📊'},{t:'시공',i:'🏗'},{t:'기타',i:'📌'}].map(({t,i})=>`<button class="sched-type-btn" data-type="${t}" onclick="selectSchedType(this)">${i} ${t}</button>`).join('')}
           </div>
         </div>
-        <div><label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:4px">제목 *</label><input id="schedTitle" type="text" placeholder="일정 제목" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:7px;font-size:.9rem"/></div>
+        <div><label class="form-label">제목 *</label><input id="schedTitle" class="field" type="text" placeholder="일정 제목"/></div>
         <div style="display:flex;gap:10px">
-          <div style="flex:1"><label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:4px">날짜 *</label><input id="schedDate" type="date" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:7px;font-size:.9rem"/></div>
-          <div style="flex:1"><label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:4px">우선순위</label><select id="schedPriority" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:7px;font-size:.9rem"><option>보통</option><option>높음</option><option>낮음</option></select></div>
+          <div style="flex:1"><label class="form-label">날짜 *</label><input id="schedDate" class="field" type="date"/></div>
+          <div style="flex:1"><label class="form-label">우선순위</label><select id="schedPriority" class="field"><option>보통</option><option>높음</option><option>낮음</option></select></div>
         </div>
-        <div><label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:4px">메모</label><textarea id="schedMemo" rows="3" placeholder="상세 내용 (선택)" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:7px;font-size:.9rem;resize:vertical"></textarea></div>
+        <div><label class="form-label">메모</label><textarea id="schedMemo" class="field" rows="3" placeholder="상세 내용 (선택)"></textarea></div>
       </div>
-      <div class="modal-footer"><button class="btn btn-primary" onclick="saveSchedItem()">저장</button><button class="btn" onclick="closeModal('schedAddModal')" style="margin-left:8px">취소</button></div>
+      <div class="toolbar" style="margin-top:0;padding:0 18px 16px"><button class="btn primary" onclick="saveSchedItem()">저장</button><button class="btn" onclick="closeModal('schedAddModal')" style="margin-left:8px">취소</button></div>
     </div></div>
   </div>`;
   if(els.fieldworkView)els.fieldworkView.classList.add('hidden');
@@ -7251,12 +7251,12 @@ function renderSchedule(){
   if(!sv){sv=document.createElement('div');sv.id='schedView';sv.style.cssText='width:100%;padding:16px;box-sizing:border-box';(els.mainGrid||document.body).after(sv);}
   sv.classList.remove('hidden');
   sv.innerHTML=html;
-  document.getElementById('schedDate').value=today.toISOString().substring(0,10);
+  document.getElementById('schedDate').value=localDateString(today);
 }
 
 function openSchedDay(dateStr){
   const allItems=[
-    ...(state.todos||[]).filter(t=>t.dueDate||t.date).map(i=>({...i,_src:'todo'})),
+    ...(state.todos||[]).filter(t=>t.due||t.dueDate||t.date).map(i=>({...i,_src:'todo'})),
     ...(state.construction||[]).filter(c=>c.start).map(c=>({id:c.id,title:(c.site||'현장')+(c.phase?' - '+c.phase:''),dueDate:c.start,_src:'con'})),
     ...(state.meetings||[]).filter(m=>m.date).map(m=>({id:m.id,title:m.title||'회의',dueDate:m.date,_src:'meet'}))
   ];
@@ -7265,13 +7265,13 @@ function openSchedDay(dateStr){
   const label=`${Number(mo)}월 ${Number(d)}일`;
   const srcLabel={todo:'할일',con:'시공',meet:'회의'};
   const srcColor={todo:'#3b82f6',con:'#f97316',meet:'#10b981'};
-  const html=`<div id="schedDayModal" class="modal open" onclick="if(event.target===this)closeModal('schedDayModal')">
-    <div class="modal-box" style="max-width:420px">
-      <div class="modal-header"><h3>📅 ${label} 일정 ${items.length}건</h3><button class="modal-close" onclick="closeModal('schedDayModal')">×</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">
+  const html=`<div id="schedDayModal" class="overlay open" onclick="if(event.target===this)closeModal('schedDayModal')">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-head"><h3 style="font-size:16px;font-weight:700;margin:0">📅 ${label} 일정 ${items.length}건</h3><button class="btn icon" onclick="closeModal('schedDayModal')">×</button></div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">
         ${items.length?items.map(i=>{const{type,icon}=detectSchedType(i.title||i.content||'');const color=srcColor[i._src]||'#6b7280';return`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:8px;background:#f9fafb;border-left:4px solid ${color}"><span style="font-size:1.2rem">${icon}</span><div style="flex:1"><div style="font-weight:600;font-size:.9rem">${esc(i.title||i.content||'')}</div><div style="font-size:.78rem;color:#6b7280;margin-top:3px">${srcLabel[i._src]||'일정'} · ${esc(i.status||type||'')}</div></div></div>`;}).join(''):`<div style="color:#9ca3af;text-align:center;padding:20px">이날 일정이 없습니다</div>`}
       </div>
-      <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('schedDayModal');openSchedAddModal()">+ 일정 추가</button><button class="btn" onclick="closeModal('schedDayModal')" style="margin-left:8px">닫기</button></div>
+      <div class="toolbar" style="margin-top:0;padding:0 18px 16px"><button class="btn primary" onclick="closeModal('schedDayModal');openSchedAddModal()">+ 일정 추가</button><button class="btn" onclick="closeModal('schedDayModal')" style="margin-left:8px">닫기</button></div>
     </div>
   </div>`;
   document.getElementById('schedDayModal')?.remove();
@@ -7279,6 +7279,7 @@ function openSchedDay(dateStr){
 }
 
 function openSchedAddModal(){document.getElementById('schedAddModal')?.classList.add('open');}
+function closeModal(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('open');if(el.parentElement===document.body)el.remove();}
 
 function selectSchedType(btn){
   document.querySelectorAll('.sched-type-btn').forEach(b=>b.classList.remove('active'));
@@ -7296,7 +7297,7 @@ function saveSchedItem(){
   const activeType=document.querySelector('.sched-type-btn.active')?.dataset?.type||'기타';
   if(!title){toast('제목을 입력해주세요.');return;}
   if(!date){toast('날짜를 선택해주세요.');return;}
-  const newItem={id:uid('todo'),title:title,content:memo,dueDate:date,status:'진행전',priority,tags:[activeType],createdAt:new Date().toISOString()};
+  const newItem={id:uid('todo'),title:title,content:memo,due:date,dueDate:date,status:'백로그',priority,tags:[activeType],createdAt:new Date().toISOString()};
   state.todos=state.todos||[];
   state.todos.unshift(newItem);
   persistState();

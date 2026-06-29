@@ -24,9 +24,7 @@
   <meta name="twitter:description" content="기술지원팀 업무관리 사이트입니다.">
 
 
-    <!-- lectureMaskingStyle: fullTextMaskingStyle로 통합됨 (중복 제거) -->
-
-    <link rel="stylesheet" href="style.css?v=20260629f">
+    <link rel="stylesheet" href="style.css?v=20260629h">
 </head>
 <body>
   <div class="auth-gate" id="authGate">
@@ -40,17 +38,11 @@
       <div class="auth-add-row">
         <select class="field" id="staffLoginName">
           <option value="">직원 선택</option>
-          <option value="이재강">이재강</option>
-          <option value="김현지">김현지</option>
-          <option value="최호운">최호운</option>
-          <option value="최형민">최형민</option>
-          <option value="김하린">김하린</option>
-          <option value="안승표">안승표</option>
         </select>
-        <input class="field" id="staffLoginPin" type="password" inputmode="numeric" placeholder="개인 PIN">
+        <input class="field" id="staffLoginPin" type="password" inputmode="numeric" placeholder="개인 PIN" autocomplete="off">
       </div>
       <div class="auth-actions">
-        <button class="btn primary" id="staffLoginBtn" type="button" onclick="staffLogin()">업무관리 로그인</button>
+        <button class="btn primary" id="staffLoginBtn" type="button">업무관리 로그인</button>
       </div>
     </div>
   </div>
@@ -76,7 +68,7 @@
   <div class="overlay" id="constructionReportModal"><div class="modal"><div class="modal-head"><h2>월간 시공 보고서</h2><button class="btn icon" data-close="constructionReportModal">×</button></div><button class="btn" id="copyConstructionReportBtn">복사</button><div class="report-output" id="constructionReport"></div></div></div>
   <div class="overlay" id="todoModal"><div class="modal"><div class="modal-head"><h2>할일 수정</h2><button class="btn icon" data-close="todoModal">×</button></div><div class="form-grid"><div class="form-row full"><label>할일 제목 *</label><input class="field" id="todoTitle" placeholder="할일 제목"></div><div class="form-row"><label>담당</label><select id="todoOwner"></select></div><div class="form-row"><label>현장/프로젝트</label><select id="todoProject"></select></div><div class="form-row full"><label>공동 담당자</label><div class="helper-grid" id="todoHelpers"></div></div><div class="form-row"><label>구분</label><select id="todoType"></select></div><div class="form-row"><label>우선순위</label><select id="todoPriority"></select></div><div class="form-row"><label>상태</label><select id="todoStatus"></select></div><div class="form-row"><label><input type="checkbox" id="todoAllDay"> 종일</label></div><div class="form-row"><label>시작</label><div class="time-grid"><input class="field" type="date" id="todoStart"><input class="field" type="time" id="todoStartTime"></div></div><div class="form-row"><label>종료/마감</label><div class="time-grid"><input class="field" type="date" id="todoDue"><input class="field" type="time" id="todoEndTime"></div></div><div class="form-row full"><label>빠른 시간</label><div class="quick-durations"><button class="btn" type="button" data-todo-duration-min="10">10분</button><button class="btn" type="button" data-todo-duration-min="30">30분</button><button class="btn primary" type="button" data-todo-duration-min="60">1시간</button><button class="btn" type="button" data-todo-duration-min="120">2시간</button><button class="btn" type="button" data-todo-duration-min="180">3시간</button><button class="btn" type="button" data-todo-duration-all-day="1">종일</button></div></div><div class="form-row full"><label>반복</label><select id="todoRepeat"><option>반복 없음</option><option>매일</option><option>매주</option><option>매월</option></select></div><div class="form-row full"><label>장소/주소</label><input class="field" id="todoLocation" placeholder="주소 또는 장소"></div><div class="form-row full"><label>진행 단계</label><div class="todo-steps" id="todoSteps"></div></div><div class="form-row full"><label>상세 내용</label><textarea class="field" id="todoDetail"></textarea></div><div class="form-row full"><label>처리 결과</label><textarea class="field" id="todoResult"></textarea></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="saveTodoBtn">저장</button><button class="btn" id="kakaoTodoBtn" type="button">카톡 메시지</button><button class="btn danger hidden" id="deleteTodoInModalBtn">삭제</button></div></div></div>
   <div class="overlay" id="kakaoTodoModal"><div class="modal"><div class="modal-head"><h2>카톡 메시지</h2><button class="btn icon" data-close="kakaoTodoModal">×</button></div><div class="form-row full"><label>아래 내용을 복사해서 카톡에 붙여넣으세요</label><textarea class="field" id="kakaoTodoText" style="min-height:240px"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoTodoBtn" type="button">복사</button><button class="btn" id="openKakaoTodoBtn" type="button">카톡 열기</button></div></div></div>
-  <div class="overlay" id="kakaoConstructionModal"><div class="modal"><div class="modal-head"><h2>재무팀 카톡메세지</h2><button class="btn icon" data-close="kakaoConstructionModal">×</button></div><div class="form-row full"><textarea class="kakao-message-box" id="kakaoConstructionText"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoConstructionBtn" type="button">복사</button><button class="btn" id="openKakaoConstructionBtn" type="button">카톡 열기</button></div></div></div>
+  <div class="overlay" id="kakaoConstructionModal"><div class="modal"><div class="modal-head"><h2>재무팀 카톡 메시지</h2><button class="btn icon" data-close="kakaoConstructionModal">×</button></div><div class="form-row full"><textarea class="kakao-message-box" id="kakaoConstructionText"></textarea></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="copyKakaoConstructionBtn" type="button">복사</button><button class="btn" id="openKakaoConstructionBtn" type="button">카톡 열기</button></div></div></div>
   <div class="toast" id="toast"></div>
     <script src="https://accounts.google.com/gsi/client" async onload="if(window._onGisLoaded)_onGisLoaded()"></script>
     <script src="epc_data.js"></script>

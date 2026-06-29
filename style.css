@@ -252,9 +252,8 @@
     .dash-empty{border:1px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);background:#fbfdfc}
     .memo-list,.linked-list,.today-list{display:grid;gap:8px}
     .memo-item,.linked-item,.today-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 13px;text-align:left;font-size:13px;font-weight:500;color:var(--ink);border-left:3px solid var(--teal);transition:.12s}
-    .linked-item:hover,.today-item:hover{background:#f8faff;border-color:var(--teal);box-shadow:0 2px 8px rgba(13,148,136,.1)}
     .linked-item,.today-item{cursor:pointer}
-    .linked-item:hover,.today-item:hover{border-color:var(--teal);background:#f2fbfa}
+    .linked-item:hover,.today-item:hover{background:#f2fbfa;border-color:var(--teal);box-shadow:0 2px 8px rgba(13,148,136,.1)}
     .memo-item .meta,.linked-item .meta,.today-item .meta{line-height:1.5}
     .mini-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
     .mini-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px}
@@ -345,11 +344,9 @@
     /* 마스킹 스타일: fullTextMaskingStyle 블록으로 통합됨 (중복 제거) */
 /* ── 시공일정 모달 저장 버튼 항상 보이기 ── */
 #constructionModal .modal{display:flex;flex-direction:column;padding:0}
-#constructionModal .modal-head{padding:18px 18px 0;flex-shrink:0}
+#constructionModal .modal-head{padding:18px 18px 0;flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #constructionModal .form-grid{flex:1;overflow-y:auto;padding:14px 18px}
 #constructionModal .toolbar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 18px;margin:0;flex-shrink:0;z-index:1}
-/* 카톡/DB검색 입력창도 헤더 안에 예쁘게 */
-#constructionModal .modal-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* ── 시공일정 전용 레이아웃 ── */
 #mainGrid.construction-mode{grid-template-columns:minmax(0,2.2fr) minmax(240px,0.55fr);height:calc(100vh - 250px);overflow:hidden}
 #mainGrid.construction-mode>.panel{height:100%;display:flex;flex-direction:column}
@@ -1370,3 +1367,40 @@ body {
     padding-top: calc(8px + env(safe-area-inset-top)) !important;
   }
 }
+
+/* ======== 일정 뷰 (schedView) ======== */
+#schedView{width:100%;padding:16px;box-sizing:border-box}
+.sched-main-view{display:grid;gap:14px}
+.sched-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sched-nav{display:flex;align-items:center;gap:6px}
+.sched-nav h2{font-size:17px;font-weight:700;margin:0;min-width:100px;text-align:center}
+.sched-stats{display:flex;flex-wrap:wrap;gap:6px}
+.sched-stat-chip{border:1px solid;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;background:#fff}
+.sched-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.sched-dow{text-align:center;font-size:11px;font-weight:800;color:var(--muted);padding:4px 0}
+.sched-dow.sun,.sched-dow.sat{color:var(--red)}
+.sched-cell{min-height:72px;border:1px solid var(--line);border-radius:6px;padding:5px;font-size:11px;background:#fff;cursor:pointer;transition:.1s}
+.sched-cell:hover{background:#f0fdf4;border-color:var(--teal)}
+.sched-cell.today{border-color:var(--teal);background:#ecfdf5;font-weight:700}
+.sched-cell.empty{background:transparent;border:none;cursor:default}
+.sched-cell.sun .sched-day-num{color:var(--red)}
+.sched-cell.sat .sched-day-num{color:var(--blue)}
+.sched-day-num{font-weight:700;font-size:12px;margin-bottom:2px}
+.sched-item{border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;font-weight:600}
+.sched-more{font-size:10px;color:var(--muted);font-weight:600}
+.sched-section{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.sched-section h3{font-size:13px;font-weight:700;margin:0;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px}
+.sched-badge{background:var(--teal);color:#fff;border-radius:999px;padding:2px 7px;font-size:11px;font-weight:700}
+.sched-list{display:grid;gap:0}
+.sched-list-item{display:grid;grid-template-columns:70px 22px 1fr auto;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px;border-left:3px solid transparent}
+.sched-list-item:last-child{border-bottom:none}
+.sched-date{color:var(--muted);font-size:11px;font-weight:600}
+.sched-type-icon{text-align:center}
+.sched-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sched-type-label{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.sched-empty-msg{color:var(--muted);font-size:13px;padding:14px;margin:0}
+.sched-type-btns{display:flex;flex-wrap:wrap;gap:6px}
+.sched-type-btn{border:1px solid var(--line);background:#f8f9fa;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;transition:.1s;font-weight:600;color:var(--ink)}
+.sched-type-btn:hover{background:#ecfdf5;border-color:var(--teal)}
+.sched-type-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.form-label{font-size:.85rem;font-weight:600;color:var(--ink);display:block;margin-bottom:6px}
