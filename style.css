@@ -1440,6 +1440,77 @@ body {
 [data-theme="dark"] .search-modal{background:var(--panel);border-color:var(--line)}
 [data-theme="dark"] #searchInput{color:var(--ink)}
 [data-theme="dark"] .search-result-item:hover,[data-theme="dark"] .search-result-item.focused{background:var(--teal-light)}
+/* ── 다크모드 추가 (하드코딩 색상 재정의) ── */
+[data-theme="dark"] header{background:var(--panel);border-color:var(--line)}
+[data-theme="dark"] aside{background:var(--nav-bg)}
+/* 날씨 카드 */
+[data-theme="dark"] .weather-city,[data-theme="dark"] .weather-sub-card{background:#162b24;border-color:var(--line)}
+[data-theme="dark"] .weather-sub-card .sub-city{color:var(--muted)}
+[data-theme="dark"] .weather-sub-card .sub-temp{color:var(--ink)}
+[data-theme="dark"] .weather-sub-card .sub-stats{color:var(--muted)}
+[data-theme="dark"] .weather-sub-card.rain-alert{background:#0f1e30;border-color:#1d3a5a}
+[data-theme="dark"] .forecast-day{background:#172420;border-color:var(--line);color:var(--ink)}
+[data-theme="dark"] .forecast-day.rain-day{background:#0f1e30;border-color:#1d3a5a}
+[data-theme="dark"] .forecast-day .fc-rain{color:#60c0e8}
+[data-theme="dark"] .forecast-day .fc-temp{color:var(--muted)}
+/* 대시보드 리스크·메모 */
+[data-theme="dark"] .risk-item{background:#172420;border-color:var(--line)}
+[data-theme="dark"] .risk-soon{background:#1e1a0d;border-left-color:#d97706}
+[data-theme="dark"] .risk-late{background:#1e0f0f;border-color:#3a1515;border-left-color:#ef4444}
+[data-theme="dark"] .risk-late strong{color:#fca5a5}
+[data-theme="dark"] .risk-soon strong{color:#fcd34d}
+[data-theme="dark"] .dashboard-memo-box{background:#162b24;border-color:var(--line);color:var(--ink)}
+/* KPI 카드 텍스트 */
+[data-theme="dark"] .kpi-value{color:var(--ink)}
+[data-theme="dark"] .kpi-value small{color:var(--muted)}
+[data-theme="dark"] .kpi-label,[data-theme="dark"] .kpi-delta{color:var(--muted)}
+[data-theme="dark"] .dash-kpi-card.kpi-teal{background:linear-gradient(135deg,#0a2e1e,#0d3d26)!important}
+[data-theme="dark"] .dash-kpi-card.kpi-red{background:linear-gradient(135deg,#2a0d0d,#3a1515)!important}
+[data-theme="dark"] .dash-kpi-card.kpi-amber{background:linear-gradient(135deg,#1e190a,#2a2410)!important}
+[data-theme="dark"] .dash-kpi-card.kpi-blue{background:linear-gradient(135deg,#0a1830,#0f2040)!important}
+/* 할일 칩 */
+[data-theme="dark"] .todo-chip{background:#1a2e29;color:var(--muted);border-color:var(--line)}
+[data-theme="dark"] .todo-chip.active{background:var(--teal);color:#fff}
+/* 뱃지 */
+[data-theme="dark"] .badge{background:#1e2e29;color:var(--muted);border-color:var(--line)}
+[data-theme="dark"] .badge.red{background:#2a0d0d;color:#fca5a5;border-color:#4a1f1f}
+[data-theme="dark"] .badge.amber{background:#1e190a;color:#fcd34d;border-color:#3a2d0a}
+[data-theme="dark"] .badge.green{background:#0d2a18;color:#6ee7b7;border-color:#1a4a2a}
+[data-theme="dark"] .badge.blue{background:#0a1830;color:#93c5fd;border-color:#1a2e50}
+/* 마감 뱃지 */
+[data-theme="dark"] .due-badge.late{background:#2a0d0d;color:#fca5a5;border-color:#4a1f1f}
+[data-theme="dark"] .due-badge.soon{background:#1e190a;color:#fcd34d;border-color:#3a2d0a}
+/* 진행중 업무 팝업 stat */
+[data-theme="dark"] .my-work-stat{background:#1a2822;border-color:var(--line)}
+/* 할일·일정 추가 모달 */
+[data-theme="dark"] #assignmentModal .modal,[data-theme="dark"] #todoModal .modal{background:#172420;border-color:var(--line)}
+[data-theme="dark"] #assignmentModal .modal-head h2,[data-theme="dark"] #todoModal .modal-head h2{color:var(--ink)}
+[data-theme="dark"] #assignmentModal .form-row label,[data-theme="dark"] #todoModal .form-row label{color:var(--muted)}
+[data-theme="dark"] #assignmentModal .field,[data-theme="dark"] #assignmentModal select,[data-theme="dark"] #todoModal .field,[data-theme="dark"] #todoModal select{background:#1a2822;border-color:var(--line);color:var(--ink)}
+[data-theme="dark"] #assignmentModal .quick-durations .btn,[data-theme="dark"] #todoModal .quick-durations .btn{background:#1a2822;border-color:var(--line);color:var(--muted)}
+[data-theme="dark"] #assignmentModal .helper-grid,[data-theme="dark"] #todoModal .helper-grid{background:#1a2822;border-color:var(--line)}
+[data-theme="dark"] #assignmentModal .toolbar,[data-theme="dark"] #todoModal .toolbar{background:#172420;border-color:var(--line)}
+/* 시공 모달 툴바 */
+[data-theme="dark"] #constructionModal .toolbar{background:#172420;border-color:var(--line)}
+/* 구글 버튼 */
+[data-theme="dark"] .google-btn{background:#0d2e1a;border-color:#1a4a2a;color:#6ee7b7}
+/* 캘린더 셀 */
+[data-theme="dark"] .day-cell{background:#172420;border-color:var(--line)}
+[data-theme="dark"] .mini-day-name{background:#1e2e29;color:var(--muted)}
+[data-theme="dark"] .today-item{background:#1a2822;border-color:var(--line)}
+/* 패널 내부 헤더·섹션 */
+[data-theme="dark"] .panel-title{border-color:var(--line)}
+[data-theme="dark"] .panel-title h2{color:var(--ink)}
+/* 데이터 테이블 */
+[data-theme="dark"] table{color:var(--ink)}
+[data-theme="dark"] th{background:#1e2e29;color:var(--muted);border-color:var(--line)}
+[data-theme="dark"] td{border-color:var(--line)}
+/* 드롭다운·팝오버 */
+[data-theme="dark"] .popover,[data-theme="dark"] .dropdown-menu{background:var(--panel);border-color:var(--line);color:var(--ink)}
+/* 스크롤바 */
+[data-theme="dark"]::-webkit-scrollbar-track{background:var(--bg)}
+[data-theme="dark"]::-webkit-scrollbar-thumb{background:#2e4840}
+[data-theme="dark"] *{scrollbar-color:#2e4840 var(--bg)}
 /* ══════════════════════════════════════
    모바일 사이드바 (햄버거 메뉴)
 ══════════════════════════════════════ */
