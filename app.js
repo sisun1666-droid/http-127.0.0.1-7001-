@@ -7783,7 +7783,7 @@ function saveSchedItem(){
     kInject();
     const panel=document.getElementById("knowledgeView");
     if(!panel)return;
-    // 지식창고 뷰에서 불필요한 섹션 강제 숨김
+    panel.classList.remove("hidden"); // kInject 후 DOM 생성됐으므로 명시적으로 표시
     ["mainGrid","kpis","sharedNotice","inspectionView","dashboardView","adminView"].forEach(id=>{
       document.getElementById(id)?.classList.add("hidden");
     });
