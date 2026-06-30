@@ -7740,6 +7740,10 @@ function saveSchedItem(){
     kInject();
     const panel=document.getElementById("knowledgeView");
     if(!panel)return;
+    // 지식창고 뷰에서 불필요한 섹션 강제 숨김
+    ["mainGrid","kpis","sharedNotice","inspectionView","dashboardView","adminView"].forEach(id=>{
+      document.getElementById(id)?.classList.add("hidden");
+    });
     const filtered=kFiltered(),sel=kSelected();
 
     const listHtml=filtered.length
@@ -7854,8 +7858,11 @@ function saveSchedItem(){
     const kv=document.getElementById("knowledgeView");
     if(kv)kv.classList.toggle("hidden",currentView!=="knowledge");
     if(currentView==="knowledge"){
-      els.mainGrid?.classList.add("hidden");
-      $("#kpis")?.classList.add("hidden");
+      ["mainGrid","kpis","sharedNotice","inspectionView","dashboardView","adminView"].forEach(id=>{
+        document.getElementById(id)?.classList.add("hidden");
+      });
+    }else{
+      document.getElementById("sharedNotice")?.classList.remove("hidden");
     }
   };
 
