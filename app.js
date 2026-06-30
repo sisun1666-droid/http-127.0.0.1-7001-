@@ -102,7 +102,7 @@
     /* 최근 삭제된 항목 보호 (60초간): 다른 브라우저의 덮어쓰기로 인한 부활 방지 */
     const _deletedTombstones={};TABLE_KEYS.forEach(t=>_deletedTombstones[t]=new Map());
     const _tombstoneKey="solar-deleted-tombstones-v1";
-    const _tombstoneTtl=7*24*60*60*1000;
+    const _tombstoneTtl=365*24*60*60*1000;
     function loadTombstones(){try{const s=localStorage.getItem(_tombstoneKey);if(!s)return;const p=JSON.parse(s);const now=Date.now();TABLE_KEYS.forEach(t=>{if(p[t]&&typeof p[t]==="object")Object.entries(p[t]).forEach(([id,ts])=>{if(now-ts<_tombstoneTtl)_deletedTombstones[t].set(id,ts);})});}catch{}}
     function saveTombstones(){try{const o={};TABLE_KEYS.forEach(t=>{const e={};_deletedTombstones[t].forEach((ts,id)=>{e[id]=ts;});o[t]=e;});localStorage.setItem(_tombstoneKey,JSON.stringify(o));}catch{}}
     function markDeleted(table,id){if(id&&_deletedTombstones[table]){_deletedTombstones[table].set(id,Date.now());saveTombstones();}}
@@ -460,19 +460,33 @@ function inspRows(b) {
         }
       }
       /* 최근 삭제된 항목이 서버 데이터에 포함되어 있어도 부활 방지 */
-      TABLE_KEYS.forEach(t=>{if(Array.isArray(merged[t]))merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));});
+      /* 동시에: 서버에 아직 남아있는 삭제 항목 ID를 추적 → 다음 저장에서 강제 DELETE */
+      const _svr_tombstoned={};
+      TABLE_KEYS.forEach(t=>{
+        if(!Array.isArray(merged[t]))return;
+        const before=merged[t].map(x=>x.id).filter(Boolean);
+        merged[t]=merged[t].filter(item=>!wasRecentlyDeleted(t,item.id));
+        const afterSet=new Set(merged[t].map(x=>x.id));
+        _svr_tombstoned[t]=before.filter(id=>!afterSet.has(id));
+      });
       state=merged;
       /* TABLE_KEYS 밖 보호 키(siteInspections, allocation): 폴링 때마다 덮어써지는 버그 방지 — 로컬이 더 최신이면 유지 */
       if(!forceReplace&&_localUpdatedAt>(shared.__updatedAt||0)){
         Object.keys(_localProtect).forEach(k=>{state[k]=_localProtect[k]});
       }
       /* _svrIds 업데이트 (서버 기준 ID 동기화) */
-      if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});saveSvrIds();
+      if(TABLE_KEYS)(TABLE_KEYS).forEach(t=>{if(Array.isArray(state[t]))_svrIds[t]=new Set(state[t].map(x=>x.id).filter(Boolean))});
+      /* 삭제 표시됐지만 서버에 남아있는 항목: _svrIds에 재추가 → 다음 저장에서 DELETE 재실행 */
+      let _needsDeleteCleanup=false;
+      TABLE_KEYS.forEach(t=>{(_svr_tombstoned[t]||[]).forEach(id=>{_svrIds[t].add(id);_needsDeleteCleanup=true;});});
+      saveSvrIds();
       localStorage.setItem(storageKey,JSON.stringify(state));
       setSyncNotice("ok",hadLocalOnly?"내 변경사항과 팀원 데이터를 병합했습니다.":"✅ 팀원의 최신 데이터를 불러왔습니다.");
       render();
       /* 로컬 항목이 있었으면 병합 결과를 즉시 서버에 올려 다른 팀원도 볼 수 있게 함 */
       if(hadLocalOnly)scheduleSharedSave(500);
+      /* 서버에 좀비 항목 있으면 즉시 DELETE 재실행 */
+      else if(_needsDeleteCleanup)scheduleSharedSave(1000);
     }
     async function loadSharedState(silent=false,forceRemote=false){
       if(!silent)setSyncNotice("saving","Supabase 저장소에서 최신 데이터를 확인하는 중입니다.");
@@ -4747,6 +4761,8 @@ document.addEventListener("change",e=>{
           e?.preventDefault?.();
           e?.stopImmediatePropagation?.();
           if(editingConstructionIndex===null||!confirm("이 시공일정을 삭제할까요?"))return;
+          const _dc=state.construction[editingConstructionIndex];
+          if(_dc?.id)markDeleted("construction",_dc.id);
           state.construction.splice(editingConstructionIndex,1);
           editingConstructionIndex=null;
           currentView="construction";
