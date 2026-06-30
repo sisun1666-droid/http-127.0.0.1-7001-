@@ -6862,22 +6862,35 @@ document.addEventListener("change",e=>{
     (function setupGoogleCalendarSync(){
       const CAL_API="https://www.googleapis.com/calendar/v3";
       const SCOPE="https://www.googleapis.com/auth/calendar";
-      const TOKEN_STORE="gcal_token_v1";
       let accessToken=null,tokenExpiresAt=0,tokenClient=null,autoRefreshTimer=null;
       function clientId(){return state.gcalClientId||""}
       function calendarId(){return state.gcalCalendarId||"primary"}
       function syncColor(){return state.gcalSyncColor||""}
       const GCAL_COLORS={"":"전체 (색상 무관)","9":"🟢 바질 (초록)","7":"🔵 공작새 (파랑)","1":"🪻 라벤더 (연보라)","2":"🌿 세이지 (연두)","3":"🍇 포도 (보라)","4":"🦩 플라밍고 (분홍)","5":"🍌 바나나 (노랑)","6":"🍊 귤 (주황)","8":"🫐 블루베리 (남색)","10":"🍅 토마토 (빨강)"};
       function isConnected(){return !!accessToken&&Date.now()<tokenExpiresAt}
-      /* 토큰 복원 */
-      (function(){try{const d=JSON.parse(localStorage.getItem(TOKEN_STORE)||"{}");if(d.t&&d.e>Date.now()+5000){accessToken=d.t;tokenExpiresAt=d.e}}catch(e){}}());
+      /* 앱 공유 상태에서 토큰 복원 (Supabase 통해 모든 기기 공유 — 한 기기에서 연결하면 전체 적용) */
+      function loadTokenFromState(){
+        if(state.gcalToken&&state.gcalTokenExpiry>Date.now()+5000){
+          accessToken=state.gcalToken;tokenExpiresAt=state.gcalTokenExpiry;
+          scheduleAutoRefresh(Math.round((tokenExpiresAt-Date.now())/1000));
+          return true;
+        }
+        /* 구버전 localStorage → state 마이그레이션 (최초 1회) */
+        try{const d=JSON.parse(localStorage.getItem("gcal_token_v1")||"{}");if(d.t&&d.e>Date.now()+5000){saveToken(d.t,Math.round((d.e-Date.now())/1000));localStorage.removeItem("gcal_token_v1");return true;}}catch(e){}
+        return false;
+      }
       function saveToken(t,expiresIn){
         accessToken=t;tokenExpiresAt=Date.now()+(expiresIn-60)*1000;
-        localStorage.setItem(TOKEN_STORE,JSON.stringify({t:accessToken,e:tokenExpiresAt}));
+        /* Supabase 공유 상태에 저장 → 팀원/다른 기기도 자동 인식 */
+        state.gcalToken=accessToken;state.gcalTokenExpiry=tokenExpiresAt;
+        scheduleSharedSave(500);
         scheduleAutoRefresh(expiresIn);
       }
       function clearToken(){
-        accessToken=null;tokenExpiresAt=0;localStorage.removeItem(TOKEN_STORE);
+        accessToken=null;tokenExpiresAt=0;
+        state.gcalToken="";state.gcalTokenExpiry=0;
+        localStorage.removeItem("gcal_token_v1");
+        scheduleSharedSave(500);
         if(autoRefreshTimer){clearTimeout(autoRefreshTimer);autoRefreshTimer=null}
       }
       /* 만료 10분 전 자동 갱신 예약 */
@@ -6885,13 +6898,13 @@ document.addEventListener("change",e=>{
         if(autoRefreshTimer){clearTimeout(autoRefreshTimer);autoRefreshTimer=null}
         const delay=Math.max(((expiresIn||3600)-600)*1000,5000);
         autoRefreshTimer=setTimeout(async()=>{
-          if(!clientId()||!isConnected())return;
+          if(!clientId())return;
           const ok=await requestToken(false);
           if(!ok){clearToken();updateGcalBtn();renderGcalBanner();}
         },delay);
       }
-      /* 페이지 로드 시 기존 토큰 있으면 자동 갱신 예약 */
-      if(isConnected()){scheduleAutoRefresh(Math.round((tokenExpiresAt-Date.now())/1000))}
+      /* 앱 상태 로드 시 토큰 복원 */
+      loadTokenFromState();
       /* GIS(Google Identity Services) 기반 토큰 클라이언트 초기화 */
       function initGisClient(){
         if(!window.google?.accounts?.oauth2||!clientId())return false;
@@ -6944,16 +6957,28 @@ document.addEventListener("change",e=>{
       function disconnect(){clearToken();updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
       /* GIS 라이브러리 로드 완료 시 → 이 기기에서 이전에 연결한 적 있을 때만 갱신 시도 */
       window._onGisLoaded=function(){
-        if(clientId()&&!isConnected()&&localStorage.getItem(TOKEN_STORE)){
-          initGisClient();
-          setTimeout(()=>{
-            if(!isConnected()&&clientId()){
-              requestToken(false).then(ok=>{
-                if(ok){toast("✅ 구글 캘린더 자동 재연결됐습니다.");updateGcalBtn();autoPullFromGcal();}
-              });
-            }
-          },800);
+        if(isConnected()){
+          /* Supabase에서 가져온 유효 토큰 있음 → UI만 업데이트하고 자동 pull */
+          updateGcalBtn();
+          autoPullFromGcal();
+          return;
         }
+        if(!clientId())return;
+        /* 토큰 없거나 만료 → silent re-auth 시도 (구글 로그인 상태면 팝업 없이 자동 갱신) */
+        initGisClient();
+        setTimeout(()=>{
+          if(isConnected()||!clientId())return;
+          requestToken(false).then(ok=>{
+            if(ok){updateGcalBtn();autoPullFromGcal();}
+            else{updateGcalBtn();} /* 조용히 실패 — 사용자가 직접 연결 버튼 누를 때까지 대기 */
+          });
+        },800);
+      };
+      /* Supabase 공유 상태 갱신 시 → 다른 기기에서 연결한 토큰 자동 수신 */
+      const _baseApplySharedForGcal=applySharedState;
+      applySharedState=function(shared,forceReplace){
+        _baseApplySharedForGcal(shared,forceReplace);
+        if(!isConnected()&&loadTokenFromState()){updateGcalBtn();autoPullFromGcal();}
       };
       /* 페이지 로드 시 만료된 토큰 조용히 정리 */
       if(accessToken&&!isConnected()){clearToken();}
@@ -7072,8 +7097,8 @@ document.addEventListener("change",e=>{
         let banner=$("#gcalDisconnectBanner");
         if(isConnected()||!clientId()){if(banner)banner.remove();return;}
         if(!banner){
-          panel.insertAdjacentHTML("afterbegin",`<div id="gcalDisconnectBanner" style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:13px;font-weight:600;color:#b91c1c">⚠️ 구글 캘린더 연결이 끊어졌습니다.</span><button id="gcalReconnectBannerBtn" style="background:#ef4444;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔗 재연결</button></div>`);
-          $("#gcalReconnectBannerBtn").onclick=async()=>{if(await requestToken(true)){toast("✅ 구글 캘린더 재연결됐습니다.");updateGcalBtn();autoPullFromGcal();}};
+          panel.insertAdjacentHTML("afterbegin",`<div id="gcalDisconnectBanner" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:13px;color:#0369a1">📅 구글 캘린더 — 클릭 한 번으로 연결하세요</span><button id="gcalReconnectBannerBtn" style="background:#0ea5e9;color:#fff;border:0;border-radius:8px;padding:6px 16px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600">연결</button></div>`);
+          $("#gcalReconnectBannerBtn").onclick=async()=>{if(await requestToken(true)){toast("✅ 구글 캘린더 연결됐습니다.");updateGcalBtn();autoPullFromGcal();}};
         }
       }
       /* 할일 툴바 버튼 주입 */
@@ -7137,6 +7162,8 @@ document.addEventListener("change",e=>{
         if(state.gcalClientId===undefined)state.gcalClientId="";
         if(state.gcalCalendarId===undefined)state.gcalCalendarId="";
         if(state.gcalSyncColor===undefined)state.gcalSyncColor="";
+        if(!state.gcalToken)state.gcalToken="";
+        if(!state.gcalTokenExpiry)state.gcalTokenExpiry=0;
         if(!localStorage.getItem("gcalCleaned_v2")&&state.todos){
           const before=state.todos.length;
           state.todos=state.todos.filter(t=>!t.gcalEventId);
@@ -7152,7 +7179,7 @@ document.addEventListener("change",e=>{
         if(!isConnected())return[];
         try{const d=await gcalFetch("/users/me/calendarList?maxResults=50");return d?.items||[];}catch(e){return[];}
       }
-      renderAdmin=function(){baseRenderAdminForGcal();if($("#gcalAdminCard"))return;const grid=$("#adminView .admin-grid");if(!grid)return;const colorOpts=Object.entries(GCAL_COLORS).map(([v,l])=>`<option value="${v}"${syncColor()===v?" selected":""}>${l}</option>`).join("");const calSel=isConnected()?`<label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">동기화할 캘린더</label><select class="field" id="gcalCalendarSelect"><option value="primary">기본 캘린더 (primary)</option></select><button class="btn" id="gcalRefreshCalsBtn" style="margin-top:4px;font-size:12px">캘린더 목록 새로고침</button><label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">📥 가져올 이벤트 색상 (이 색상만 앱으로 가져옴)</label><select class="field" id="gcalColorSelect">${colorOpts}</select>`:"";grid.insertAdjacentHTML("beforeend",`<div class="card" id="gcalAdminCard"><div class="panel-title"><h2>Google 캘린더 연동</h2></div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">OAuth 2.0 클라이언트 ID</label><input class="field" id="gcalClientIdInput" placeholder="123456789-xxx.apps.googleusercontent.com" value="${esc(state.gcalClientId||"")}"><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" id="gcalSaveClientIdBtn">저장</button>${isConnected()?`<button class="btn danger" id="gcalDisconnectAdminBtn">연결 해제</button>`:""}</div>${calSel}<p class="meta" style="margin-top:8px">현재 상태: ${isConnected()?"<strong style='color:#16a34a'>연결됨 (자동 갱신 활성화)</strong>":"<span style='color:#94a3b8'>미연결</span>"}</p></div>`);
+      renderAdmin=function(){baseRenderAdminForGcal();if($("#gcalAdminCard"))return;const grid=$("#adminView .admin-grid");if(!grid)return;const colorOpts=Object.entries(GCAL_COLORS).map(([v,l])=>`<option value="${v}"${syncColor()===v?" selected":""}>${l}</option>`).join("");const calSel=isConnected()?`<label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">동기화할 캘린더</label><select class="field" id="gcalCalendarSelect"><option value="primary">기본 캘린더 (primary)</option></select><button class="btn" id="gcalRefreshCalsBtn" style="margin-top:4px;font-size:12px">캘린더 목록 새로고침</button><label style="font-size:12px;color:#64748b;display:block;margin:10px 0 4px">📥 가져올 이벤트 색상 (이 색상만 앱으로 가져옴)</label><select class="field" id="gcalColorSelect">${colorOpts}</select>`:"";grid.insertAdjacentHTML("beforeend",`<div class="card" id="gcalAdminCard"><div class="panel-title"><h2>Google 캘린더 연동</h2></div><label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px">OAuth 2.0 클라이언트 ID</label><input class="field" id="gcalClientIdInput" placeholder="123456789-xxx.apps.googleusercontent.com" value="${esc(state.gcalClientId||"")}"><div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" id="gcalSaveClientIdBtn">저장</button>${isConnected()?`<button class="btn danger" id="gcalDisconnectAdminBtn">연결 해제</button>`:""}</div>${calSel}<p class="meta" style="margin-top:8px">현재 상태: ${isConnected()?"<strong style='color:#16a34a'>✅ 연결됨 — 모든 기기 자동 공유</strong>":"<span style='color:#94a3b8'>미연결 — 할일관리 탭에서 연결</span>"}</p></div>`);
         $("#gcalSaveClientIdBtn").onclick=()=>{state.gcalClientId=$("#gcalClientIdInput").value.trim();tokenClient=null;saveState("Google Client ID를 저장했습니다.");toast("저장됐습니다. 할일관리 탭에서 연동 버튼을 누르세요.")};
         const discBtn=$("#gcalDisconnectAdminBtn");if(discBtn)discBtn.onclick=()=>{disconnect();renderAdmin()};
         const sel=$("#gcalCalendarSelect");
