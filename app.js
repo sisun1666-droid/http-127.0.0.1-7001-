@@ -6926,9 +6926,9 @@ document.addEventListener("change",e=>{
         });
       }
       function disconnect(){clearToken();updateGcalBtn();toast("Google 캘린더 연결을 해제했습니다.")}
-      /* GIS 라이브러리 로드 완료 시 → 조용히 자동 갱신 시도 */
+      /* GIS 라이브러리 로드 완료 시 → 이 기기에서 이전에 연결한 적 있을 때만 갱신 시도 */
       window._onGisLoaded=function(){
-        if(clientId()&&!isConnected()){
+        if(clientId()&&!isConnected()&&localStorage.getItem(TOKEN_STORE)){
           initGisClient();
           setTimeout(()=>{
             if(!isConnected()&&clientId()){
