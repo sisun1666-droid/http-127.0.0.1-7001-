@@ -7674,6 +7674,223 @@ function saveSchedItem(){
 })();
 
 /* ══════════════════════════════════════
+   지식창고 (Knowledge Base)
+══════════════════════════════════════ */
+(function setupKnowledge(){
+  const K_STORE="solar-knowledge-v1",K_SB_ID="knowledge";
+  const K_CATS=["업무방법","자재/발주","현장/고객","법규/제도"];
+  let kNotes=[],kLoaded=false,kQuery="",kCat="",kSelId=null;
+  try{kNotes=JSON.parse(localStorage.getItem(K_STORE)||"[]");}catch{}
+  if(localStorage.getItem(viewStorageKey)==="knowledge")currentView="knowledge";
+
+  async function kLoad(){
+    if(kLoaded)return;
+    try{
+      const h=supabaseHeaders();
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/app_config?id=eq.${K_SB_ID}&select=data`,{cache:"no-store",headers:h});
+      if(res.ok){const rows=await res.json();if(rows[0]?.data?.notes?.length){kNotes=rows[0].data.notes;localStorage.setItem(K_STORE,JSON.stringify(kNotes));}}
+    }catch{}
+    kLoaded=true;
+  }
+
+  async function kSave(){
+    localStorage.setItem(K_STORE,JSON.stringify(kNotes));
+    try{
+      const h=supabaseHeaders({"Prefer":"resolution=merge-duplicates"});
+      await fetch(`${SUPABASE_URL}/rest/v1/app_config`,{method:"POST",headers:h,body:JSON.stringify({id:K_SB_ID,data:{notes:kNotes}})});
+    }catch{}
+  }
+
+  function kNew(){return{id:uid("kn"),title:"",content:"",category:K_CATS[0],tags:"",history:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}
+  function kSelected(){return kNotes.find(n=>n.id===kSelId)||null}
+
+  function kCommit(note){
+    const idx=kNotes.findIndex(n=>n.id===note.id);
+    if(idx>=0){
+      const old=kNotes[idx];
+      if(old.content!==note.content||old.title!==note.title){
+        note.history=[{content:old.content,title:old.title,savedAt:old.updatedAt},...(old.history||[])].slice(0,20);
+      }
+      note.updatedAt=new Date().toISOString();
+      kNotes[idx]=note;
+    }else{
+      note.createdAt=note.updatedAt=new Date().toISOString();
+      kNotes.unshift(note);
+    }
+    kSave();
+  }
+
+  function kDelete(id){kNotes=kNotes.filter(n=>n.id!==id);kSelId=kNotes[0]?.id||null;kSave();}
+
+  function kFiltered(){
+    const q=kQuery.trim().toLowerCase();
+    return kNotes.filter(n=>{
+      if(kCat&&n.category!==kCat)return false;
+      if(!q)return true;
+      return(n.title+n.content+(n.tags||"")).toLowerCase().includes(q);
+    });
+  }
+
+  function kInject(){
+    if(document.getElementById("knowledgeView"))return;
+    document.getElementById("adminView")?.insertAdjacentHTML("afterend",`<section class="panel hidden" id="knowledgeView"></section>`);
+  }
+
+  function renderKnowledge(){
+    kInject();
+    const panel=document.getElementById("knowledgeView");
+    if(!panel)return;
+    const filtered=kFiltered(),sel=kSelected();
+
+    const listHtml=filtered.length
+      ?filtered.map(n=>`<div class="k-item${kSelId===n.id?" active":""}" data-ksel="${esc(n.id)}">
+        <div class="k-item-title">${esc(n.title||"제목 없음")}</div>
+        <div class="k-item-meta"><span class="k-cat-chip">${esc(n.category)}</span><span>${esc((n.updatedAt||"").slice(0,10))}</span></div>
+        ${n.tags?`<div class="k-item-tags">${n.tags.split(",").map(t=>t.trim()).filter(Boolean).map(t=>`<span class="k-tag">${esc(t)}</span>`).join("")}</div>`:""}
+      </div>`).join("")
+      :`<div class="k-empty">📭 ${kQuery?"검색 결과 없음":"아직 메모가 없습니다"}</div>`;
+
+    const editorHtml=sel?renderEditor(sel):`<div class="k-empty-main">← 메모를 선택하거나<br><strong>+ 새 메모</strong>를 눌러보세요</div>`;
+
+    panel.innerHTML=`<div class="k-shell">
+      <aside class="k-side">
+        <div class="k-search-wrap">
+          <input class="search" id="kSearch" placeholder="전체 검색..." value="${esc(kQuery)}">
+          <button class="btn primary" id="kNewBtn">+ 새 메모</button>
+        </div>
+        <div class="k-cats">
+          <button class="k-cat${!kCat?" active":""}" data-kcat="">전체 <span class="k-count">${kNotes.length}</span></button>
+          ${K_CATS.map(c=>`<button class="k-cat${kCat===c?" active":""}" data-kcat="${esc(c)}">${esc(c)} <span class="k-count">${kNotes.filter(n=>n.category===c).length}</span></button>`).join("")}
+        </div>
+        <div class="k-list">${listHtml}</div>
+      </aside>
+      <section class="k-main" id="kEditorPane">${editorHtml}</section>
+    </div>`;
+
+    document.getElementById("kSearch")?.addEventListener("input",e=>{kQuery=e.target.value;renderKnowledge()});
+    document.getElementById("kNewBtn")?.addEventListener("click",()=>{
+      const n=kNew();kNotes.unshift(n);kSelId=n.id;kSave();renderKnowledge();
+      setTimeout(()=>document.getElementById("kTitle")?.focus(),50);
+    });
+    panel.querySelectorAll("[data-ksel]").forEach(el=>el.addEventListener("click",()=>{kSelId=el.dataset.ksel;renderKnowledge()}));
+    panel.querySelectorAll("[data-kcat]").forEach(el=>el.addEventListener("click",()=>{kCat=el.dataset.kcat;renderKnowledge()}));
+    if(sel)wireEditor(sel);
+  }
+
+  function renderEditor(note){
+    const catOpts=K_CATS.map(c=>`<option${note.category===c?" selected":""}>${esc(c)}</option>`).join("");
+    const hist=(note.history||[]).slice(0,10);
+    return`<div class="k-editor-wrap">
+      <div class="k-editor-head">
+        <input class="k-title-input" id="kTitle" value="${esc(note.title)}" placeholder="제목을 입력하세요...">
+        <div class="k-editor-meta">
+          <select class="field" id="kCatSel" style="max-width:130px">${catOpts}</select>
+          <input class="field" id="kTags" value="${esc(note.tags||"")}" placeholder="태그: 한전, 발주..." style="flex:1;min-width:100px">
+          <button class="btn primary" id="kSaveBtn">저장</button>
+          <button class="btn danger" id="kDelBtn">삭제</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding:4px 0 10px">작성 ${esc((note.createdAt||"").slice(0,10))} · 수정 ${esc((note.updatedAt||"").slice(0,10))}</div>
+      </div>
+      <textarea class="k-content" id="kContent" placeholder="내용을 자유롭게 입력하세요...">${esc(note.content||"")}</textarea>
+      ${hist.length?`<details class="k-history"><summary>이전 버전 기록 ${hist.length}개 보기</summary>
+        ${hist.map((h,i)=>`<div class="k-hist-item">
+          <div class="k-hist-meta">${i===0?"바로 이전 버전":esc((h.savedAt||"").slice(0,16).replace("T"," "))+" 저장"}</div>
+          <pre class="k-hist-content">${esc(h.content||"(내용 없음)")}</pre>
+          <button class="btn" data-krestore="${i}" style="font-size:12px">이 버전으로 되돌리기</button>
+        </div>`).join("")}
+      </details>`:""}
+    </div>`;
+  }
+
+  function wireEditor(note){
+    const doSave=()=>{
+      note.title=document.getElementById("kTitle")?.value||"";
+      note.content=document.getElementById("kContent")?.value||"";
+      note.category=document.getElementById("kCatSel")?.value||K_CATS[0];
+      note.tags=document.getElementById("kTags")?.value||"";
+      kCommit(note);toast("저장됐습니다.");renderKnowledge();
+    };
+    document.getElementById("kSaveBtn")?.addEventListener("click",doSave);
+    document.getElementById("kContent")?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="s"){e.preventDefault();doSave()}});
+    document.getElementById("kDelBtn")?.addEventListener("click",()=>{
+      if(!confirm("이 메모를 삭제할까요?"))return;
+      kDelete(note.id);toast("삭제됐습니다.");renderKnowledge();
+    });
+    document.querySelectorAll("[data-krestore]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const h=(note.history||[])[Number(btn.dataset.krestore)];
+        if(!h||!confirm("이 버전으로 되돌릴까요?"))return;
+        const ta=document.getElementById("kContent"),ti=document.getElementById("kTitle");
+        if(ta)ta.value=h.content||"";
+        if(ti&&h.title)ti.value=h.title;
+        toast("이전 버전을 불러왔습니다. 저장 버튼을 눌러 확정하세요.");
+      });
+    });
+  }
+
+  // ── 뷰 시스템 연결 ──
+  function ensureKNav(){
+    if(!state.nav.some(n=>n.label==="지식창고")){
+      const adminIdx=state.nav.findIndex(n=>n.label.includes("관리자"));
+      state.nav.splice(adminIdx>=0?adminIdx:state.nav.length,0,{icon:"📒",label:"지식창고"});
+    }
+  }
+
+  const _kBaseNorm=normalizeState;
+  normalizeState=function(){_kBaseNorm();ensureKNav()};
+
+  const _kBaseVFL=viewForLabel;
+  viewForLabel=function(label){return label.includes("지식창고")?"knowledge":_kBaseVFL(label)};
+
+  const _kBaseIsActive=isActive;
+  isActive=function(label){
+    if(currentView==="knowledge")return label.includes("지식창고");
+    return _kBaseIsActive(label);
+  };
+
+  const _kBaseRV=renderView;
+  renderView=function(){
+    _kBaseRV();
+    const kv=document.getElementById("knowledgeView");
+    if(kv)kv.classList.toggle("hidden",currentView!=="knowledge");
+    if(currentView==="knowledge"){
+      els.mainGrid?.classList.add("hidden");
+      $("#kpis")?.classList.add("hidden");
+    }
+  };
+
+  const _kBaseRCC=renderCurrentContent;
+  renderCurrentContent=function(){
+    if(currentView==="knowledge"){renderKnowledge();return}
+    _kBaseRCC();
+  };
+
+  const _kBaseSVC=syncViewChrome;
+  syncViewChrome=function(){
+    _kBaseSVC();
+    if(currentView==="knowledge"){
+      els.pageTitle.textContent="지식창고";
+      els.pageSub.textContent="업무 노하우와 이력을 검색 가능한 메모로 축적합니다.";
+    }
+  };
+
+  const _kBaseGoTo=goToView;
+  goToView=function(view,label=""){
+    _kBaseGoTo(view,label);
+    if(view==="knowledge"){
+      kInject();
+      kLoad().then(()=>{if(currentView==="knowledge")renderKnowledge();});
+      syncViewChrome();renderKnowledge();
+    }
+  };
+
+  if(currentView==="knowledge"){
+    kInject();
+    kLoad().then(()=>{if(currentView==="knowledge"&&typeof render==="function")render();});
+  }
+})();
+
+/* ══════════════════════════════════════
    완료 칸반 컬럼 접기 (성능)
 ══════════════════════════════════════ */
 document.addEventListener("click",e=>{

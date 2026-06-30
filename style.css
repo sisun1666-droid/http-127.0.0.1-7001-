@@ -1578,3 +1578,42 @@ body {
 .todo-column-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;width:100%}
 .todo-column-toggle-icon{transition:transform .2s;display:inline-block}
 .todo-column[data-status="완료"].expanded .todo-column-toggle-icon{transform:rotate(90deg)}
+/* ── 지식창고 ── */
+#knowledgeView{padding:0}
+.k-shell{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 200px);background:var(--panel);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line)}
+.k-side{border-right:1px solid var(--line);display:flex;flex-direction:column;background:#f8f8fa;min-width:0}
+.k-search-wrap{display:flex;gap:8px;padding:14px 12px 10px;border-bottom:1px solid var(--line)}
+.k-search-wrap .search{flex:1;min-width:0}
+.k-cats{display:flex;flex-direction:column;gap:2px;padding:8px 8px 4px;border-bottom:1px solid var(--line)}
+.k-cat{border:0;background:transparent;text-align:left;padding:7px 10px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.1s}
+.k-cat:hover{background:rgba(0,0,0,.05);color:var(--ink)}
+.k-cat.active{background:var(--teal);color:#fff}
+.k-count{font-size:11px;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:999px;min-width:22px;text-align:center}
+.k-cat.active .k-count{background:rgba(255,255,255,.25);color:#fff}
+.k-list{flex:1;overflow-y:auto;padding:6px 8px 14px}
+.k-item{padding:10px;border-radius:10px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:.12s}
+.k-item:hover{background:#fff;border-color:var(--line)}
+.k-item.active{background:#fff;border-color:var(--teal);box-shadow:0 0 0 2px rgba(13,148,136,.1)}
+.k-item-title{font-weight:700;font-size:13.5px;line-height:1.35;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k-item-meta{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);margin-bottom:3px}
+.k-cat-chip{background:var(--teal-light);color:var(--teal);padding:1px 7px;border-radius:999px;font-weight:700;font-size:10.5px}
+.k-item-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.k-tag{background:#f1f5f9;color:#475569;font-size:11px;padding:1px 6px;border-radius:999px}
+.k-empty{text-align:center;padding:28px 12px;color:var(--muted);font-size:13px;line-height:1.6}
+.k-main{display:flex;flex-direction:column;min-height:0;background:#fff}
+.k-empty-main{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;color:var(--muted);font-size:14px;text-align:center;line-height:2}
+.k-editor-wrap{display:flex;flex-direction:column;height:100%}
+.k-editor-head{padding:18px 24px 0;border-bottom:1px solid var(--line)}
+.k-title-input{font-size:22px;font-weight:700;border:0;border-bottom:2px solid transparent;outline:0;padding:0 0 12px;width:100%;background:transparent;color:var(--ink);letter-spacing:-.5px;display:block;transition:.15s}
+.k-title-input:focus{border-bottom-color:var(--teal)}
+.k-editor-meta{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:10px;align-items:center}
+.k-content{flex:1;border:0;outline:0;resize:none;padding:20px 24px;font-size:14px;line-height:1.8;background:transparent;color:var(--ink);min-height:300px;font-family:inherit;width:100%}
+.k-history{border-top:1px solid var(--line);padding:14px 24px;background:#f8f8fa}
+.k-history summary{font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 0;user-select:none}
+.k-history summary::-webkit-details-marker{display:none}
+.k-history[open] summary{color:var(--ink);margin-bottom:10px}
+.k-hist-item{padding:12px 0;border-bottom:1px solid var(--line)}
+.k-hist-item:last-child{border-bottom:0}
+.k-hist-meta{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;letter-spacing:.3px}
+.k-hist-content{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.65;color:var(--ink);max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin:0 0 8px;font-family:inherit}
+@media(max-width:900px){.k-shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}.k-side{max-height:260px}.k-content{min-height:200px}}
