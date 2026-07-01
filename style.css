@@ -19,15 +19,17 @@
     .mark:before{content:"";width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#065f46 0 13%,#fff 14% 39%,#065f46 40% 47%,#fff 48% 71%,#065f46 72% 78%,#fff 79%);border:0;box-shadow:none}
     .mark:after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:#065f46;top:7px;left:13px;box-shadow:-7px 12px 0 #065f46,7px 12px 0 #065f46}
     nav{display:grid;gap:2px}
-    .nav-btn{border:0;background:transparent;color:var(--nav-text);min-height:38px;padding:0 10px;border-radius:8px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;text-align:left;transition:.12s;letter-spacing:-.1px}
-    .nav-btn:hover{background:rgba(255,255,255,.07);color:#e2e8f0}
-    .nav-btn.active{background:rgba(255,255,255,.12);color:#f8fafc;font-weight:700}
+    .nav-btn{position:relative;border:0;background:transparent;color:var(--nav-text);min-height:38px;padding:0 10px;border-radius:10px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;text-align:left;transition:.15s;letter-spacing:-.1px}
+    .nav-btn:hover{background:rgba(255,255,255,.07);color:#e2e8f0;transform:translateX(2px)}
+    .nav-btn.active{background:rgba(255,255,255,.12);color:#f8fafc;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+    .nav-btn.active:before{content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:#34d399}
     .nav-btn span:first-child{width:18px;text-align:center;font-size:15px;opacity:.85}
+    .nav-btn.active span:first-child{opacity:1}
     /* ── 메인 ── */
     main{padding:28px 32px 48px;min-width:0;background:var(--bg)}
     header{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px;align-items:flex-start}
     h1{font-size:28px;margin:0 0 4px;font-weight:700;letter-spacing:-1px;color:var(--ink)}
-    h2{font-size:15px;margin:0;font-weight:600;letter-spacing:-.3px}
+    h2{font-size:15px;margin:0;font-weight:700;letter-spacing:-.3px}
     .sub,.meta{color:var(--muted);font-size:13px;line-height:1.5;letter-spacing:-.1px}
     /* ── 버튼 ── */
     .toolbar,.row-actions,.filters,.tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -46,7 +48,7 @@
     @media(max-width:620px){.dash-top-grid{grid-template-columns:1fr;height:auto;gap:10px}}
     .kpi,.panel,.card,.modal{background:var(--panel);border:1px solid rgba(0,0,0,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
     .kpi{padding:18px}
-    .label{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .label{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
     .value{margin-top:6px;font-size:28px;font-weight:700;letter-spacing:-1.2px}
     .delta{margin-top:6px;font-size:12px;color:var(--muted);font-weight:500}
     .donut{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;margin-top:10px;background:conic-gradient(var(--teal) var(--p),#e8edf4 0)}
@@ -269,7 +271,12 @@
     .dash-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#ecfdf5;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:850}
     .dash-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
     .dash-kpi-grid.small{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
-    .dash-kpi-grid .dash-section{box-shadow:none}
+    .dash-kpi-grid .dash-section{box-shadow:none;position:relative;overflow:hidden}
+    .dash-kpi-grid .dash-section:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    .dash-kpi-grid .dash-section:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal)}
+    .dash-kpi-grid .dash-section:nth-child(2):before{background:var(--blue)}
+    .dash-kpi-grid .dash-section:nth-child(3):before{background:var(--amber)}
+    .dash-kpi-grid .dash-section:nth-child(4):before{background:var(--green)}
     .dash-kpi-card{text-align:center;padding:24px 18px 20px;position:relative;overflow:hidden;border:0!important;border-radius:28px!important;transition:.2s;box-shadow:none!important}
     .dash-kpi-card:hover{transform:translateY(-1px)}
     .dash-kpi-card.kpi-teal{background:linear-gradient(145deg,#d1fae5,#a7f3d0)!important}
